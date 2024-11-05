@@ -1,0 +1,2 @@
+- include_tasks: template-render.yml
+  when: "'render' in playbook_operations"

@@ -1,0 +1,98 @@
+#!/bin/bash
+set -euo pipefail
+
+function checkCommand {
+  if command -v "$1" &> /dev/null; then
+    :
+  else
+    echo "'$1' not found, please make sure it is installed before using shrendd."
+    if [ "$2" -gt 0 ]; then
+      exit $2
+    fi
+  fi
+}
+
+function checkFile {
+  if [ -f $1 ]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+function defaultShrendd {
+  cat << 'EndOfYml'
+shrendd:
+  version: latest
+  default:
+    template:
+      dir: $_MODULE_DIR/deploy/${target}/templates
+    render:
+      dir: $_MODULE_DIR/deploy/${target}/rendered
+  targets:
+    - name: k8s
+  test:
+    local: ./shrendd_src
+EndOfYml
+}
+
+function devD {
+  echo "you must be a developer of shrendd and running a test, copying latest from shrendd_src"
+  cp -rf $(getOrDefault ".shrendd.test.local") ./.shrendd
+}
+
+function curlD {
+  echo "downloading with curl..."
+}
+
+function wgetD {
+  echo "downloading with wget..."
+}
+
+function getOrDefault {
+  _value=$(echo "$_SHRENDD" | yq e "$1" -)
+  if [ -z "$_value" ] || [ "$_value" == "null" ]; then
+    _value=$(echo "$_SHRENDD_DEFAULTS" | yq e "$1" -)
+  fi
+  echo $(eval echo "$_value")
+}
+
+#check for yq, error if not present with message
+checkCommand "yq" 1
+
+#load shrendd.yml for properties
+if [ -f ./shrendd.yml ]; then
+  export _SHRENDD=$(cat ./shrendd.yml)
+  echo "found shrendd.yml, will use values defined there, if no value specified, will use default values."
+else
+  echo "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
+  export _SHRENDD=""
+fi
+export _SHRENDD_DEFAULTS=$(defaultShrendd)
+
+export _SHRENDD_VERSION=$(getOrDefault ".shrendd.version")
+echo "shrendd version: $_SHRENDD_VERSION"
+#download if not already downloaded
+if [ -d ./.shrendd ]; then
+  :
+else
+  echo "downlading shrend:$_SHRENDD_VERSION"
+  if [ -d $(getOrDefault ".shrendd.test.local") ]; then
+    devD
+  else
+    if [[ -z $(checkCommand "curl" 0) ]]; then
+      curlD
+    else
+      if [[ -z $(checkCommand "wget" 0) ]]; then
+        wgetD
+      else
+        echo "you must have curl or wget installed to use shrendd or you can manually down load it to a directory in this project called '.shrendd'."
+        exit 1
+      fi
+    fi
+  fi
+fi
+
+export SHRENDD_WORKING_DIR=$(pwd)
+source ./.shrendd/parse_parameters.sh
+source ./.shrendd/deploy.sh
