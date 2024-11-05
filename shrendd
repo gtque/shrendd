@@ -38,7 +38,17 @@ EndOfYml
 
 function devD {
   echo "you must be a developer of shrendd and running a test, copying latest from shrendd_src"
-  cp -rf $(getOrDefault ".shrendd.test.local") ./.shrendd
+  if [ -d ./shrend/"$1" ]; then
+    :
+  else
+    _source=$(getOrDefault ".shrendd.test.local")
+    cp -rf $_source/$1 ./.shrendd/$1
+    if [ "$1" == "render" ]; then
+      echo "copy additional render scripts..."
+      cp -rf $_source/deploy.sh ./.shrendd/
+      cp -rf $_source/parse_parameters.sh ./.shrendd/
+    fi
+  fi
 }
 
 function curlD {
@@ -78,19 +88,23 @@ if [ -d ./.shrendd ]; then
 else
   echo "downlading shrend:$_SHRENDD_VERSION"
   if [ -d $(getOrDefault ".shrendd.test.local") ]; then
-    devD
+    export _GETTER="devD"
   else
     if [[ -z $(checkCommand "curl" 0) ]]; then
-      curlD
+      export _GETTER="curlD"
     else
       if [[ -z $(checkCommand "wget" 0) ]]; then
-        wgetD
+        export _GETTER="wgetD"
       else
         echo "you must have curl or wget installed to use shrendd or you can manually down load it to a directory in this project called '.shrendd'."
         exit 1
       fi
     fi
   fi
+  mkdir "./.shrendd"
+  eval "$_GETTER \"render\""
+  #loop of list of targets
+  eval "$_GETTER \"k8s\""
 fi
 
 export SHRENDD_WORKING_DIR=$(pwd)
