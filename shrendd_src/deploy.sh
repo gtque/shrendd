@@ -110,11 +110,15 @@ else
   echo "no ./deploy/$deploy_action/pre.sh"
 fi
 
-export target="k8s"
-targetDirs "$target"
-checkRenderDirectory "$target"
-render "$target"
-doDeploy "$target"
+echo "trying to load array of targets"
+for _target in $targets; do
+  export target="$_target"
+  echo "deploying: $target"
+  targetDirs "$target"
+  checkRenderDirectory "$target"
+  render "$target"
+  doDeploy "$target"
+done
 
 if [ -f ./deploy/$deploy_action/post.sh ]; then
   echo "processing ./deploy/$deploy_action/post.sh"
