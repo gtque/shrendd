@@ -1,0 +1,9 @@
+app:
+  id: shrendd-test
+  test:
+    name: shrendd-test-single-level-localdev
+    namespace: shrendd-test
+    manager: ansible
+    version: 0.0-SNAPSHOT
+release:
+  stage: dev
