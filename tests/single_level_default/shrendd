@@ -50,6 +50,7 @@ function devD {
     echo "copy additional render scripts..."
     cp -rf $_source/deploy.sh ./.shrendd/
     cp -rf $_source/parse_parameters.sh ./.shrendd/
+    cp -rf $_source/upshrendd ./.shrendd/
   fi
 }
 
@@ -185,6 +186,7 @@ cloneShrendd "$_GETTER" "render"
 
 #loop over targets
 #cloneShrendd "$_GETTER" "k8s"
+_targets=""
 echo "trying to load array of targets"
 for index in $(getOrDefault ".shrendd.targets | select(.) | keys" 1); do
   if [ "$index" == "-" ]; then
@@ -192,10 +194,18 @@ for index in $(getOrDefault ".shrendd.targets | select(.) | keys" 1); do
   else
     _target=$(getOrDefault ".shrendd.targets[$index].name" 0)
     echo -e "checking: $_target"
+    if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
+      :
+    else
+      _targets="$_targets "
+    fi
+    _targets="$_targets$_target"
     cloneShrendd "$_GETTER" "$_target"
   fi
 done
 
+echo "list of targets:$_targets"
+export targets="$_targets"
 export SHRENDD_WORKING_DIR=$(pwd)
-#source ./.shrendd/parse_parameters.sh
-#source ./.shrendd/deploy.sh
+source ./.shrendd/parse_parameters.sh
+source ./.shrendd/deploy.sh
