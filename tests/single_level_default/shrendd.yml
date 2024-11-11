@@ -2,4 +2,4 @@ shrendd:
   test:
     local: ../../shrendd_src
   targets:
-    - name: test
+  - name: test

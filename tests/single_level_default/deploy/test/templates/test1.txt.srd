@@ -1,0 +1,4 @@
+hello, ${TEST_HELLO}!
+sup, $(getConfig "test.sup")?
+message 1: $(single_level_default_message "${TEST_MESSAGE1}")
+message 2: $(single_level_default_message "$(getConfig "test.message2")")

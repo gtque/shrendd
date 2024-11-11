@@ -3,6 +3,8 @@ set -euo pipefail
 
 trap resetLocal EXIT
 
+source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
+
 function resetLocal {
   if [ "$_is_debug" == true ]; then
     echo "running as debug, not deleting render directories"
@@ -13,13 +15,13 @@ function resetLocal {
 }
 
 function targetDirs {
-  export TEMPLATE_DIR=$(getOrDefault ".shrendd.targets[] | select(.name==\"$1\") | .template.dir")
+  export TEMPLATE_DIR=$(getOrDefault "shrendd.targets[] | select(.name==\"$1\") | .template.dir")
   if [ -z "$TEMPLATE_DIR" ] || [ "$TEMPLATE_DIR" == "null" ]; then
-    export TEMPLATE_DIR=$(getOrDefault ".shrendd.default.template.dir")
+    export TEMPLATE_DIR=$(getOrDefault "shrendd.default.template.dir")
   fi
-  export RENDER_DIR=$(getOrDefault ".shrendd.targets[] | select(.name==\"$1\") | .render.dir")
+  export RENDER_DIR=$(getOrDefault "shrendd.targets[] | select(.name==\"$1\") | .render.dir")
   if [ -z "$RENDER_DIR" ] || [ "$RENDER_DIR" == "null" ]; then
-    export RENDER_DIR=$(getOrDefault ".shrendd.default.render.dir")
+    export RENDER_DIR=$(getOrDefault "shrendd.default.render.dir")
   fi
 }
 
@@ -44,7 +46,7 @@ function render {
   prePostRender "$1" "beforerender"
   if [ "$SKIP_TEMPLATE" == "false" ]; then
     echo "rendering templates"
-    source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
+    doRender $TEMPLATE_DIR
   else
     echo "skipping template rendering"
   fi
@@ -81,6 +83,22 @@ function doDeploy {
   prePostAfter "$1" "post"
 }
 
+function initConfig {
+  _config_keys=$(keysFor "$_SHRENDD_CONFIG")
+  echo "configuring: $_config_keys"
+  for _config_key in $_config_keys; do
+    _name=$(trueName $_config_key)
+    _value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_config_key" -)
+    echo "initializing> $_config_key: $_name: $_value"
+    eval "export $_name=\"$_value\""
+  done
+}
+
+function getConfig {
+  _name=$(trueName $1)
+  eval "echo -e \"${!_name}\""
+}
+
 if [ "$_requested_help" == "true" ]; then
   if [ "$_is_debug" == true ]; then
     echo "config: $_config"
@@ -94,9 +112,20 @@ if [ "$_config" == "false" ]; then
   exit 1
 fi
 
-echo "ansible config:"
+echo "config:"
 cat $_config
 echo ""
+
+if [ -f $_config ]; then
+  export _SHRENDD_CONFIG=$(cat $_config)
+  echo "found $_config."
+  initConfig
+  echo "done initializing"
+else
+  echo "no $_config found, no custom parameters defined."
+  export _SHRENDD_CONFIG=""
+  exit 1
+fi
 
 echo "switching to module: $_module"
 cd $_module

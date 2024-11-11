@@ -32,7 +32,7 @@ EndOfYml
 function devD {
   echo "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
   rm -f ./shrendd
-  _source=$(getOrDefault ".shrendd.test.local")
+  _source=$(getOrDefault "shrendd.test.local")
   cp -f $_source/../shrendd ./
 }
 
@@ -44,10 +44,31 @@ function wgetD {
   wget --output-document=./$1 "$2"
 }
 
+function trueName {
+  echo "$(echo "$1" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]")"
+}
+
+function testIf {
+  _parm=$(trueName $1)
+  echo "parm: $_parm"
+  if [ -v "$_parm" ]; then
+    echo "true"
+    _value="$(echo ${!_parm})"
+  else
+    echo "false"
+  fi
+}
+
 function getOrDefault {
-  _value=$(echo "$_SHRENDD" | yq e "$1" -)
-  if [ -z "$_value" ] || [ "$_value" == "null" ]; then
-    _value=$(echo "$_SHRENDD_DEFAULTS" | yq e "$1" -)
+  _value=""
+  if [ "$(testIf $1)" == true ]; then
+    _parm=$(trueName $1)
+    _value="$(echo ${!_parm})"
+  else
+    _value=$(echo "$_SHRENDD" | yq e ".$1" -)
+    if [ -z "$_value" ] || [ "$_value" == "null" ]; then
+      _value=$(echo "$_SHRENDD_DEFAULTS" | yq e ".$1" -)
+    fi
   fi
   if [ -z "${2+x}" ] || [ "$2" -lt 1 ]; then
     echo $(eval echo "$_value")
@@ -97,11 +118,11 @@ else
 fi
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
 
-export _SHRENDD_VERSION=$(getOrDefault ".shrendd.version")
-export _SHRENDD_GIT_URL=$(getOrDefault ".shrendd.git.url")
+export _SHRENDD_VERSION=$(getOrDefault "shrendd.version")
+export _SHRENDD_GIT_URL=$(getOrDefault "shrendd.git.url")
 echo "shrendd version: $_SHRENDD_VERSION"
 
-if [ -d $(getOrDefault ".shrendd.test.local") ]; then
+if [ -d $(getOrDefault "shrendd.test.local") ]; then
   export _GETTER="devD"
 else
   if [[ -z $(checkCommand "curl" 0) ]]; then

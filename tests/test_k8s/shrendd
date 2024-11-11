@@ -55,11 +55,11 @@ function devD {
 }
 
 function curlD {
-  curl --output ./.shrendd/$1.zip -L "$2"
+  curl --output ./.shrendd/$1$2 -L "$3"
 }
 
 function wgetD {
-  wget --output-document=./.shrendd/$1.zip "$2"
+  wget --output-document=./.shrendd/$1$2 "$3"
 }
 
 function getOrDefault {
@@ -86,8 +86,8 @@ function isUpToDate {
             rm -rf ./.shrendd/.latest
           fi
           mkdir ./.shrendd/.latest
-          eval "$1 \".latest/version.yml\" \"$3/version.yml\""
-          _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" ./.shrendd/.latest/version.yml.zip)
+          eval "$1 \".latest/version\" \".yml\" \"$3/version.yml\""
+          _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" ./.shrendd/.latest/version.yml)
           if [ "$_SHRENDD_LATEST_VERSION" == "$_SHRENDD_CURRENT_VERSION" ]; then
             export _SHRENDD_IS_UPTODATE="true"
           else
@@ -134,7 +134,7 @@ function cloneShrendd {
     fi
     rm -f ./.shrendd/$2.zip
     echo "downloading with $1...$2"
-    eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2.zip\""
+    eval "$1 \"$2\" \".zip\" \"$_SHRENDD_ARTIFACT_URL/$2.zip\""
     if [ "$1" == "devD" ]; then
       echo "cloned locally, nothing to unzip."
     else

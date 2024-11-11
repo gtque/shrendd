@@ -24,29 +24,42 @@ function defaultShrendd {
   cat << 'EndOfYml'
 shrendd:
   version: latest
+  git:
+    url: https://github.com/gtque/shrendd
   default:
     template:
-      dir: deploy/${target}/templates
+      dir: $_MODULE_DIR/deploy/${target}/templates
     render:
-      dir: deploy/${target}/rendered
+      dir: $_MODULE_DIR/deploy/${target}/rendered
   targets:
-    - name: k8s
+  - name: k8s
+    description: just testing extra fields in the array element
   test:
     local: ./shrendd_src
 EndOfYml
 }
 
 function devD {
-  echo "you must be a developer of shrendd and running a test, copying latest from shrendd_src"
-  cp -rf $(getOrDefault ".shrendd.test.local") ./.shrendd
+  echo "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
+  if [ -d ./.shrendd/$1 ]; then
+    rm -rf ./.shrendd/$1
+  fi
+  _source=$(getOrDefault ".shrendd.test.local")
+  cp -rf $_source/$1 ./.shrendd/$1
+  if [ "$1" == "render" ]; then
+    echo "copy additional render scripts..."
+    cp -rf $_source/deploy.sh ./.shrendd/
+    cp -rf $_source/parse_parameters.sh ./.shrendd/
+    cp -rf $_source/upshrendd ./.shrendd/
+  fi
 }
 
 function curlD {
-  echo "downloading with curl..."
+  curl --output ./.shrendd/$1$2 -L "$3"
 }
 
 function wgetD {
-  echo "downloading with wget..."
+  wget --output-document=./.shrendd/$1$2 "$3"
 }
 
 function getOrDefault {
@@ -54,7 +67,82 @@ function getOrDefault {
   if [ -z "$_value" ] || [ "$_value" == "null" ]; then
     _value=$(echo "$_SHRENDD_DEFAULTS" | yq e "$1" -)
   fi
-  echo $(eval echo "$_value")
+  if [ -z "${2+x}" ] || [ "$2" -lt 1 ]; then
+    echo $(eval echo "$_value")
+  else
+    echo -e "$_value"
+  fi
+}
+
+function isUpToDate {
+  if [ -z "$_SHRENDD_IS_UPTODATE" ] || [ "$_SHRENDD_IS_UPTODATE" == "null" ]; then
+    if [ "$1" == "devD" ]; then
+      export _SHRENDD_IS_UPTODATE="false"
+    else
+      if [ -f ./.shrendd/version.yml ]; then
+        _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" ./.shrendd/version.yml)
+        if [ "$_SHRENDD_VERSION" == "latest" ]; then
+          if [ -d ./.shrendd/.latest ]; then
+            rm -rf ./.shrendd/.latest
+          fi
+          mkdir ./.shrendd/.latest
+          eval "$1 \".latest/version\" \".yml\" \"$3/version.yml\""
+          _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" ./.shrendd/.latest/version.yml)
+          if [ "$_SHRENDD_LATEST_VERSION" == "$_SHRENDD_CURRENT_VERSION" ]; then
+            export _SHRENDD_IS_UPTODATE="true"
+          else
+            export _SHRENDD_IS_UPTODATE="false"
+          fi
+        else
+          if [ "$_SHRENDD_VERSION" == "$_SHRENDD_CURRENT_VERSION" ]; then
+            export _SHRENDD_IS_UPTODATE="true"
+          else
+            export _SHRENDD_IS_UPTODATE="false"
+          fi
+        fi
+      else
+        export _SHRENDD_IS_UPTODATE="false"
+      fi
+    fi
+    echo "$_SHRENDD_IS_UPTODATE"
+  else
+    if [ -d ./.shrendd/$2 ]; then
+      echo "$_SHRENDD_IS_UPTODATE"
+    else
+      echo "false"
+    fi
+  fi
+}
+
+function cloneShrendd {
+  if [ "$_SHRENDD_VERSION" == "latest" ]; then
+    export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/latest/download"
+  else
+    export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/download/v$_SHRENDD_VERSION"
+  fi
+  export _SHRENDD_IS_UPTODATE_NOW=$(isUpToDate "$1" "$2" "$_SHRENDD_ARTIFACT_URL")
+  echo "$2 uptodate: $_SHRENDD_IS_UPTODATE, now: $_SHRENDD_IS_UPTODATE_NOW"
+  if [ -z "$_SHRENDD_IS_UPTODATE" ]; then
+    export _SHRENDD_IS_UPTODATE="$_SHRENDD_IS_UPTODATE_NOW"
+  fi
+  if [ "$_SHRENDD_IS_UPTODATE_NOW" == "true" ]; then
+    :
+  else
+    echo "downloading shrendd:$_SHRENDD_VERSION"
+    if [ -d ./.shrendd/$2 ]; then
+      rm -rf ./.shrendd/$2
+    fi
+    rm -f ./.shrendd/$2.zip
+    echo "downloading with $1...$2"
+    eval "$1 \"$2\" \".zip\" \"$_SHRENDD_ARTIFACT_URL/$2.zip\""
+    if [ "$1" == "devD" ]; then
+      echo "cloned locally, nothing to unzip."
+    else
+      echo "unzipping cloned file: $2.zip"
+      unzip -ao ./.shrendd/$2.zip -d ./.shrendd
+      rm ./.shrendd/$2.zip
+    fi
+  fi
 }
 
 #check for yq, error if not present with message
@@ -71,28 +159,53 @@ fi
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
 
 export _SHRENDD_VERSION=$(getOrDefault ".shrendd.version")
+export _SHRENDD_GIT_URL=$(getOrDefault ".shrendd.git.url")
 echo "shrendd version: $_SHRENDD_VERSION"
-#download if not already downloaded
-if [ -d ./.shrendd ]; then
-  :
+
+if [ -d $(getOrDefault ".shrendd.test.local") ]; then
+  export _GETTER="devD"
 else
-  echo "downlading shrend:$_SHRENDD_VERSION"
-  if [ -d $(getOrDefault ".shrendd.test.local") ]; then
-    devD
+  if [[ -z $(checkCommand "curl" 0) ]]; then
+    export _GETTER="curlD"
   else
-    if [[ -z $(checkCommand "curl" 0) ]]; then
-      curlD
+    if [[ -z $(checkCommand "wget" 0) ]]; then
+      export _GETTER="wgetD"
     else
-      if [[ -z $(checkCommand "wget" 0) ]]; then
-        wgetD
-      else
-        echo "you must have curl or wget installed to use shrendd or you can manually down load it to a directory in this project called '.shrendd'."
-        exit 1
-      fi
+      echo "you must have curl or wget installed to use shrendd or you can manually down load it to a directory in this project called '.shrendd'."
+      exit 1
     fi
   fi
 fi
+if [ -d ./.shrendd ]; then
+  :
+else
+  mkdir "./.shrendd"
+fi
+export _SHRENDD_IS_UPTODATE=""
+cloneShrendd "$_GETTER" "render"
 
+#loop over targets
+#cloneShrendd "$_GETTER" "k8s"
+_targets=""
+echo "trying to load array of targets"
+for index in $(getOrDefault ".shrendd.targets | select(.) | keys" 1); do
+  if [ "$index" == "-" ]; then
+    :
+  else
+    _target=$(getOrDefault ".shrendd.targets[$index].name" 0)
+    echo -e "checking: $_target"
+    if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
+      :
+    else
+      _targets="$_targets "
+    fi
+    _targets="$_targets$_target"
+    cloneShrendd "$_GETTER" "$_target"
+  fi
+done
+
+echo "list of targets:$_targets"
+export targets="$_targets"
 export SHRENDD_WORKING_DIR=$(pwd)
 source ./.shrendd/parse_parameters.sh
 source ./.shrendd/deploy.sh
