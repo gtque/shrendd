@@ -10,6 +10,13 @@ metadata:
     app.kubernetes.io/component: "${APP_TEST_NAME}"
     app.kubernetes.io/part-of: "${APP_TEST_NAME}"
 data:
+  test1a: "${APP_TEST_TEST1}"
+  test1b: \"${APP_TEST_TEST1}\"
+  $(k8s_to_yaml "test2: |" "app.test.test2")
+  test2$(k8s_to_yaml "b: |" "app.test.test2" "6")
+  $(test_k8s_test3)
+  $(test_k8s_test4)
+  $(test_k8s_test5)
   application-$(echo "$(getConfig "release.stage")" | tr "[:upper:]" "[:lower:]").yml: |
     server:
       port: 8080

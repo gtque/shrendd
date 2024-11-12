@@ -7,7 +7,7 @@ deployaction=${deployaction:-setup}
 
 export SKIP_TEMPLATE=false
 export SKIP_STANDARD=false
-
+export SKIP_DEPLOY="false"
 export _requested_help="false"
 while [ $# -gt 0 ]; do
   if [[ $1 == *"--"* ]]; then
@@ -26,6 +26,8 @@ while [ $# -gt 0 ]; do
   elif [[ $1 == "-t" ]]; then
     param="deployaction"
     declare $param="teardown"
+  elif [[ $1 == "-r" ]]; then
+    export SKIP_DEPLOY="true"
   elif [[ $1 == "?" ]]; then
     export helped=true
     echo "Usage:"
@@ -37,6 +39,7 @@ while [ $# -gt 0 ]; do
     echo -e "  --deployaction [setup|teardown]\n\t  the deployment action being performed, setup to render and deploy, teardown to uninstall or delete the deployment"
     echo -e "  -s\n\t  setup as the deployment action, short hand for --deployaction setup\n\t    you may specify this and -t, but the last one specified wins and will determine the deployment action."
     echo -e "  -t\n\t  teardown as the deployment action, short hand for --deployaction teardown\n\t    you may specify this and -s, but the last one specified wins and will determine the deployment action."
+    echo -e "  -r\n\t  render only, skip deploy"
     export _requested_help="true"
   fi
   shift

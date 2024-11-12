@@ -5,5 +5,12 @@ app:
     namespace: shrendd-test
     manager: ansible
     version: 0.0-SNAPSHOT
+    test1: "hello, world!"
+    test2: |
+      cats:
+      - name: takis
+      - name: ruffles
+      - name: catniss
+    test4: "the chip sisters!!!"
 release:
   stage: dev

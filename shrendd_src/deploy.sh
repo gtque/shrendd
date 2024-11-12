@@ -15,13 +15,13 @@ function resetLocal {
 }
 
 function targetDirs {
-  export TEMPLATE_DIR=$(getOrDefault "shrendd.targets[] | select(.name==\"$1\") | .template.dir")
+  export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.targets[] | select(.name==\"$1\") | .template.dir")
   if [ -z "$TEMPLATE_DIR" ] || [ "$TEMPLATE_DIR" == "null" ]; then
-    export TEMPLATE_DIR=$(getOrDefault "shrendd.default.template.dir")
+    export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.default.template.dir")
   fi
-  export RENDER_DIR=$(getOrDefault "shrendd.targets[] | select(.name==\"$1\") | .render.dir")
+  export RENDER_DIR=$(shrenddOrDefault "shrendd.targets[] | select(.name==\"$1\") | .render.dir")
   if [ -z "$RENDER_DIR" ] || [ "$RENDER_DIR" == "null" ]; then
-    export RENDER_DIR=$(getOrDefault "shrendd.default.render.dir")
+    export RENDER_DIR=$(shrenddOrDefault "shrendd.default.render.dir")
   fi
 }
 
@@ -95,8 +95,41 @@ function initConfig {
 }
 
 function getConfig {
-  _name=$(trueName $1)
+  _name=$(trueName "$1")
   eval "echo -e \"${!_name}\""
+}
+
+function getConfigOrEmptyD {
+  _check=$(trueName "$1")
+  echo "truename for config: $_check"
+  if [ -z "${!_check+x}" ]; then
+    echo " was empty"
+  else
+    echo " was not empty?"
+    getConfig "$1"
+  fi
+}
+
+function getConfigOrEmpty {
+  _check=$(trueName "$1")
+  if [ -z "${!_check+x}" ]; then
+    :
+  else
+    getConfig "$1"
+  fi
+}
+
+function toYaml {
+  echo -e "$1" | yq e '. | to_yaml' -
+}
+
+function padding {
+  num_spaces=$1
+  if [ -z "$num_spaces" ]; then
+    num_spaces="0"
+  fi
+  spaces=$(printf "%${num_spaces}s")
+  echo "$spaces"
 }
 
 if [ "$_requested_help" == "true" ]; then
@@ -146,7 +179,12 @@ for _target in $targets; do
   targetDirs "$target"
   checkRenderDirectory "$target"
   render "$target"
-  doDeploy "$target"
+  if [ "$SKIP_DEPLOY" == "false" ]; then
+    echo "deploying $target"
+    doDeploy "$target"
+  else
+    echo "skipping deploy"
+  fi
 done
 
 if [ -f ./deploy/$deploy_action/post.sh ]; then

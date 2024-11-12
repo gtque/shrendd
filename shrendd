@@ -38,6 +38,9 @@ shrendd:
   targets:
   - name: k8s
     description: just testing extra fields in the array element
+  k8s:
+    yaml:
+      padding: 2
   test:
     local: ./shrendd_src
 EndOfYml
@@ -48,7 +51,7 @@ function devD {
   if [ -d ./.shrendd/$1 ]; then
     rm -rf ./.shrendd/$1
   fi
-  _source=$(getOrDefault "shrendd.test.local")
+  _source=$(shrenddOrDefault "shrendd.test.local")
   cp -rf $_source/$1 ./.shrendd/$1
   if [ "$1" == "render" ]; then
     echo "copy additional render scripts..."
@@ -81,7 +84,7 @@ function testIf {
   fi
 }
 
-function getOrDefault {
+function shrenddOrDefault {
   _value=""
   if [ "$(testIf $1)" == true ]; then
     _parm=$(trueName $1)
@@ -202,11 +205,11 @@ fi
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
 export TEST_SHRENDD_VERSION="hello world"
 testIf "test.shrendd.version"
-export _SHRENDD_VERSION=$(getOrDefault "shrendd.version")
-export _SHRENDD_GIT_URL=$(getOrDefault "shrendd.git.url")
+export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
+export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
 echo "shrendd version: $_SHRENDD_VERSION"
 
-if [ -d $(getOrDefault "shrendd.test.local") ]; then
+if [ -d $(shrenddOrDefault "shrendd.test.local") ]; then
   export _GETTER="devD"
 else
   if [[ -z $(checkCommand "curl" 0) ]]; then
@@ -246,7 +249,7 @@ fi
 
 _targets=""
 for index in $_target_keys; do
-  _target=$(getOrDefault "$index" 0)
+  _target=$(shrenddOrDefault "$index" 0)
   echo -e "checking: $_target"
   if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
     :
