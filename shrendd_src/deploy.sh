@@ -94,9 +94,26 @@ function initConfig {
   done
 }
 
+function getSecret {
+  _secret=$(getConfig "$1")
+  if [ $? -ne 0 ]; then
+    echo -e "${_secret}"
+  else
+    _secret=$(echo -e "$_secret" | base64)
+    echo -e "$_secret"
+  fi
+}
+
 function getConfig {
   _name=$(trueName "$1")
-  eval "echo -e \"${!_name}\""
+  _value=$(eval "echo -e \"${!_name}\"")
+  if [ -z "$_value" ] || [ "$_value" == "" ]; then
+    echo "error getting config for $1" >> $RENDER_DIR/config_error.log
+    echo -e "\${${1}}"
+    return 1
+  else
+    echo -e "$_value"
+  fi
 }
 
 function getConfigOrEmptyD {
