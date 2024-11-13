@@ -109,13 +109,17 @@ function getSecret {
 
 function getConfig {
   _name=$(trueName "$1")
-  _value=$(eval "echo -e \"${!_name}\"")
-  if [ -z "$_value" ] || [ "$_value" == "" ]; then
+  if [ -z "${!_name+x}" ]; then
     echo "error getting config for $1" >> $RENDER_DIR/config_error.log
     echo -e "\${${1}}"
     return 1
   else
-    echo -e "$_value"
+      if [ -z "$_value" ] || [ "$_value" == "" ]; then
+        echo ""
+      else
+        _value=$(eval "echo -e \"${!_name}\"")
+        echo -e "$_value"
+      fi
   fi
 }
 

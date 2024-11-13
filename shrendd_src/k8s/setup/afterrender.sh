@@ -12,7 +12,7 @@ do
   export COMMA=","
 done
 echo "List of template objects: $OBJECT_LIST"
-export APP_K8S_OBJECTS="$OBJECT_LIST"
+export APP_K8S_OBJECTS="\"$OBJECT_LIST\""
 
 process_k8s_script_maps() {
   FILES_TEMPLATE_DIR=$TEMPLATE_DIR/$1
@@ -40,10 +40,14 @@ process_k8s_script_maps() {
         _CM_FILE=$(basename "$config_map" | sed 's/.srd//')
           for sname in $script_files
           do
-            _FILE=$(basename "$sname")
-            echo "    adding $_FILE: $_CM_FILE"
-            echo "  $_FILE: |" >> $RENDER_DIR/$_CM_FILE
-            echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/$_CM_FILE
+            if [ "$sname" == "*.sh" ]; then
+              echo "no scripts found, nothing to append to config map..."
+            else
+              _FILE=$(basename "$sname")
+              echo "    adding $_FILE: $_CM_FILE"
+              echo "  $_FILE: |" >> $RENDER_DIR/$_CM_FILE
+              echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/$_CM_FILE
+            fi
           done
       done
       echo -e "+++++++++++++++rendered $fname+++++++++++++++"
