@@ -6,6 +6,9 @@ trap resetLocal EXIT
 source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
 
 function resetLocal {
+  if [ $? -ne 0 ]; then
+    echo "It seems there was an error during the process. Please review the logs for more information."
+  fi
   if [ "$_is_debug" == true ]; then
     echo "running as debug, not deleting render directories"
   else

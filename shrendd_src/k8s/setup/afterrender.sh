@@ -14,10 +14,10 @@ done
 echo "List of template objects: $OBJECT_LIST"
 export APP_K8S_OBJECTS="$OBJECT_LIST"
 
-process_script_maps() {
+process_k8s_script_maps() {
   FILES_TEMPLATE_DIR=$TEMPLATE_DIR/$1
   if [ -d $FILES_TEMPLATE_DIR ]; then
-    echo "Adding scripts to configmap..."
+    echo "Adding scripts to configmaps..."
     echo "files directory: $FILES_TEMPLATE_DIR"
     config_files="$FILES_TEMPLATE_DIR"
     if [ "$2" -gt 0 ]; then
@@ -28,7 +28,7 @@ process_script_maps() {
     for fname in $config_files
     do
       file_dir=$fname
-      echo "processing: $fname"
+      echo -e "======================================================\nprocessing scripts for $fname"
       cd $fname
       doRender "$fname"
       #ansible-playbook $SHRENDD_WORKING_DIR/.shrendd/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$fname" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
@@ -37,20 +37,25 @@ process_script_maps() {
       for config_map in $config_maps
       do
         echo "  templating: $config_map"
+        _CM_FILE=$(basename "$config_map" | sed 's/.srd//')
           for sname in $script_files
           do
             _FILE=$(basename "$sname")
-            _CM_FILE=$(basename "$config_map" | sed 's/.srd//')
-            echo "    replacing $_FILE: $_CM_FILE"
+            echo "    adding $_FILE: $_CM_FILE"
             echo "  $_FILE: |" >> $RENDER_DIR/$_CM_FILE
             echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/$_CM_FILE
           done
       done
+      echo -e "+++++++++++++++rendered $fname+++++++++++++++"
+      cat $RENDER_DIR/$_CM_FILE
+      echo -e "+++++++++++++++rendered $fname+++++++++++++++"
+      echo -e "finished processing scripts for $fname\n======================================================"
       cd $_curdir
     done
     sleep 1
   fi
 }
-
-process_script_maps "teardown" 0
-process_script_maps "scripts" 1
+echo "processing teardown scripts"
+process_k8s_script_maps "teardown" 0
+echo "processing configmap scripts"
+process_k8s_script_maps "scripts" 1
