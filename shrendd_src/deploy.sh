@@ -6,8 +6,12 @@ trap resetLocal EXIT
 source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
 
 function resetLocal {
-  if [ $? -ne 0 ]; then
+  if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
     echo "It seems there was an error during the process. Please review the logs for more information."
+    if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+      echo "errors during shrendd:"
+      cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+    fi
   fi
   if [ "$_is_debug" == true ]; then
     echo "running as debug, not deleting render directories"
@@ -93,7 +97,7 @@ function initConfig {
     _name=$(trueName $_config_key)
     _value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_config_key" -)
     echo "initializing> $_config_key: $_name: $_value"
-    eval "export $_name=\"$_value\""
+    export $_name="$_value"
   done
 }
 
@@ -110,7 +114,7 @@ function getSecret {
 function getConfig {
   _name=$(trueName "$1")
   if [ -z "${!_name+x}" ]; then
-    echo "error getting config for $1" >> $RENDER_DIR/config_error.log
+    echo "error getting config for $1" >> $_DEPLOY_ERROR_DIR/config_error.log
     echo -e "\${${1}}"
     return 1
   else
@@ -119,6 +123,21 @@ function getConfig {
       else
         _value=$(eval "echo -e \"${!_name}\"")
         echo -e "$_value"
+      fi
+  fi
+}
+
+function getAsIs {
+  _name=$(trueName "$1")
+  if [ -z "${!_name+x}" ]; then
+    echo "error getting config for $1" >> $_DEPLOY_ERROR_DIR/config_error.log
+    echo -e "\${${1}}"
+    return 1
+  else
+      if [ -z "$_value" ] || [ "$_value" == "" ]; then
+        echo ""
+      else
+        echo -e "${!_name}"
       fi
   fi
 }
@@ -155,6 +174,13 @@ function padding {
   spaces=$(printf "%${num_spaces}s")
   echo "$spaces"
 }
+
+export _DEPLOY_ERROR_DIR="$SHRENDD_WORKING_DIR/.shrendd/errors"
+if [ -d $_DEPLOY_ERROR_DIR ]; then
+  rm -rf $_DEPLOY_ERROR_DIR/*
+else
+  mkdir $_DEPLOY_ERROR_DIR
+fi
 
 if [ "$_requested_help" == "true" ]; then
   if [ "$_is_debug" == true ]; then
