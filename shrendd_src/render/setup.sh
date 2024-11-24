@@ -2,7 +2,7 @@
 set -euo pipefail
 
 function doEval {
-  eval "echo -e \"$1\" > $2"
+  eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
 }
 
 function actualRender {
@@ -11,18 +11,23 @@ function actualRender {
   _rname=$(echo "$1" | sed -e "s/\.srd//g")
   _rname="$RENDER_DIR/$_rname"
   echo "doing the rendering"
-  _eval=$(doEval "$_template" "$_rname")
-  if [ $? -ne 0 ]; then
-    echo "eval issue:_eval"
-    #echo "error rendering $1" >> $_DEPLOY_ERROR_DIR/config_error.log
-  fi
+  doEval "$_template" "$_rname"
+#  if [ -z "$_eval_result" ] || [ "$_eval_result" == "" ]; then
+#    echo "error rendering $1: $_eval_result" >> $_DEPLOY_ERROR_DIR/config_error.log
+#  fi
   echo "eval finished"
   echo -e "+++++++++++++++rendered $fname+++++++++++++++"
   cat "$_rname"
   echo -e "+++++++++++++++rendered $fname+++++++++++++++"
   if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
-    echo "errors rendering:"
-    cat $_DEPLOY_ERROR_DIR/config_error.log
+    _render_errors=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
+    if [ "$_render_errors" == "" ]; then
+      echo "no errors detected."
+      rm $_DEPLOY_ERROR_DIR/config_error.log
+    else
+      echo "errors rendering:"
+      cat $_DEPLOY_ERROR_DIR/config_error.log
+    fi
   else
     echo "finished rendering without errors"
   fi

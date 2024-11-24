@@ -6,6 +6,10 @@ trap resetLocal EXIT
 source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
 
 function resetLocal {
+  if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
+    echo "warnings during shrendd:"
+    cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
+  fi
   if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
     echo "It seems there was an error during the process. Please review the logs for more information."
     if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
@@ -93,12 +97,39 @@ function doDeploy {
 function initConfig {
   _config_keys=$(keysFor "$_SHRENDD_CONFIG")
   echo "configuring: $_config_keys"
+  _initialized="true"
   for _config_key in $_config_keys; do
     _name=$(trueName $_config_key)
-    _value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_config_key" -)
-    echo "initializing> $_config_key: $_name: $_value"
-    export $_name="$_value"
+    _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_config_key" -)
+    if [ "${_value}" == "null" ]; then
+      echo "  $_config_key was null, checking if required or default present."
+      _template_value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_config_key" -)
+      _value_required=$(echo "$_template_value" | yq e ".required" -)
+      if [ "${_value_required}" == "true" ]; then
+        echo "  $_config_key is required but was not provided."
+        echo "$_config_key is required but was not provided." >> $_DEPLOY_ERROR_DIR/render_error.log
+        _initialized="false"
+      else
+        _value_default=$(echo "$_template_value" | yq e ".default" -)
+        if [ "${_value_default}" == "null" ]; then
+          echo "  $_config_key no default has been defined."
+          echo "$_config_key is not required but was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_warning.log
+        else
+          echo "  $_config_key using default value"
+          _value="${_value_default}"
+        fi
+      fi
+    fi
+    if [ "${_value}" == "null" ]; then
+      echo "not initializing> $_config_key"
+    else
+      echo "initializing> $_config_key: $_name: $_value"
+      export $_name="$_value"
+    fi
   done
+  if [ "$_initialized" == "false" ]; then
+    exit 1
+  fi
 }
 
 function getSecret {
@@ -200,7 +231,12 @@ cat $_config
 echo ""
 
 if [ -f $_config ]; then
-  export _SHRENDD_CONFIG=$(cat $_config)
+  if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
+    export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.path")/$(shrenddOrDefault "shrendd.config.definition")")
+  else
+    export _SHRENDD_CONFIG=$(cat $_config)
+  fi
+  export _PROVIDED_CONFIG=$(cat $_config)
   echo "found $_config."
   initConfig
   echo "done initializing"
