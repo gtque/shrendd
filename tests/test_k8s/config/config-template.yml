@@ -1,0 +1,37 @@
+app:
+  id: |
+    required: true
+  test:
+    name: |
+      required: true
+    namespace: |
+      required: true
+    manager:  |
+      required: false
+      default: ansible
+    version:  |
+      required: true
+    test1: |
+      required: false
+      default: "hello, render!"
+    test2: |
+      required: false
+      default: |
+        cats:
+        - name: lola
+        - name: libby
+    test4: |
+      required: true
+    test6: |
+      required: false
+      default: |
+        $(get_test6)
+    test7: |
+      required: false
+    test8: |
+      required: true
+    test9: |
+      required: true
+release:
+  stage: |
+    required: true

@@ -12,5 +12,6 @@ app:
       - name: ruffles
       - name: catniss
     test4: "the chip sisters!!!"
+    test8: "pre-sent"
 release:
   stage: dev

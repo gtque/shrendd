@@ -38,6 +38,10 @@ shrendd:
   targets:
   - name: k8s
     description: just testing extra fields in the array element
+  config:
+    path: .
+    validate: true
+    definition: config/config-template.yml
   k8s:
     yaml:
       padding: 2

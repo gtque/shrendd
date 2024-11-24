@@ -28,3 +28,14 @@ function test_k8s_test5 {
   test5b.status: \"false\""
   echo -e "$_test5"
 }
+
+function get_test6 {
+  _test6="pies: |
+  - name: dutch apple
+    crust: pastry
+  - name: pecan
+    crust: biscoff
+  - name: chocolate cheesecake
+    crust: oreo"
+  echo -e "$_test6"
+}
