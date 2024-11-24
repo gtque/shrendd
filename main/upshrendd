@@ -30,10 +30,10 @@ EndOfYml
 }
 
 function devD {
-  echo "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
-  rm -f ./shrendd
   _source=$(shrenddOrDefault "shrendd.test.local")
-  cp -f $_source/../shrendd ./
+  echo "you must be a developer of shrendd and running a test, copying latest '$1' from $_source"
+  rm -f ./shrendd
+  cp -f $_source/shrendd ./
 }
 
 function curlD {

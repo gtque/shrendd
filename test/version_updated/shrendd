@@ -35,7 +35,7 @@ shrendd:
   - name: k8s
     description: just testing extra fields in the array element
   test:
-    local: ./shrendd_src
+    local: ./main
 EndOfYml
 }
 

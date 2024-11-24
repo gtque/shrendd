@@ -1,6 +1,5 @@
 shrendd:
   test:
-    local: ../../shrendd_src
+    local: ../../main
   targets:
-    - name: k8s
     - name: test

@@ -46,7 +46,7 @@ shrendd:
     yaml:
       padding: 2
   test:
-    local: ./shrendd_src
+    local: ./main
 EndOfYml
 }
 
@@ -264,18 +264,6 @@ for index in $_target_keys; do
   cloneShrendd "$_GETTER" "$_target"
 done
 
-#echo "default keys:"
-#echo -e $_SHRENDD_DEFAULT_KEYS
-#for index in $_targets; do
-#  if [ "$index" == "-" ]; then
-#    echo "- not a key"
-#  else
-#    echo "$index"
-#  fi
-#  echo "-----------------"
-#done
-
-#echo "list of targets:$_targets"
 export targets="$_targets"
 export SHRENDD_WORKING_DIR=$(pwd)
 source ./.shrendd/parse_parameters.sh
