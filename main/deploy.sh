@@ -113,7 +113,7 @@ function initConfig {
         _value_default=$(echo "$_template_value" | yq e ".default" -)
         if [ "${_value_default}" == "null" ]; then
           echo "  $_config_key no default has been defined."
-          echo "$_config_key is not required but was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_warning.log
+          echo "$_config_key is not required and was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_warning.log
         else
           echo "  $_config_key using default value"
           _value="${_value_default}"

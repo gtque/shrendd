@@ -31,7 +31,7 @@ app:
     test8: |
       required: true
     test9: |
-      required: true
+      required: false
 release:
   stage: |
     required: true

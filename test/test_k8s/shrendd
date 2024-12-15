@@ -43,9 +43,11 @@ shrendd:
     validate: true
     definition: config/config-template.yml
   k8s:
+    source: "cloneShrendd \"$_GETTER\" \"k8s\""
     yaml:
       padding: 2
   test:
+    source: "cloneShrendd \"$_GETTER\" \"test\""
     local: ./main
 EndOfYml
 }
@@ -195,6 +197,13 @@ function cloneShrendd {
   fi
 }
 
+if [ -f ./boot.shrendd ]; then
+  echo "found a boot.shrendd file, sourcing it now..."
+  source ./boot.shrendd
+else
+  echo "no boot.shrendd found"
+fi
+
 #check for yq, error if not present with message
 checkCommand "yq" 1
 
@@ -261,7 +270,10 @@ for index in $_target_keys; do
     _targets="$_targets "
   fi
   _targets="$_targets$_target"
-  cloneShrendd "$_GETTER" "$_target"
+  _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
+  #cloneShrendd "$_GETTER" "$_target"
+  echo "shrendd.${_target}.source: ${_target_source}"
+  eval "${_target_source}"
 done
 
 export targets="$_targets"
