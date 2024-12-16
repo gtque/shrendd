@@ -53,3 +53,9 @@ shrendd:
     render:
       dir: $_MODULE_DIR/deploy/${target}/rendered
 ```
+
+## Bootstrap
+You can bootstrap shrendd by adding a boot.shrendd file to the same directory as the "shrendd" file.
+This is where you can define functions for getting custom shrendd target modules
+or anything else that needs to be done prior to shrendd running. 
+Please note: this will have access to the loaded functions from "shrendd" but not the templating, rendering, or deployment functions.
