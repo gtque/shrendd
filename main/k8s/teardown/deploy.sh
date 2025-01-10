@@ -18,8 +18,8 @@ else
 fi
 
 if [ "$SKIP_STANDARD_TEARDOWN" == "false" ]; then
-  echo "running standard tear down."
-  kubectl --v=0 -n $TEARDOWN_NAMESPACE delete $TEARDOWN_STANDARD -l app.kubernetes.io/part-of=$TEARDOWN_PARTOF
+  echo "running standard tear down. $TEARDOWN_NAMESPACE delete $TEARDOWN_STANDARD $_TEARDOWN_IDENTIFIER"
+  kubectl --v=0 -n $TEARDOWN_NAMESPACE delete $TEARDOWN_STANDARD $_TEARDOWN_IDENTIFIER
 else
   echo "skipping standard tear down"
 fi

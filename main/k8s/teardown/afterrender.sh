@@ -24,6 +24,8 @@ cd $_curdir
 export TEARDOWN_NAMESPACE=$(yq e '.metadata.namespace' $RENDER_DIR/01_configmap-teardown.yml)
 export TEARDOWN_NAME=$(yq e '.metadata.name' $RENDER_DIR/01_configmap-teardown.yml)
 export TEARDOWN_PARTOF=$(yq e '.metadata.labels."app.kubernetes.io/part-of"' $RENDER_DIR/01_configmap-teardown.yml)
-
+export TEARDOWN_COMPONENT=$(yq e '.metadata.labels."app.kubernetes.io/component"' $RENDER_DIR/01_configmap-teardown.yml)
+export TEARDOWN_IDENTIFIER=$(yq e '.data.identifier' $RENDER_DIR/01_configmap-teardown.yml)
+export _TEARDOWN_IDENTIFIER=$(eval "echo -e \"$TEARDOWN_IDENTIFIER\"" 2>> $_DEPLOY_ERROR_DIR/config_error.log)
 echo "namespace: $TEARDOWN_NAMESPACE"
 echo "name: $TEARDOWN_NAME"

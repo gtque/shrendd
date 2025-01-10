@@ -41,6 +41,7 @@ echo "add core shrendd files to render.zip"
 zip "../build/target/$_VERSION/render.zip" upshrendd
 zip "../build/target/$_VERSION/render.zip" version.yml
 zip "../build/target/$_VERSION/render.zip" deploy.sh
+zip "../build/target/$_VERSION/render.zip" stub.sh
 zip "../build/target/$_VERSION/render.zip" parse_parameters.sh
 echo "processing targets"
 for target in $_targets; do
