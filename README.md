@@ -3,7 +3,7 @@ template rendering and deployment
 
 ## ToDo
 1. build
-   1. package
+   1. ~~package~~
    2. run tests
    3. version bump support
 2. upload
@@ -25,7 +25,11 @@ template rendering and deployment
 7. additional modules
    1. docker
    2. terraform
-
+8. additional functionality
+   1. ~~stub templates for deployment module types~~
+   2. ~~delete all render directories~~
+   3. ~~make k8s teardown identifier configurable~~
+   4. ~~custom config location~~
 
 ## Getting Started
 * download the appropriate version of `shrendd` from releases. it is recommended just grab the latest version.
