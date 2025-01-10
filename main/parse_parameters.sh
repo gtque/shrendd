@@ -1,8 +1,9 @@
 #!/bin/bash
 
 module=${module:-.}
-config=${config:-config/config-localdev.yml}
+config=${config:-config-localdev.yml}
 is_debug=${is_debug:-true}
+stub=${stub:-false}
 deployaction=${deployaction:-setup}
 
 export SKIP_TEMPLATE=false
@@ -33,8 +34,9 @@ while [ $# -gt 0 ]; do
     echo "Usage:"
     echo -e "  -debug\n\t  run as local debug deployment/teardown, preserves rendered templates, this is the default mode"
     echo -e "  -live\n\t  run as live deployment/teardown, including auto clean up of rendered templates."
+    echo -e "  --stub [deployment type to stub]\n\t  stub some default template definitions, if defined, for the specified deployment type.\n\t  if stub is specified, render will be skipped, regardless of the order of parameters specified when running shrendd.\nt\t  example: --stub k8s"
     echo -e "  --module [relative\\path\\\to\\module]\n\t  the path to the module to be deployed, defaults to current directory.\n\t example: --module infrastructure\n\t example: --module simpleApiServer"
-    echo -e "  --config [relative\\path\\\to\\\config.yml]\n\t  the path to the config.yml file to use for the deployment, relative to the configured config path, which defaults to the current directory."
+    echo -e "  --config [relative\\path\\\to\\\config.yml]\n\t  the path to the config.yml file to use for the deployment, relative to the configured config path (shrendd.config.path), which defaults to './config'."
     echo -e "  --deployaction [setup|teardown]\n\t  the deployment action being performed, setup to render and deploy, teardown to uninstall or delete the deployment, defaults to setup"
     echo -e "  -s\n\t  setup as the deployment action, short hand for --deployaction setup\n\t    you may specify this and -t, but the last one specified wins and will determine the deployment action."
     echo -e "  -t\n\t  teardown as the deployment action, short hand for --deployaction teardown\n\t    you may specify this and -s, but the last one specified wins and will determine the deployment action."
@@ -44,6 +46,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+
+export _stub=$stub
 export _module=$module
 export _config=$config
 export _is_debug=$is_debug

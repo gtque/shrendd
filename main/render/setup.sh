@@ -34,27 +34,29 @@ function actualRender {
 }
 
 function doRender {
-  _curdir=$(pwd)
-  echo "running bash templating..."
-  cd $1
-  config_files="*.srd"
-  echo "files should be in: $config_files"
-  export _RENDER_ERRORS=""
-  for fname in $config_files
-  do
-    rm -rf $_DEPLOY_ERROR_DIR/config_error.log
-    echo -e "------------------------------------------------------\nrendering $fname"
-    actualRender "$fname"
-    if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
-      echo "failed to render: $TEMPLATE_DIR/$fname" >> $_DEPLOY_ERROR_DIR/render_error.log
-      cat $_DEPLOY_ERROR_DIR/config_error.log | sed -e "s/^/  /g" >> $_DEPLOY_ERROR_DIR/render_error.log
+  if [ -d "$1" ]; then
+    _curdir=$(pwd)
+    echo "running bash templating..."
+    cd $1
+    config_files="*.srd"
+    echo "files should be in: $config_files"
+    export _RENDER_ERRORS=""
+    for fname in $config_files
+    do
+      rm -rf $_DEPLOY_ERROR_DIR/config_error.log
+      echo -e "------------------------------------------------------\nrendering $fname"
+      actualRender "$fname"
+      if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+        echo "failed to render: $TEMPLATE_DIR/$fname" >> $_DEPLOY_ERROR_DIR/render_error.log
+        cat $_DEPLOY_ERROR_DIR/config_error.log | sed -e "s/^/  /g" >> $_DEPLOY_ERROR_DIR/render_error.log
+      fi
+      echo -e "end $fname\n------------------------------------------------------"
+    done
+    cd $_curdir
+    if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+      echo "errors rendering templates"
+    else
+      echo "finished rendering everything without errors"
     fi
-    echo -e "end $fname\n------------------------------------------------------"
-  done
-  cd $_curdir
-  if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-    echo "errors rendering templates"
-  else
-    echo "finished rendering everything without errors"
   fi
 }

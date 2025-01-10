@@ -1,27 +1,22 @@
 #!/bin/bash
 set -euo pipefail
 
-trap resetLocal EXIT
-
 source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
 
-function resetLocal {
-  if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
-    echo "warnings during shrendd:"
-    cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
-  fi
-  if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-    echo "It seems there was an error during the process. Please review the logs for more information."
-    if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-      echo "errors during shrendd:"
-      cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
-    fi
-  fi
-  if [ "$_is_debug" == true ]; then
-    echo "running as debug, not deleting render directories"
+function stageLeft {
+  _check="_MODULE_DIR"
+  if [ -z "${!_check+x}" ]; then
+    :
   else
-    echo "deleting $RENDER_DIR"
-    rm -rf $RENDER_DIR
+    cd $_MODULE_DIR
+    #loop over all types and delete the renders
+    for _target in $targets; do
+      targetDirs $_target
+      if [ -d "$RENDER_DIR" ]; then
+        echo "deleting $RENDER_DIR"
+        rm -rf $RENDER_DIR
+      fi
+    done
   fi
 }
 
@@ -232,7 +227,7 @@ echo ""
 
 if [ -f $_config ]; then
   if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
-    export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.path")/$(shrenddOrDefault "shrendd.config.definition")")
+    export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
   else
     export _SHRENDD_CONFIG=$(cat $_config)
   fi
@@ -258,7 +253,7 @@ else
   echo "no ./deploy/$deploy_action/pre.sh"
 fi
 
-echo "trying to load array of targets"
+echo "trying to load array of targets for: $_MODULE_DIR"
 for _target in $targets; do
   export target="$_target"
   echo "deploying: $target"
