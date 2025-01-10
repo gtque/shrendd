@@ -30,6 +30,10 @@ template rendering and deployment
    2. ~~delete all render directories~~
    3. ~~make k8s teardown identifier configurable~~
    4. ~~custom config location~~
+   5. custom mmodule configs
+   6. default config in shrendd.yml
+   7. warning if shrendd file is out of date
+   8. stub config template from existing complete config yml
 
 ## Getting Started
 * download the appropriate version of `shrendd` from releases. it is recommended just grab the latest version.
