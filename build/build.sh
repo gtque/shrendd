@@ -8,6 +8,9 @@ _targets="render k8s test"
 export _VERSION=$(echo -e "$_SHRENDD" | yq e ".shrendd.version" -)
 echo "version: $_VERSION"
 
+echo "updating version in shrendd file..."
+sed -i "s/_UPSHRENDD_VERSION=\".*\"/_UPSHRENDD_VERSION=\"$_VERSION\"/g" "./main/shrendd"
+
 if [ -d "build/target" ]; then
   echo "target exists"
 else
