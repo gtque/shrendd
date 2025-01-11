@@ -63,6 +63,7 @@ shrendd:
   config:
     path: ./config
     validate: true
+    default: localdev.yml
     definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
   k8s:
     source: "cloneShrendd \"$_GETTER\" \"k8s\""
