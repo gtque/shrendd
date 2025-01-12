@@ -91,10 +91,12 @@ function doDeploy {
 
 function initConfig {
   _config_keys=$(keysFor "$_SHRENDD_CONFIG")
+  _provided_keys="$(keysFor "$_PROVIDED_CONFIG") "
   echo "configuring: $_config_keys"
   _initialized="true"
   for _config_key in $_config_keys; do
     _name=$(trueName $_config_key)
+    _provided_keys=$(echo "$_provided_keys" | sed -e "s/$_config_key //g")
     _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_config_key" -)
     if [ "${_value}" == "null" ]; then
       echo "  $_config_key was null, checking if required or default present."
@@ -108,7 +110,12 @@ function initConfig {
         _value_default=$(echo "$_template_value" | yq e ".default" -)
         if [ "${_value_default}" == "null" ]; then
           echo "  $_config_key no default has been defined."
-          echo "$_config_key is not required and was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_warning.log
+          if [ "${_strict}" == "true" ]; then
+            echo "$_config_key is not required and was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_error.log
+            _initialized="false"
+          else
+            echo "$_config_key is not required and was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_warning.log
+          fi
         else
           echo "  $_config_key using default value"
           _value="${_value_default}"
@@ -120,6 +127,15 @@ function initConfig {
     else
       echo "initializing> $_config_key: $_name: $_value"
       export $_name="$_value"
+    fi
+  done
+  for _config_key in $_provided_keys; do
+    echo "  $_config_key not defined in the template."
+    if [ "${_strict}" == "true" ]; then
+      echo "$_config_key not defined in the template." >> $_DEPLOY_ERROR_DIR/render_error.log
+      _initialized="false"
+    else
+      echo "$_config_key not defined in the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
     fi
   done
   if [ "$_initialized" == "false" ]; then

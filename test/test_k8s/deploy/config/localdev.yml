@@ -5,6 +5,7 @@ app:
     namespace: shrendd-test
     manager: ansible
     version: 0.0-SNAPSHOT
+    test10: "i shouldn't be here."
     test1: "hello, world!"
     test2: |
       cats:

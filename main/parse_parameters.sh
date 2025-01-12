@@ -10,6 +10,8 @@ export SKIP_TEMPLATE=false
 export SKIP_STANDARD=false
 export SKIP_DEPLOY="false"
 export _requested_help="false"
+export _strict="false"
+
 while [ $# -gt 0 ]; do
   if [[ $1 == *"--"* ]]; then
     param="${1/--/}"
@@ -21,6 +23,8 @@ while [ $# -gt 0 ]; do
   elif [[ $1 == "-live" ]]; then
     param="is_debug"
     declare $param="false"
+  elif [[ $1 == "-S" ]]; then
+    export _strict="true"
   elif [[ $1 == "-s" ]]; then
     param="deployaction"
     declare $param="setup"
@@ -41,6 +45,7 @@ while [ $# -gt 0 ]; do
     echo -e "  -s\n\t  setup as the deployment action, short hand for --deployaction setup\n\t    you may specify this and -t, but the last one specified wins and will determine the deployment action."
     echo -e "  -t\n\t  teardown as the deployment action, short hand for --deployaction teardown\n\t    you may specify this and -s, but the last one specified wins and will determine the deployment action."
     echo -e "  -r\n\t  render only, skip deploy"
+    echo -e "  -S\n\t  strict mode, fail on warnings"
     export _requested_help="true"
   fi
   shift
