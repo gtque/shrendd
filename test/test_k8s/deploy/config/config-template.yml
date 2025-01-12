@@ -1,37 +1,54 @@
 app:
-  id: |
+  id: |-
     required: true
+    description: "something to summarize or express what this value is and used for"
+    #default: "the default value to use"
   test:
-    name: |
+    name: |-
       required: true
-    namespace: |
+      description: "something to summarize or express what this value is and used for"
+      #default: "the default value to use"
+    namespace: |-
       required: true
-    manager:  |
+      description: "something to summarize or express what this value is and used for"
+      #default: "the default value to use"
+    manager: |-
       required: false
+      description: "something to summarize or express what this value is and used for"
       default: ansible
-    version:  |
+    version: |-
       required: true
-    test1: |
-      required: false
+      description: "something to summarize or express what this value is and used for"
       default: "hello, render!"
-    test2: |
+    test1: |-
       required: false
+      description: "something to summarize or express what this value is and used for"
+      #default: "the default value to use"
+    test2: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
       default: |
         cats:
         - name: lola
         - name: libby
-    test4: |
+    test4: |-
       required: true
-    test6: |
+      description: "something to summarize or express what this value is and used for"
+      #default: "the default value to use"
+    test6: |-
       required: false
       default: |
         $(get_test6)
-    test7: |
+    test7: |-
       required: false
-    test8: |
+    test8: |-
       required: true
+      description: "something to summarize or express what this value is and used for"
+      #default: "the default value to use"
     test9: |
       required: false
 release:
-  stage: |
+  stage: |-
     required: true
+    description: "something to summarize or express what this value is and used for"
+    #default: "the default value to use"

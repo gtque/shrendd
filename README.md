@@ -30,10 +30,10 @@ template rendering and deployment
    2. ~~delete all render directories~~
    3. ~~make k8s teardown identifier configurable~~
    4. ~~custom config location~~
-   5. custom mmodule configs
+   5. custom module configs
    6. ~~default config in shrendd.yml~~
    7. ~~warning if shrendd file is out of date~~
-   8. stub config template from existing complete config yml
+   8. ~~stub config template from existing complete config yml~~
    9. support and use description field in config template
    10. warn if extra properties in config file not defined in template, with optional strict mode to fail
    11. color code log output

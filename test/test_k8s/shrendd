@@ -26,13 +26,12 @@ export _RED='\033[0;31m'
 export _BLUE='\033[0;34m'
 export _LIGHT_BLUE='\033[1;34m'
 export _GREEN='\033[0;32m'
-export _YELLOW='\033[1;33m'
+export _YELLOW='\033[0;33m'
 export _NC='\033[0m' # No Color
 
 function checkShrenddVersion {
   _UPSHRENDD_VERSION="0.4.0-beta.1"
   _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" ./.shrendd/version.yml)
-  echo "$_UPSHRENDD_VERSION == $_SHRENDD_CURRENT_VERSION"
   if [[ $_UPSHRENDD_VERSION == $_SHRENDD_CURRENT_VERSION ]]; then
     :
   else
