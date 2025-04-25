@@ -1,7 +1,0 @@
-- name: Render Templates
-  template:
-    src: "{{ item }}"
-    dest: "{{ template_output_dir }}/{{ item | basename | regex_replace('\\.j2','') }}"
-    mode: 0640
-  with_fileglob:
-    - "{{ template_input_dir }}/*.j2"

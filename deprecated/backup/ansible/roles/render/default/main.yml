@@ -1,6 +1,0 @@
-# Which operations should be performed when the playbook is executed
-playbook_operations:
-  - template
-
-# Directory where the templates will be rendered into
-template_output_dir: ".."

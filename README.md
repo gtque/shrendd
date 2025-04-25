@@ -5,7 +5,8 @@ template rendering and deployment
 1. build
    1. ~~package~~
    2. run tests
-   3. version bump support
+   3. ~~version bump support~~
+   4. branch and remove beta version.
 2. upload
 3. ~~bootstrap shrendd~~
 4. ~~custom module source~~

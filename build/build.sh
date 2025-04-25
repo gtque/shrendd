@@ -6,6 +6,7 @@ export _SHRENDD=$(cat ./main/version.yml)
 _targets="render k8s test"
 #get version from version.yml
 export _VERSION=$(echo -e "$_SHRENDD" | yq e ".shrendd.version" -)
+export _VERSION=$(eval "echo -e \"$_VERSION\"")
 echo "version: $_VERSION"
 
 echo "updating version in shrendd file..."
