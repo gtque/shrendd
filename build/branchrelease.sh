@@ -5,7 +5,8 @@ export _SHRENDD=$(cat ./main/version.yml)
 
 #get version from version.yml
 export _VERSION=$(echo -e "$_SHRENDD" | yq e ".shrendd.version" -)
-if git show-ref --quiet --verify refs/heads/main; then
+export _BRANCH_NAME=$(git branch --show-current)
+if [ "$_BRANCH_NAME" == "main" ]; then
   echo "in main branch"
 else
   echo "not in main branch, please release branching should only be done from the main branch, please switch branches and try again."
