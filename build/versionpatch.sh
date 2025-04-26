@@ -4,23 +4,24 @@ export _NEW_VERSION="not-set"
 export _SHRENDD=$(cat ./main/version.yml)
 #get version from version.yml
 export _VERSION=$(echo -e "$_SHRENDD" | yq e ".shrendd.version" -)
-echo "bumping major..."
+
 if [ $# -gt 0 ]; then
   export _NEW_VERSION=$1
 else
+  echo "bumping patch version"
   _MAJOR=$(echo "$_VERSION" | cut -d'.' -f1)
-  _SPLICED=0
-  if [ -z "$_MAJOR" ]; then
+  _MINOR=$(echo "$_VERSION" | cut -d'.' -f2)
+  _PATCH=$(echo "$_VERSION" | cut -d'.' -f3)
+  if [ -z "$_PATCH" ]; then
     echo "ya done messed up a-a-ron."
     export _NEW_VERSION="a-a-ron"
   else
-    echo "found major: $_MAJOR"
-    _MAJOR=$(echo "$_MAJOR" | cut -d'-' -f1)
-    if [[ "$_MAJOR" =~ ^[0-9]+$ ]]; then
-      echo "bumping major $_MAJOR + 1"
-      ((_MAJOR++))
-      echo "new major: $_MAJOR"
-      export _NEW_VERSION="$_MAJOR.0.$_SPLICED"
+    _PATCH=$(echo "$_PATCH" | cut -d'-' -f1)
+    if [[ "$_PATCH" =~ ^[0-9]+$ ]]; then
+      echo "patch: $_PATCH + 1"
+      ((_PATCH++))
+      echo "new patch: $_PATCH"
+      export _NEW_VERSION="$_MAJOR.$MINOR.$_PATCH"
     else
       echo "something is not right, please manually verify, and update if necessary, the version.yml file."
       exit 42

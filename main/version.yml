@@ -1,3 +1,6 @@
 shrendd:
-  version: 0.4.$(date -u +%Y%m%d%H%M%S)
-  test: mcface
+  version: 0.4.0
+  git:
+    user: gtque
+    repo: shrendd
+  required: "* mikefarah/yq v4\\\\n* curl or wget\\\\n* unzip"
