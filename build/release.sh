@@ -1,4 +1,9 @@
 #! /bin/bash
+# token: github api user token retrieved from environment variable: GIT_API_TOKEN
+# this token expires and new one needs to be created periodically.
+# If publishing is failing, try generating a new token first.
+# it needs to have the necessary permissions for creating a release.
+
 # https://gist.github.com/schell/2fe896953b6728cc3c5d8d5f9f3a17a3
 # requires curl and jq on PATH: https://stedolan.github.io/jq/
 #https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release
@@ -43,7 +48,7 @@ function create_release {
     echo "create release failed with code '$http_code':"
     cat ./build/target/$_VERSION/release.json
     echo "command:"
-    echo $command
+    echo "$command" | sed "s/$GIT_API_TOKEN/****/"
     return 1
   fi
 }
@@ -75,7 +80,7 @@ function upload_release_file {
     echo "upload failed with code '$http_code':"
     cat ./build/target/$_VERSION/upload.json
     echo "command:"
-    echo $command
+    echo "$command" | sed "s/$GIT_API_TOKEN/****/"
     return 1
   fi
 }
@@ -100,7 +105,8 @@ function check_for_release {
          -H 'X-GitHub-Api-Version: 2022-11-28' \
          https://api.github.com/repos/$user/$repo/releases/tags/$tag"
   echo "about to execute..."
-  echo "$command"
+  echo "command:"
+  echo "$command" | sed "s/$GIT_API_TOKEN/****/"
   http_code=`eval $command`
   echo "executed..."
   if [ $http_code == "200" ]; then

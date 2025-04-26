@@ -7,8 +7,9 @@ template rendering and deployment
    2. run tests
    3. ~~version bump support~~
    4. ~~branch and remove beta version.~~
-2. publish
-   1. upload to github
+2. ~~publish~~
+   1. ~~upload to github~~
+   2. ~~check if release already exists~~
 3. ~~bootstrap shrendd~~
 4. ~~custom module source~~
 5. tests

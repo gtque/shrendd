@@ -45,7 +45,7 @@ app:
       required: true
       description: "something to summarize or express what this value is and used for"
       #default: "the default value to use"
-    test9: |
+    test9: |-
       required: false
 release:
   stage: |-
