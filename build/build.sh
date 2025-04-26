@@ -7,8 +7,12 @@ _targets="render k8s test"
 export _BRANCH_NAME=$(git branch --show-current)
 echo "the branch: $_BRANCH_NAME"
 export _PRE_RELEASE=""
+export _IS_PRE_RELEASE="true"
+export _IS_LATEST="false"
 if [[ "$_BRANCH_NAME" =~ ^[0-9]+\.[0-9]+$ ]]; then
   echo "on a release branch."
+  export _IS_PRE_RELEASE="false"
+  export _IS_LATEST="true"
 else
   if [ "$_BRANCH_NAME" == "main" ]; then
     echo "on main"
@@ -79,3 +83,4 @@ for target in $_targets; do
   echo " zipping $target"
   zip -r "../build/target/$_VERSION/$target.zip" "$target"
 done
+cd ..
