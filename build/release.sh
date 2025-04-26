@@ -61,7 +61,7 @@ function upload_release_file {
 
   url=`jq -r .upload_url ./build/target/$_VERSION/release.json | cut -d{ -f'1'`
   command="\
-    curl -s -o upload.json -w '%{http_code}' \
+    curl -s -o ./build/target/$_VERSION/upload.json -w '%{http_code}' \
          --request POST \
          --header 'authorization: Bearer ${token}' \
          --header 'Content-Type: application/octet-stream' \
@@ -70,12 +70,41 @@ function upload_release_file {
   http_code=`eval $command`
   if [ $http_code == "201" ]; then
     echo "asset $name uploaded:"
-    jq -r .browser_download_url upload.json
+    jq -r .browser_download_url ./build/target/$_VERSION/upload.json
   else
     echo "upload failed with code '$http_code':"
-    cat upload.json
+    cat ./build/target/$_VERSION/upload.json
     echo "command:"
     echo $command
     return 1
+  fi
+}
+
+function check_for_release {
+  export _SHRENDD=$(cat ./main/version.yml)
+  user=$(echo -e "$_SHRENDD" | yq e ".shrendd.git.user" -)
+  repo=$(echo -e "$_SHRENDD" | yq e ".shrendd.git.repo" -)
+  requires=$(echo -e "$_SHRENDD" | yq e ".shrendd.required" -)
+  echo "$_SHRENDD"
+  echo "user: $user"
+  echo "repo: $repo"
+  echo "repo: $requires"
+  #exit 0
+  token=$GIT_API_TOKEN
+  name=$1
+  tag="v$name"
+  _branch=$2
+  command="curl -s -o ./build/target/$_VERSION/checkrelease.json -w '%{http_code}' \
+         -H 'Accept: application/vnd.github+json' \
+         -H 'Authorization: Bearer $GIT_API_TOKEN' \
+         -H 'X-GitHub-Api-Version: 2022-11-28' \
+         https://api.github.com/repos/$user/$repo/releases/tags/$tag"
+  http_code=`eval $command`
+  if [ $http_code == "200" ]; then
+    echo "checked release:"
+    export _RELEASE_EXISTS="true"
+  else
+    echo "check release failed with code '$http_code':"
+    export _RELEASE_EXISTS="false"
   fi
 }

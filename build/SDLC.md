@@ -12,11 +12,7 @@ cherry-picked back to main if possible, otherwise the changes will be replicated
 following the new feature work branching strategy. There will be no dev/development branch.
 
 ### Versioning
-shrendd uses a variation of Semantic Versioning (see: https://semver.org/). The major
-difference being that the patch version is the UTC data/time stamp of when the build was created.
-This allows shrendd to iterate and do multiple builds without having to modify, commit, and push
-changes to the version with each build. Aside from that, the rest of Semantic Versioning 
-guidelines are followed. All minor and patch releases are promised to be backwards compatible for that
+shrendd uses a variation of Semantic Versioning (see: https://semver.org/). All minor and patch releases are promised to be backwards compatible for that
 major release. `-alpha` and `-beta` versions are pre-release versions. `-alpha` are development releases.
 `-beta` is a more stable release candidate version. There will be no `-rc` versions. `-alpha` versions
 will include feature branch name if built from a feature branch.
