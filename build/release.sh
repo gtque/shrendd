@@ -20,7 +20,7 @@ function create_release {
   echo "$_SHRENDD"
   echo "user: $user"
   echo "repo: $repo"
-  echo "repo: $requires"
+  echo "requires: $requires"
   #exit 0
   token=$GIT_API_TOKEN
   name=$1
@@ -88,18 +88,21 @@ function check_for_release {
   echo "$_SHRENDD"
   echo "user: $user"
   echo "repo: $repo"
-  echo "repo: $requires"
+  echo "requires: $requires"
   #exit 0
   token=$GIT_API_TOKEN
   name=$1
   tag="v$name"
-  _branch=$2
+  echo "checking for release $_VERSION now..."
   command="curl -s -o ./build/target/$_VERSION/checkrelease.json -w '%{http_code}' \
          -H 'Accept: application/vnd.github+json' \
          -H 'Authorization: Bearer $GIT_API_TOKEN' \
          -H 'X-GitHub-Api-Version: 2022-11-28' \
          https://api.github.com/repos/$user/$repo/releases/tags/$tag"
+  echo "about to execute..."
+  echo "$command"
   http_code=`eval $command`
+  echo "executed..."
   if [ $http_code == "200" ]; then
     echo "checked release:"
     export _RELEASE_EXISTS="true"

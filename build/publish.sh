@@ -1,6 +1,4 @@
 #!/bin/bash
-set -euo pipefail
-
 echo "hold my beer - drunk cousin at the wedding"
 export _NEW_FEATURES="N/A"
 if [ $# -gt 0 ]; then

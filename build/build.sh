@@ -1,6 +1,4 @@
 #!/bin/bash
-set -euo pipefail
-
 echo "I want to be a triangle - Ralph Wiggum"
 export _SHRENDD=$(cat ./main/version.yml)
 _targets="render k8s test"
