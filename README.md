@@ -7,6 +7,7 @@ template rendering and deployment
    2. ~~run tests~~
    3. ~~version bump support~~
    4. ~~branch and remove beta version.~~
+   5. run tests as part of build, don't build if tests fail.
 2. ~~publish~~
    1. ~~upload to github~~
    2. ~~check if release already exists~~
