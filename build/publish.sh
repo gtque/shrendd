@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "hold my beer - drunk cousin at the wedding"
+echo "all your base are belong to us - zero wing"
 export _NEW_FEATURES="N/A"
 if [ $# -gt 0 ]; then
   export _NEW_FEATURES="$*"

@@ -4,7 +4,7 @@ template rendering and deployment
 ## ToDo
 1. build
    1. ~~package~~
-   2. run tests
+   2. ~~run tests~~
    3. ~~version bump support~~
    4. ~~branch and remove beta version.~~
 2. ~~publish~~
@@ -15,15 +15,22 @@ template rendering and deployment
 5. tests
    1. latest version
       1. upshrendd
-      2. version specified
-      3. latest
-   2. custom render targets
-   3. custom template targets
-   4. default values
-   5. config template
-   6. k8s
-   7. custom module source
-   8. bootstrap
+      2. ~~version specified~~
+      3. ~~latest - specified by default~~
+      4. ~~latest - explicitly set to latest~~
+   2. render value with ${...} or $(getConfig ...) approach
+      1. ~~just the provided config, no template~~
+      2. ~~just the template, no values from config, ie: default value from config-template~~
+      3. a mix of provided and template defaults
+   3. custom render targets
+   4. custom template targets
+   5. complex rendering
+      1. native bash functions
+      2. custom functions
+   6. config template
+   7. k8s
+   8. custom module source
+   9. bootstrap
 6. how to
 7. additional modules
    1. docker

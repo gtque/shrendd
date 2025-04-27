@@ -1,6 +1,47 @@
 #!/bin/bash
 set -euo pipefail
 
+trap resetLocal EXIT
+
+function resetLocal {
+  if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
+    echo "warnings during shrendd:"
+    cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
+  fi
+  if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+    echo "It seems there was an error during the process. Please review the logs for more information."
+    if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+      echo "errors during shrendd:"
+      cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+    fi
+  fi
+  if [ "$_is_debug" == true ]; then
+    echo "running as debug, not deleting render directories"
+  else
+    echo "was live, should be deleting render directories"
+    stageLeft
+  fi
+}
+export _RED='\033[0;31m'
+export _BLUE='\033[0;34m'
+export _LIGHT_BLUE='\033[1;34m'
+export _GREEN='\033[0;32m'
+export _YELLOW='\033[0;33m'
+export _NC='\033[0m' # No Color
+
+function checkShrenddVersion {
+  _UPSHRENDD_VERSION="0.0.0-dev"
+  _SHRENDD_CURRENT_VERSION=""
+  if [ -f ./.shrendd/version.yml ]; then
+    _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" ./.shrendd/version.yml)
+  fi
+  if [[ $_UPSHRENDD_VERSION == $_SHRENDD_CURRENT_VERSION ]]; then
+    :
+  else
+    echo -e "${_LIGHT_BLUE}shrendd file does not match shrendd version, consider running ./.shrendd/upshrendd${_NC}"
+  fi
+}
+
 function checkCommand {
   if command -v "$1" &> /dev/null; then
     :
@@ -20,6 +61,10 @@ function checkFile {
   fi
 }
 
+function keysFor {
+  echo $(echo -e "$1" | yq e "(.. | select(. == \"*\") | {(path | join(\".\")): .}) | keys " - | sed -e "s/\- //g")
+}
+
 function defaultShrendd {
   cat << 'EndOfYml'
 shrendd:
@@ -34,7 +79,17 @@ shrendd:
   targets:
   - name: k8s
     description: just testing extra fields in the array element
+  config:
+    path: ./config
+    validate: true
+    default: localdev.yml
+    definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
+  k8s:
+    source: "cloneShrendd \"$_GETTER\" \"k8s\""
+    yaml:
+      padding: 2
   test:
+    source: "cloneShrendd \"$_GETTER\" \"test\""
     local: ./main
 EndOfYml
 }
@@ -44,13 +99,15 @@ function devD {
   if [ -d ./.shrendd/$1 ]; then
     rm -rf ./.shrendd/$1
   fi
-  _source=$(getOrDefault ".shrendd.test.local")
+  _source=$(shrenddOrDefault "shrendd.test.local")
   cp -rf $_source/$1 ./.shrendd/$1
   if [ "$1" == "render" ]; then
     echo "copy additional render scripts..."
     cp -rf $_source/deploy.sh ./.shrendd/
+    cp -rf $_source/stub.sh ./.shrendd/
     cp -rf $_source/parse_parameters.sh ./.shrendd/
     cp -rf $_source/upshrendd ./.shrendd/
+    cp -rf $_source/version.yml ./.shrendd/
   fi
 }
 
@@ -62,16 +119,55 @@ function wgetD {
   wget --output-document=./.shrendd/$1$2 "$3"
 }
 
-function getOrDefault {
-  _value=$(echo "$_SHRENDD" | yq e "$1" -)
-  if [ -z "$_value" ] || [ "$_value" == "null" ]; then
-    _value=$(echo "$_SHRENDD_DEFAULTS" | yq e "$1" -)
+function trueName {
+  echo "$(echo "$1" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]")"
+}
+
+function testIf {
+  _parm=$(trueName $1)
+  echo "parm: $_parm"
+  if [ -v "$_parm" ]; then
+    echo "true"
+    _value="$(echo ${!_parm})"
+  else
+    echo "false"
+  fi
+}
+
+function shrenddOrDefault {
+  _value=""
+  if [ "$(testIf $1)" == true ]; then
+    _parm=$(trueName $1)
+    _value="$(echo ${!_parm})"
+  else
+    _value=$(echo "$_SHRENDD" | yq e ".$1" -)
+    if [ -z "$_value" ] || [ "$_value" == "null" ]; then
+      _value=$(echo "$_SHRENDD_DEFAULTS" | yq e ".$1" -)
+    fi
   fi
   if [ -z "${2+x}" ] || [ "$2" -lt 1 ]; then
     echo $(eval echo "$_value")
   else
     echo -e "$_value"
   fi
+}
+
+function getTargetsD {
+  _targets="" #$(echo $_SHRENDD_CONFIG_KEYS | sed -e "s/\.targets\./gooch/g")"
+  echo "looping over: $1"
+  for _targ in $1; do
+    echo "targ: $_targ"
+    _targets="$_targets $(echo "$_targ" | grep ".targets.[0-9]\+.name" || echo "")"
+  done
+  echo "$_targets"
+}
+
+function getTargets {
+  _targets="" #$(echo $_SHRENDD_CONFIG_KEYS | sed -e "s/\.targets\./gooch/g")"
+  for _targ in $1; do
+    _targets="$_targets $(echo "$_targ" | grep ".targets.[0-9]\+.name" || echo "")"
+  done
+  echo "$_targets"
 }
 
 function isUpToDate {
@@ -145,6 +241,15 @@ function cloneShrendd {
   fi
 }
 
+if [ -f ./boot.shrendd ]; then
+  echo "found a boot.shrendd file, sourcing it now..."
+  source ./boot.shrendd
+else
+  echo "no boot.shrendd found"
+fi
+
+checkShrenddVersion
+
 #check for yq, error if not present with message
 checkCommand "yq" 1
 
@@ -157,12 +262,13 @@ else
   export _SHRENDD=""
 fi
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
-
-export _SHRENDD_VERSION=$(getOrDefault ".shrendd.version")
-export _SHRENDD_GIT_URL=$(getOrDefault ".shrendd.git.url")
+export TEST_SHRENDD_VERSION="hello world"
+testIf "test.shrendd.version"
+export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
+export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
 echo "shrendd version: $_SHRENDD_VERSION"
 
-if [ -d $(getOrDefault ".shrendd.test.local") ]; then
+if [ -d $(shrenddOrDefault "shrendd.test.local") ]; then
   export _GETTER="devD"
 else
   if [[ -z $(checkCommand "curl" 0) ]]; then
@@ -185,27 +291,47 @@ export _SHRENDD_IS_UPTODATE=""
 cloneShrendd "$_GETTER" "render"
 
 #loop over targets
-#cloneShrendd "$_GETTER" "k8s"
+echo "getting keys for config"
+export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
+echo "getting keys for default"
+export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
+echo "config keys: $_SHRENDD_CONFIG_KEYS"
+echo "default keys: $_SHRENDD_DEFAULT_KEYS"
+#getTargetsD "$_SHRENDD_CONFIG_KEYS"
+_target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
+echo "trying to load array of targets: $_target_keys"
+if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
+  echo "no targets... using default list"
+  #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
+  _target_keys=$(getTargets "$_SHRENDD_DEFAULT_KEYS")
+fi
+
 _targets=""
-echo "trying to load array of targets"
-for index in $(getOrDefault ".shrendd.targets | select(.) | keys" 1); do
-  if [ "$index" == "-" ]; then
+for index in $_target_keys; do
+  _target=$(shrenddOrDefault "$index" 0)
+  echo -e "checking: $_target"
+  if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
     :
   else
-    _target=$(getOrDefault ".shrendd.targets[$index].name" 0)
-    echo -e "checking: $_target"
-    if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
-      :
-    else
-      _targets="$_targets "
-    fi
-    _targets="$_targets$_target"
-    cloneShrendd "$_GETTER" "$_target"
+    _targets="$_targets "
   fi
+  _targets="$_targets$_target"
+  _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
+  #cloneShrendd "$_GETTER" "$_target"
+  echo "shrendd.${_target}.source: ${_target_source}"
+  eval "${_target_source}"
 done
 
-echo "list of targets:$_targets"
 export targets="$_targets"
 export SHRENDD_WORKING_DIR=$(pwd)
 source ./.shrendd/parse_parameters.sh
-source ./.shrendd/deploy.sh
+export _config=$(shrenddOrDefault shrendd.config.path)/${_config}
+echo "======================================================="
+echo "                 best shrendds forever                 "
+echo "using: $_config"
+if [[ $_stub == "false" ]]; then
+  source ./.shrendd/deploy.sh
+else
+  echo "stubbing: $_stub/toes"
+  source ./.shrendd/stub.sh
+fi

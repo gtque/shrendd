@@ -135,10 +135,15 @@ function initConfig {
       echo "$_config_key not defined in the template." >> $_DEPLOY_ERROR_DIR/render_error.log
       _initialized="false"
     else
+      _name=$(trueName $_config_key)
+      _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_config_key" -)
+      echo "  initializing> $_config_key: $_name: $_value"
+      export $_name="$_value"
       echo "$_config_key not defined in the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
     fi
   done
   if [ "$_initialized" == "false" ]; then
+    echo "something was missing in the template, please update the template and try again."
     exit 1
   fi
 }
