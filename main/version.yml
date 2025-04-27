@@ -1,5 +1,5 @@
 shrendd:
-  version: 0.4.$(date -u +%Y%m%d%H%M%S)
+  version: 0.5.$(date -u +%Y%m%d%H%M%S)
   git:
     user: gtque
     repo: shrendd
