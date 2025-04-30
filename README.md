@@ -10,9 +10,9 @@ template rendering and deployment
    5. run tests as part of build, don't build if tests fail.
    6. publish upshrendd compatibility
       1. this is needed before even considering 1.0
-      2. indicate if version is backwards compatible or not
-      3. upshrendd needs to check for targeted version and see if version is compatible
-      4. if downgrading, need to check if downgrade is compatible
+      2. ~~indicate if version is backwards compatible or not~~
+      3. ~~upshrendd needs to check for targeted version and see if version is compatible~~
+      4. ~~if downgrading, need to check if downgrade is compatible~~
       5. interactive prompt to allow user to force upshrendd if version not compatible
       6. support `-f` flag for silent force, aka no interactive prompting
    7. release notes file
