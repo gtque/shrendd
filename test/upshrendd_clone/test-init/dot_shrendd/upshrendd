@@ -40,8 +40,6 @@ function devD {
   else
     echo "seems like cloning specific file"
     cp -f $_source/$_clone ./$1
-    _VERSION=$(yq e ".shrendd.version" ./.shrendd/version.yml)
-    sed -i "s/_UPSHRENDD_VERSION=\".*\"/_UPSHRENDD_VERSION=\"$_VERSION\"/g" "./$1"
   fi
 }
 
@@ -91,10 +89,11 @@ function isUpToDate {
     export _TARGET_VERSION=$(yq e ".shrendd.version" ./.shrendd/targetversion.yml)
   else
     #default if not found
-    export _TARGET_VERSION="0.0.0-sp"
+    export export _TARGET_VERSION="0.0.0-sp"
   fi
   _current_version=$(cat ./shrendd | grep "  _UPSHRENDD_VERSION" || echo "0.0.0-dev")
   _current_version=$(echo "$_current_version" | sed 's/  _UPSHRENDD_VERSION=//g' | sed 's/"//g')
+  echo "$_TARGET_VERSION"
   if [ "$_current_version" == "$_TARGET_VERSION" ]; then
     echo "true"
   else
@@ -110,7 +109,7 @@ function isCompatible {
     fi
   else
     #default if not found
-    export _TARGET_VERSION="0"
+    export export _TARGET_VERSION="0"
   fi
   _current_version=$(cat ./shrendd | grep "  _UPSHRENDD_VERSION" || echo "0.0.0-dev")
   _current_version=$(echo "$_current_version" | sed 's/  _UPSHRENDD_VERSION=//g' | sed 's/"//g')
@@ -130,7 +129,7 @@ function isUpgrade {
     fi
   else
     #default if not found
-    export _TARGET_VERSION="0"
+    export export _TARGET_VERSION="0"
   fi
   _current_version=$(yq e ".shrendd.upshrendd" ./.shrendd/version.yml)
   if [ -z "$_current_version" ] || [ "$_current_version" = "null" ]; then
@@ -155,16 +154,13 @@ function cloneShrendd {
   export _SHRENDD_IS_COMPATIBLE=$(isCompatible)
   export _SHRENDD_IS_UPGRADE=$(isUpgrade)
   #rm -f ./.shrendd/targetversion.yml
+  echo "$2 uptodate: $_SHRENDD_IS_UPTODATE, now: $_SHRENDD_IS_UPTODATE_NOW"
+  if [ -z "$_SHRENDD_IS_UPTODATE" ]; then
+    export _SHRENDD_IS_UPTODATE="$_SHRENDD_IS_UPTODATE_NOW"
+  fi
   if [ "$_SHRENDD_IS_UPTODATE_NOW" == "true" ]; then
     echo "seems shrendd is already up to date."
   else
-    if [ -f ./.shrendd/targetversion.yml ]; then
-      export _TARGET_VERSION=$(yq e ".shrendd.version" ./.shrendd/targetversion.yml)
-    else
-      #default if not found
-      export _TARGET_VERSION="0.0.0-sp"
-    fi
-    echo "shrendd version ($_SHRENDD_VERSION) does not match target version ($_TARGET_VERSION)"
     if [ "$_SHRENDD_IS_COMPATIBLE" == "true" ]; then
       if [ "$_SHRENDD_IS_UPGRADE" == "true" ]; then
         echo "downloading shrendd:$_SHRENDD_VERSION"
@@ -175,10 +171,10 @@ function cloneShrendd {
         echo "downloading with $1...$2"
         eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
       else
-        echo "It appears as though you are downgrading. That is not recommended, as it seems there were breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+        echo "it appears as though you are downgrading. That is not recommended, as it seems there were breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
       fi
     else
-      echo "You are upgrading, but it seems there are breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+      echo "It seems there are breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
     fi
   fi
 }
@@ -215,4 +211,5 @@ else
   fi
 fi
 
+export _SHRENDD_IS_UPTODATE=""
 cloneShrendd "$_GETTER" "shrendd"
