@@ -9,7 +9,8 @@ if [ $# -gt 0 ]; then
   export _NEW_VERSION=$1
 else
   _MAJOR=$(echo "$_VERSION" | cut -d'.' -f1)
-  _SPLICED=0
+  _MINOR=0
+  _PATCH=0
   if [ -z "$_MAJOR" ]; then
     echo "ya done messed up a-a-ron."
     export _NEW_VERSION="a-a-ron"
@@ -20,7 +21,7 @@ else
       echo "bumping major $_MAJOR + 1"
       ((_MAJOR++))
       echo "new major: $_MAJOR"
-      export _NEW_VERSION="$_MAJOR.0.$_SPLICED"
+      export _NEW_VERSION="$_MAJOR.$_MINOR.$_PATCH"
     else
       echo "something is not right, please manually verify, and update if necessary, the version.yml file."
       exit 42

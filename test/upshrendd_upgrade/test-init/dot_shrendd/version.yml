@@ -1,6 +1,6 @@
 shrendd:
-  version: 0.5.0
-  upshrendd: 0
+  version: -1.0.0-dev
+  upshrendd: -1
   git:
     user: gtque
     repo: shrendd

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ app.test.namespace }}
+  labels:
+    kubernetes.io/metadata.name: "{{ app.test.namespace }}"
+    shared-gateway-access: "true"
