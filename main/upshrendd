@@ -154,6 +154,7 @@ function cloneShrendd {
   export _SHRENDD_IS_UPTODATE_NOW=$(isUpToDate)
   export _SHRENDD_IS_COMPATIBLE=$(isCompatible)
   export _SHRENDD_IS_UPGRADE=$(isUpgrade)
+  _force_message="false"
   #rm -f ./.shrendd/targetversion.yml
   if [ "$_SHRENDD_IS_UPTODATE_NOW" == "true" ]; then
     echo "seems shrendd is already up to date."
@@ -165,21 +166,46 @@ function cloneShrendd {
       export _TARGET_VERSION="0.0.0-sp"
     fi
     echo "shrendd version ($_SHRENDD_VERSION) does not match target version ($_TARGET_VERSION)"
-    if [ "$_SHRENDD_IS_COMPATIBLE" == "true" ]; then
-      if [ "$_SHRENDD_IS_UPGRADE" == "true" ]; then
-        echo "downloading shrendd:$_SHRENDD_VERSION"
-        if [ -d ./.shrendd/$2 ]; then
-          rm -rf ./.shrendd/$2
+    if [ "$_FORCE_UPSHRENDD" == "false" ]; then
+      if [ "$_SHRENDD_IS_COMPATIBLE" == "true" ]; then
+        if [ "$_SHRENDD_IS_UPGRADE" == "true" ]; then
+          echo "downloading shrendd:$_SHRENDD_VERSION"
+          if [ -d ./.shrendd/$2 ]; then
+            rm -rf ./.shrendd/$2
+          fi
+          rm -f ./.shrendd/$2.zip
+          echo "downloading with $1...$2"
+          eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
+        else
+          echo "It appears as though you are downgrading. That is not recommended, as it seems there were breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+          _force_message="true"
         fi
-        rm -f ./.shrendd/$2.zip
-        echo "downloading with $1...$2"
-        eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
       else
-        echo "It appears as though you are downgrading. That is not recommended, as it seems there were breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+        echo "You are upgrading, but it seems there are breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+        _force_message="true"
       fi
     else
-      echo "You are upgrading, but it seems there are breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+      echo "forcing upshrendd..."
+      if [ "$_SHRENDD_IS_COMPATIBLE" == "true" ]; then
+        if [ "$_SHRENDD_IS_UPGRADE" == "true" ]; then
+          echo "No incompatibility detected, will be forced anyways, as you wish."
+        else
+          echo "You are downgrading and an incompatibility was detected. The downgrade will be forced, as you wish."
+        fi
+      else
+        echo "You are upgrading and an incompatibility was detected. The upgrade will be forced, as you wish."
+      fi
+      echo "downloading shrendd:$_SHRENDD_VERSION"
+      if [ -d ./.shrendd/$2 ]; then
+        rm -rf ./.shrendd/$2
+      fi
+      rm -f ./.shrendd/$2.zip
+      echo "downloading with $1...$2"
+      eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
     fi
+  fi
+  if [ "$_force_message" == "true" ]; then
+    echo "The upshrendd can be forced by re-running with the '-f' parameter."
   fi
 }
 
@@ -214,5 +240,20 @@ else
     fi
   fi
 fi
+export _FORCE_UPSHRENDD="false"
+export _requested_help="false"
+while [ $# -gt 0 ]; do
+  if [[ $1 == "-f" ]]; then
+    export _FORCE_UPSHRENDD="true"
+  elif [[ $1 == "?" ]]; then
+    export helped=true
+    echo "Usage: used to update shrendd to the specified version."
+    echo -e "  -f\n\t  force the update even if incompatibility detected."
+    export _requested_help="true"
+  fi
+  shift
+done
 
-cloneShrendd "$_GETTER" "shrendd"
+if [ "$_requested_help" == "false" ]; then
+  cloneShrendd "$_GETTER" "shrendd"
+fi

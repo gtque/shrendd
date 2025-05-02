@@ -8,13 +8,14 @@ template rendering and deployment
    3. ~~version bump support~~
    4. ~~branch and remove beta version.~~
    5. run tests as part of build, don't build if tests fail.
-   6. publish upshrendd compatibility
-      1. this is needed before even considering 1.0
+   6. ~~publish upshrendd compatibility~~
+      1. ~~this is needed before even considering 1.0~~
       2. ~~indicate if version is backwards compatible or not~~
       3. ~~upshrendd needs to check for targeted version and see if version is compatible~~
       4. ~~if downgrading, need to check if downgrade is compatible~~
-      5. interactive prompt to allow user to force upshrendd if version not compatible
-      6. support `-f` flag for silent force, aka no interactive prompting
+      5. ~~interactive prompt to allow user to force upshrendd if version not compatible~~
+         1. ~~instead of prompting, will just provide the hint that it can be forced with -f~~
+      6. ~~support `-f` flag for silent force, aka no interactive prompting~~
    7. release notes file
 2. ~~publish~~
    1. ~~upload to github~~
@@ -23,7 +24,7 @@ template rendering and deployment
 4. ~~custom module source~~
 5. tests
    1. latest version
-      1. upshrendd
+      1. ~~upshrendd~~
       2. ~~version specified~~
       3. ~~latest - specified by default~~
       4. ~~latest - explicitly set to latest~~
@@ -56,6 +57,8 @@ template rendering and deployment
    9. support and use description field in config template
    10. ~~warn if extra properties in config file not defined in template, with optional strict mode to fail~~
    11. color code log output
+       1. implement color coding of log output
+       2. support customizing colors for log output
    12. stub config-template from template files.
        1. stub everything as required
        2. add commented out description line

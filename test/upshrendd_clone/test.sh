@@ -18,7 +18,7 @@ if [ "$_valid" == "failed to upshrendd completely!" ]; then
 else
   _check=$(echo -e "$_valid" | grep "does not match target version" || echo "not found")
   if [ "$_check" == "not found" ]; then
-    export test_results="$test_results\tvalid upshrendd: failed to detect a and perform upgrade. failed\n"
+    export test_results="$test_results\tvalid upshrendd: failed to detect a difference and perform upgrade. failed\n"
   else
     export test_results="$test_results\tvalid upshrendd: shrendd was upgraded. pass\n"
   fi
