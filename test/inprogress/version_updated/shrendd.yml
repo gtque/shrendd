@@ -1,6 +1,0 @@
-shrendd:
-  test:
-    local: ../../main
-  targets:
-    - name: k8s
-    - name: test

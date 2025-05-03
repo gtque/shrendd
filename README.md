@@ -39,18 +39,26 @@ template rendering and deployment
       2. custom functions
    6. config template
    7. k8s
-   8. custom module source
+   8. ~~custom module source~~
    9. bootstrap
 6. how to
 7. additional modules
-   1. docker
-   2. terraform
+   1. ~~k8s~~
+   2. docker
+   3. terraform
+   4. scp
+   5. aws
+   6. google cloud
+   7. azure
 8. additional functionality
    1. ~~stub templates for deployment module types~~
    2. ~~delete all render directories~~
    3. ~~make k8s teardown identifier configurable~~
    4. ~~custom config location~~
-   5. custom module configs
+   5. ~~custom module configs~~
+      1. ~~a "module" is a separate folder in the root that contains templates~~
+      2. ~~each "module" may have its own configuration~~
+      3. ~~template dir, rendered dir, config dir~~
    6. ~~default config in shrendd.yml~~
    7. ~~warning if shrendd file is out of date~~
    8. ~~stub config template from existing complete config yml~~
@@ -58,12 +66,17 @@ template rendering and deployment
    10. ~~warn if extra properties in config file not defined in template, with optional strict mode to fail~~
    11. color code log output
        1. implement color coding of log output
-       2. support customizing colors for log output
+       2. ~~support customizing colors for log output~~
    12. stub config-template from template files.
        1. stub everything as required
        2. add commented out description line
        3. add commented out default value
    13. support setting configuration(s) in shrendd.yml by running `shrendd -set <key>=<value>`
+   14. support "plugin configs"
+       1. may have a default
+       2. may be included in the shrendd.yml file
+       3. may be its own file
+   15. ~~support multiple modules at one time~~
 
 ## Getting Started
 * download the appropriate version of `shrendd` from releases. it is recommended just grab the latest version.

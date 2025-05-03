@@ -1,5 +1,7 @@
 **/.idea
 **/.shrendd
 **/rendered
+**/generated
+**/pudding
 **/custom-rendered
 **/build/target

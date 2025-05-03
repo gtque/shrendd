@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "initializing shrendd for tests"
+echo "cleaning up shrendd for tests"
 if [ -d ./.shrendd ]; then
   rm -rf ./.shrendd
 fi

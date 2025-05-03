@@ -4,8 +4,7 @@ set -euo pipefail
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
 source ../../build/release.sh
-
-./shrendd
+./shrendd -init
 export test_results_clone="true"
 export test_results="version latest (specified) test results:\n"
 export test_results="$test_results\tclone passed\n"

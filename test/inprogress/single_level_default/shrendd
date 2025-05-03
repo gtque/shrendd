@@ -38,7 +38,7 @@ function checkShrenddVersion {
   if [[ $_UPSHRENDD_VERSION == $_SHRENDD_CURRENT_VERSION ]]; then
     :
   else
-    echo -e "${_LIGHT_BLUE}shrendd file does not match shrendd version, consider running ./.shrendd/upshrendd${_NC}"
+    echo -e "${_LIGHT_BLUE}shrendd file does not match shrendd version, consider running ./.shrendd/upshrendd${_CLEAR_TEXT_COLOR}"
   fi
 }
 
