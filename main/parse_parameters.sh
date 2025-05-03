@@ -11,12 +11,15 @@ export SKIP_STANDARD=false
 export SKIP_DEPLOY="false"
 export _requested_help="false"
 export _strict="false"
+export _Just_INITIALIZE="false"
 
 while [ $# -gt 0 ]; do
   if [[ $1 == *"--"* ]]; then
     param="${1/--/}"
     declare $param="$2"
     shift
+  elif [[ $1 == "-init" ]]; then
+    export _Just_INITIALIZE="true"
   elif [[ $1 == "-debug" ]]; then
     param="is_debug"
     declare $param="true"
@@ -36,6 +39,7 @@ while [ $# -gt 0 ]; do
   elif [[ $1 == "?" ]]; then
     export helped=true
     echo "Usage:"
+    echo -e "  -init\n\t  initialize shrendd by downloading render and specified modules. Skips all other actions regardless of other flags."
     echo -e "  -debug\n\t  run as local debug deployment/teardown, preserves rendered templates, this is the default mode"
     echo -e "  -live\n\t  run as live deployment/teardown, including auto clean up of rendered templates."
     echo -e "  --stub [deployment type to stub]\n\t  stub some default template definitions, if defined, for the specified deployment type.\n\t  if stub is specified, render will be skipped, regardless of the order of parameters specified when running shrendd.\nt\t  example: --stub k8s"

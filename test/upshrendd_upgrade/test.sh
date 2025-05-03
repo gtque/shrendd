@@ -3,7 +3,7 @@ set -euo pipefail
 
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
-./shrendd -r
+./shrendd -init
 echo "faking out version"
 cp -r ./test-init/dot_shrendd/version.yml ./.shrendd/version.yml
 sed -i "s/_UPSHRENDD_VERSION=\".*\"/_UPSHRENDD_VERSION=\"-1.0.0-dev\"/g" "./shrendd"

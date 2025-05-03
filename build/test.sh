@@ -1,9 +1,11 @@
 #!/bin/bash
 echo "hold my beer - drunk cousin at the wedding"
+#export _TESTS="version_latest_specified"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
 export _TESTS="$_TESTS render_no_template render_only_template"
 export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
 #export _TESTS="single_level_default"
+
 cd test
 export _FULL_TEST_RESULTS=""
 export test_results=""

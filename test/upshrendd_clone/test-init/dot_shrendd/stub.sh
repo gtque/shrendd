@@ -22,9 +22,9 @@ function stubConfig {
   _template_path="$(shrenddOrDefault "shrendd.config.definition")"
   echo "file: $_template_path"
   if [ -f $_template_path ]; then
-    echo -e "${_YELLOW}${_template_path} already exists. If you really mean to stub it again, delete or rename the existing one and try again.${_NC}"
+    echo -e "${_YELLOW}${_template_path} already exists. If you really mean to stub it again, delete or rename the existing one and try again.${_CLEAR_TEXT_COLOR}"
   else
-    echo -e "${_LIGHT_BLUE}templating config based on ${_GREEN}${_config}${_NC}"
+    echo -e "${_LIGHT_BLUE}templating config based on ${_GREEN}${_config}${_CLEAR_TEXT_COLOR}"
     cp ${_config} ${_template_path}
     sed -i "s/\"//g" "${_template_path}"
     #_toe=$(cat $SHRENDD_WORKING_DIR/.shrendd/render/config/template.yml)

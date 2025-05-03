@@ -3,10 +3,12 @@ set -euo pipefail
 
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
-rm -f ./shrendd
-cp ./test-init/shrendd ./
+#rm -f ./shrendd
+#cp ./test-init/shrendd ./
+export SHRENDD_TEXT_INFO_RED='\033[0;31m'
+export SHRENDD_TEXT_INFO='$SHRENDD_TEXT_INFO_RED'
 echo "running shrendd"
-./shrendd -r
+./shrendd -init
 export test_results="upshrendd valid and already uptodate:\n"
 echo "running valid upshrendd"
 _valid=$(./.shrendd/upshrendd || echo "failed to upshrendd completely!")
@@ -28,9 +30,9 @@ if [ "$_uptodate" == "failed to upshrendd the second time completely!" ]; then
 else
   _check=$(echo -e "$_uptodate" | grep "seems shrendd is already up to date" || echo "not found")
   if [ "$_check" == "not found" ]; then
-    export test_results="$test_results\tuptodate upshrendd: failed to detect a and perform upgrade. failed\n"
+    export test_results="$test_results\t${_TEST_ERROR}uptodate upshrendd: failed to detect a and perform upgrade. failed${_CLEAR_TEXT_COLOR}\n"
   else
-    export test_results="$test_results\tuptodate upshrendd: shrendd was upgraded. pass\n"
+    export test_results="$test_results\t${_TEST_PASS}uptodate upshrendd: shrendd is up-to-date. pass${_CLEAR_TEXT_COLOR}\n"
   fi
 fi
 

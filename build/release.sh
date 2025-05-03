@@ -119,7 +119,12 @@ function check_for_release {
 }
 
 function latest_release {
-  export _SHRENDD=$(cat ./main/version.yml || cat ../../main/version.yml)
+  export _SHRENDD=$(cat ./main/version.yml || echo "")
+  if [ -z "$_SHRENDD" ]; then
+    echo "couldn't find main/verison.yml, trying to escape and see if it is there..."
+    export _SHRENDD=$(cat ../../main/version.yml)
+    echo "hopefully it was loaded this time."
+  fi
   user=$(echo -e "$_SHRENDD" | yq e ".shrendd.git.user" -)
   repo=$(echo -e "$_SHRENDD" | yq e ".shrendd.git.repo" -)
   requires=$(echo -e "$_SHRENDD" | yq e ".shrendd.required" -)
@@ -146,11 +151,11 @@ function latest_release {
   http_code=`eval $command`
   echo "executed..."
   if [ $http_code == "200" ]; then
-    echo "latest release:"
     export _RELEASE=$(jq -r .name $_latest_release)
     echo "latest release: $_RELEASE"
   else
     echo "check release failed with code '$http_code':"
     export _RELEASE="false"
   fi
+
 }
