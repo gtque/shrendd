@@ -1,2 +1,2 @@
-test the 3 primary ways for injecting a value from the config yml into a template
+only render using values from the template.
 when using only default value from config-template.
