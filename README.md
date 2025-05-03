@@ -71,11 +71,16 @@ template rendering and deployment
        1. stub everything as required
        2. add commented out description line
        3. add commented out default value
+       4. update config-template
    13. support setting configuration(s) in shrendd.yml by running `shrendd -set <key>=<value>`
-   14. support "plugin configs"
-       1. may have a default
-       2. may be included in the shrendd.yml file
-       3. may be its own file
+       1. main shrendd properties by default
+          1. will still respect custom location for shrendd.yml
+       2. module properties if --module <module> specified
+   14. support "plugins"
+       1. plugin configs
+           1. may have a default
+           2. may be included in the shrendd.yml file
+           3. may be its own file
    15. ~~support multiple modules at one time~~
 
 ## Getting Started
