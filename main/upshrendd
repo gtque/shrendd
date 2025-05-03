@@ -144,6 +144,7 @@ function isUpgrade {
 }
 
 function cloneShrendd {
+  echo "cloning shrendd"
   if [ "$_SHRENDD_VERSION" == "latest" ]; then
     export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/latest/download"
   else
@@ -151,6 +152,7 @@ function cloneShrendd {
   fi
   rm -f ./.shrendd/targetversion.yml
   eval "$1 \"./.shrendd/targetversion.yml\" \"$_SHRENDD_ARTIFACT_URL/version.yml\""
+  echo "retrieved target version."
   export _SHRENDD_IS_UPTODATE_NOW=$(isUpToDate)
   export _SHRENDD_IS_COMPATIBLE=$(isCompatible)
   export _SHRENDD_IS_UPGRADE=$(isUpgrade)

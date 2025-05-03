@@ -22,7 +22,7 @@ else
   _SPLICED=$(echo "$_SPLICED" | cut -d'-' -f1)
   if [[ "$_SPLICED" =~ ^[0-9]+$ ]]; then
     #((_SPLICED++))
-    export _NEW_VERSION="$_MAJOR.$_SPLICED.\$(date -u +%Y%m%d%H%M%S)"
+    export _NEW_VERSION="$_MAJOR.$_SPLICED.0"
   else
     echo "something is not right, please manually verify, and update if necessary, the version.yml file."
     exit 42

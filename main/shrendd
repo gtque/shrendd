@@ -88,6 +88,7 @@ shrendd:
   config:
     path: ./config
     validate: true
+    unwind: true
     default: localdev.yml
     definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
   k8s:
@@ -126,7 +127,7 @@ function wgetD {
 }
 
 function trueName {
-  echo "$(echo "$1" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]")"
+  echo "$(echo "$1" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]" | cut -d'[' -f1)"
 }
 
 function testIf {
@@ -246,6 +247,42 @@ function isUpToDate {
   fi
 }
 
+function initTargets {
+  echo "getting keys for config"
+  export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
+  echo "getting keys for default"
+  export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
+  echo "config keys: $_SHRENDD_CONFIG_KEYS"
+  echo "default keys: $_SHRENDD_DEFAULT_KEYS"
+  #getTargetsD "$_SHRENDD_CONFIG_KEYS"
+  _target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
+  echo "trying to load array of targets: $_target_keys"
+  if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
+    echo "no targets... using default list"
+    #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
+    _target_keys=$(getTargets "$_SHRENDD_DEFAULT_KEYS")
+  fi
+
+  _targets=""
+  for index in $_target_keys; do
+    _target=$(shrenddOrDefault "$index" 0)
+    echo -e "checking: $_target"
+    if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
+      :
+    else
+      _targets="$_targets "
+    fi
+    _targets="$_targets$_target"
+    if [ $# -gt 0 ]; then
+      _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
+      #cloneShrendd "$_GETTER" "$_target"
+      echo "shrendd.${_target}.source: ${_target_source}"
+      eval "${_target_source}"
+    fi
+  done
+  export targets="$_targets"
+}
+
 function cloneShrendd {
   if [ "$_SHRENDD_VERSION" == "latest" ]; then
     export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/latest/download"
@@ -336,36 +373,7 @@ else
 fi
 
 #loop over targets
-echo "getting keys for config"
-export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
-echo "getting keys for default"
-export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
-echo "config keys: $_SHRENDD_CONFIG_KEYS"
-echo "default keys: $_SHRENDD_DEFAULT_KEYS"
-#getTargetsD "$_SHRENDD_CONFIG_KEYS"
-_target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
-echo "trying to load array of targets: $_target_keys"
-if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
-  echo "no targets... using default list"
-  #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
-  _target_keys=$(getTargets "$_SHRENDD_DEFAULT_KEYS")
-fi
-
-_targets=""
-for index in $_target_keys; do
-  _target=$(shrenddOrDefault "$index" 0)
-  echo -e "checking: $_target"
-  if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
-    :
-  else
-    _targets="$_targets "
-  fi
-  _targets="$_targets$_target"
-  _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
-  #cloneShrendd "$_GETTER" "$_target"
-  echo "shrendd.${_target}.source: ${_target_source}"
-  eval "${_target_source}"
-done
+initTargets "true"
 
 if [[ -n "${_JUST_INITIALIZE+x}" ]]; then
   :
@@ -374,14 +382,14 @@ else
 fi
 if [ "$_JUST_INITIALIZE" == "true" ]; then
   checkShrenddVersion
+  echo -e "${_TEXT_INFO}just initializing, nothing to see here.${_CLEAR_TEXT_COLOR}"
   exit 0
 fi
 
-export targets="$_targets"
-export _config=$(shrenddOrDefault shrendd.config.path)/${_config}
+export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
 echo "======================================================="
 echo "                 best shrendds forever                 "
-echo "using: $_config"
+echo "using: $_config_path"
 if [[ $_stub == "false" ]]; then
   source ./.shrendd/deploy.sh
 else

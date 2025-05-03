@@ -1,0 +1,20 @@
+shrendd:
+  modules:
+    poc:
+      template:
+        dir: hello/world
+      render:
+        dir: goodbye/world
+    test1:
+      template:
+        dir: hello/doofen
+      render:
+        dir: goodbye/shmirtz
+  k8s:
+    source: "cloneShrendd \"$_GETTER\" \"k8s\""
+    yaml:
+      padding: 2
+  targets:
+    - name: a
+    - name: b
+    - name: c

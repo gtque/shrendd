@@ -10,7 +10,7 @@ function actualRender {
   _template=$(cat $1 | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")
   _rname=$(echo "$1" | sed -e "s/\.srd//g")
   _rname="$RENDER_DIR/$_rname"
-  echo "doing the rendering"
+  echo "doing the rendering: $_template -> $_rname"
   doEval "$_template" "$_rname"
 #  if [ -z "$_eval_result" ] || [ "$_eval_result" == "" ]; then
 #    echo "error rendering $1: $_eval_result" >> $_DEPLOY_ERROR_DIR/config_error.log

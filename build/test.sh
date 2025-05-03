@@ -1,10 +1,11 @@
 #!/bin/bash
 echo "hold my beer - drunk cousin at the wedding"
-#export _TESTS="version_latest_specified"
+#export _TESTS="upshrendd_downgrade"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
 export _TESTS="$_TESTS render_no_template render_only_template"
 export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
 export _TESTS="$_TESTS shrendd_yaml_override"
+export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties"
 #export _TESTS="single_level_default"
 
 cd test

@@ -1,0 +1,14 @@
+shrendd:
+  modules:
+    poc:
+      template:
+        dir: hello/smeegle
+      render:
+        dir: goodbye/tracy
+    test2:
+      template:
+        dir: hello/smeegle
+      render:
+        dir: goodbye/tracy
+  targets:
+    - name: z

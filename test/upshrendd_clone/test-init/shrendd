@@ -180,7 +180,6 @@ function initColors {
   export _TEXT_ERROR=$(shrenddOrDefault "shrendd.text.error")
   export _TEXT_DEBUG=$(shrenddOrDefault "shrendd.text.debug")
   export _TEXT_INFO=$(shrenddOrDefault "shrendd.text.info")
-  echo "textinfo: "$(shrenddOrDefault "shrendd.text.info")
   export _TEXT_PASS=$(shrenddOrDefault "shrendd.text.pass")
   export _TEXT_WARN=$(shrenddOrDefault "shrendd.text.warn")
 }

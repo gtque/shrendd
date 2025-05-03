@@ -3,8 +3,8 @@ set -euo pipefail
 
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
-#rm -f ./shrendd
-#cp ./test-init/shrendd ./
+rm -f ./shrendd
+cp ./test-init/shrendd ./
 export SHRENDD_TEXT_INFO_RED='\033[0;31m'
 export SHRENDD_TEXT_INFO='$SHRENDD_TEXT_INFO_RED'
 echo "running shrendd"
@@ -22,7 +22,7 @@ else
   if [ "$_check" == "not found" ]; then
     export test_results="$test_results\tvalid upshrendd: failed to detect a difference and perform upgrade. failed\n"
   else
-    export test_results="$test_results\tvalid upshrendd: shrendd was upgraded. pass\n"
+    export test_results="$test_results\tvalid upshrendd: shrendd was upgraded. passed\n"
   fi
 fi
 if [ "$_uptodate" == "failed to upshrendd the second time completely!" ]; then
@@ -32,7 +32,7 @@ else
   if [ "$_check" == "not found" ]; then
     export test_results="$test_results\t${_TEST_ERROR}uptodate upshrendd: failed to detect a and perform upgrade. failed${_CLEAR_TEXT_COLOR}\n"
   else
-    export test_results="$test_results\t${_TEST_PASS}uptodate upshrendd: shrendd is up-to-date. pass${_CLEAR_TEXT_COLOR}\n"
+    export test_results="$test_results\t${_TEST_PASS}uptodate upshrendd: shrendd is up-to-date. passed${_CLEAR_TEXT_COLOR}\n"
   fi
 fi
 

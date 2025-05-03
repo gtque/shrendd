@@ -1,0 +1,8 @@
+hello:
+  greeting1: ${TEST_HELLO}
+  greeting2: ${test.hello}
+  greeting3: $(getConfig "test.hello")
+  greeting4: $(getConfig "TEST_HELLO")
+  food: ${TEST_FRUIT}
+  food1: ${test.sandwich}
+  food2: $(getConfig "TEST_DESSERT")

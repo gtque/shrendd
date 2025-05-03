@@ -19,13 +19,13 @@ else
   if [ "$_check" == "not found" ]; then
     export test_results="$test_results\tupgrade upshrendd: failed to detect an incompatible upgrade. failed\n"
   else
-    export test_results="$test_results\tupgrade upshrendd: shrendd detected an upgrade incompatibility correctly. pass\n"
+    export test_results="$test_results\tupgrade upshrendd: shrendd detected an upgrade incompatibility correctly. passed\n"
   fi
   _check=$(echo -e "$_valid" | grep "'-f'" || echo "not found")
   if [ "$_check" == "not found" ]; then
     export test_results="$test_results\tupgrade upshrendd: failed to print message about '-f' parameter. failed\n"
   else
-    export test_results="$test_results\tupgrade upshrendd: mentioned '-f'. pass\n"
+    export test_results="$test_results\tupgrade upshrendd: mentioned '-f'. passed\n"
   fi
 fi
 _valid=$(./.shrendd/upshrendd -f || echo "failed to upshrendd completely!")
@@ -36,13 +36,13 @@ else
   if [ "$_check" == "not found" ]; then
     export test_results="$test_results\tupgrade upshrendd: failed to detect a difference and perform upgrade. failed\n"
   else
-    export test_results="$test_results\tupgrade upshrendd: shrendd was upgraded. pass\n"
+    export test_results="$test_results\tupgrade upshrendd: shrendd was upgraded. passed\n"
   fi
     _check=$(echo -e "$_valid" | grep "You are upgrading and an incompatibility was detected. The upgrade will be forced, as you wish." || echo "not found")
   if [ "$_check" == "not found" ]; then
     export test_results="$test_results\tupgrade upshrendd: failed to detect an incompatible upgrade with force enabled. failed\n"
   else
-    export test_results="$test_results\tupgrade upshrendd: shrendd detected an upgrade incompatibility correctly with force enabled. pass\n"
+    export test_results="$test_results\tupgrade upshrendd: shrendd detected an upgrade incompatibility correctly with force enabled. passed\n"
   fi
 fi
 
