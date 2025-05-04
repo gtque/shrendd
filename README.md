@@ -65,8 +65,8 @@ template rendering and deployment
    8. ~~stub config template from existing complete config yml~~
    9. ~~support and use description field in config template~~
    10. ~~warn if extra properties in config file not defined in template, with optional strict mode to fail~~
-   11. **color code log output**
-       1. implement color coding of log output
+   11. ~~color code log output~~
+       1. ~~implement color coding of log output~~
        2. ~~support customizing colors for log output~~
    12. **config-template**
        1. ~~include description in error/warning logs~~
@@ -87,6 +87,9 @@ template rendering and deployment
            3. may be its own file
    15. ~~support multiple modules at one time~~
    16. ~~just "render" support~~
+   17. ~~sensitive values~~
+       1. ~~mark as sensitive in config-template~~
+       2. ~~mask when logging~~
 9. how to contribute documentation
    1. submitting bugs
    2. requesting features
