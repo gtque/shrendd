@@ -6,7 +6,7 @@ function stageLeft {
 }
 
 function targetDirs {
-  export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.targets[] | select(.name==\"$1\") | .template.dir")
+  export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.$1.template.dir")
   if [ -z "$TEMPLATE_DIR" ] || [ "$TEMPLATE_DIR" == "null" ]; then
     export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.default.template.dir")
   fi

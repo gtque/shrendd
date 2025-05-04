@@ -10,7 +10,7 @@ _greeting1=$(yq e ".hello.greeting1" "./deploy/test/rendered/test1.yml")
 _greeting2=$(yq e ".hello.greeting2" "./deploy/test/rendered/test1.yml")
 _greeting3=$(yq e ".hello.greeting3" "./deploy/test/rendered/test1.yml")
 _greeting4=$(yq e ".hello.greeting4" "./deploy/test/rendered/test1.yml")
-_greetingA=$(cat ./config/config-template.yml | grep -e "default" | sed -e "s/.*default://g" | sed -e "s/ //g")
+_greetingA=$(yq e ".test.hello" "./config/config-template.yml" | yq e ".default" -)
 echo "checking rendering"
 if [ "$_greeting1" == "$_greetingA" ]; then
   export test_results="$test_results\tgreeting 1: env, aka uppercase with underscores, \"$_greeting1\" == \"$_greetingA\" passed\n"

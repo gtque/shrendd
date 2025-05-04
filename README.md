@@ -22,8 +22,8 @@ template rendering and deployment
    2. ~~check if release already exists~~
 3. ~~bootstrap shrendd~~
 4. ~~custom module source~~
-5. tests
-   1. latest version
+5. **tests**
+   1. ~~latest version~~
       1. ~~upshrendd~~
       2. ~~version specified~~
       3. ~~latest - specified by default~~
@@ -32,6 +32,7 @@ template rendering and deployment
       1. ~~just the provided config, no template~~
       2. ~~just the template, no values from config, ie: default value from config-template~~
       3. a mix of provided and template defaults
+      4. ~~render with default render target~~
    3. custom render targets
    4. custom template targets
    5. complex rendering
@@ -41,7 +42,7 @@ template rendering and deployment
    7. k8s
    8. ~~custom module source~~
    9. bootstrap
-6. how to
+6. **how to**
 7. additional modules
    1. ~~k8s~~
    2. docker
@@ -62,26 +63,34 @@ template rendering and deployment
    6. ~~default config in shrendd.yml~~
    7. ~~warning if shrendd file is out of date~~
    8. ~~stub config template from existing complete config yml~~
-   9. support and use description field in config template
+   9. ~~support and use description field in config template~~
    10. ~~warn if extra properties in config file not defined in template, with optional strict mode to fail~~
-   11. color code log output
+   11. **color code log output**
        1. implement color coding of log output
        2. ~~support customizing colors for log output~~
-   12. stub config-template from template files.
-       1. stub everything as required
-       2. add commented out description line
-       3. add commented out default value
-       4. update config-template
+   12. **config-template**
+       1. ~~include description in error/warning logs~~
+       2. stub config-template from template files.
+           1. stub everything as required
+           2. add commented out description line
+           3. add commented out default value
+           4. update config-template
+       3. generate a <config>.yml file from config-template
    13. support setting configuration(s) in shrendd.yml by running `shrendd -set <key>=<value>`
        1. main shrendd properties by default
           1. will still respect custom location for shrendd.yml
        2. module properties if --module <module> specified
-   14. support "plugins"
+   14. **support "plugins"**
        1. plugin configs
            1. may have a default
            2. may be included in the shrendd.yml file
            3. may be its own file
    15. ~~support multiple modules at one time~~
+   16. ~~just "render" support~~
+9. how to contribute documentation
+   1. submitting bugs
+   2. requesting features
+   3. contributing
 
 ## Getting Started
 * download the appropriate version of `shrendd` from releases. it is recommended just grab the latest version.

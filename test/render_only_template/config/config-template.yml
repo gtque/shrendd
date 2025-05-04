@@ -3,3 +3,14 @@ test:
     required: false
     description: hello world value
     default: cheeseburger
+    sensitive: true
+  hello2: |-
+    required: false
+    description: extra masking of ing3
+    default: ing3
+    sensitive: true
+  hello3: |-
+    required: false
+    description: extra masking of ing1
+    default: ing1
+    sensitive: true

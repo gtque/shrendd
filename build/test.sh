@@ -2,19 +2,19 @@
 echo "hold my beer - drunk cousin at the wedding"
 #export _TESTS="upshrendd_downgrade"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
-export _TESTS="$_TESTS render_no_template render_only_template"
+export _TESTS="$_TESTS render_render render_no_template render_only_template"
 export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
 export _TESTS="$_TESTS shrendd_yaml_override"
 export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties"
 #export _TESTS="single_level_default"
-
+source ./build/test/start.sh
 cd test
 export _FULL_TEST_RESULTS=""
 export test_results=""
 for test in $_TESTS; do
   echo -e "\n*********************running: $test*********************\n"
   cd $test
-  test_results=$(./test.sh 2>&1 || echo "end of shrendd tests\n------------------------------------------\n$test failed\n------------------------------------------")
+  test_results=$(./test.sh 2>&1 || echo "end of shrendd tests\n------------------------------------------\n${_TEST_ERROR}$test failed${_CLEAR_TEXT_COLOR}\n------------------------------------------")
   echo -e "$test_results"
   test_results=$(echo "$test_results" | sed -z "s/start of shrendd tests.*end of shrendd tests//g" )
   export _FULL_TEST_RESULTS="$_FULL_TEST_RESULTS$test_results"
