@@ -21,11 +21,12 @@ function stageLeft {
 }
 
 function targetDirs {
-  export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.targets[] | select(.name==\"$1\") | .template.dir")
+  export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.$1.template.dir")
   if [ -z "$TEMPLATE_DIR" ] || [ "$TEMPLATE_DIR" == "null" ]; then
     export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.default.template.dir")
   fi
-  export RENDER_DIR=$(shrenddOrDefault "shrendd.targets[] | select(.name==\"$1\") | .render.dir")
+  echo "template directory: $TEMPLATE_DIR"
+  export RENDER_DIR=$(shrenddOrDefault "shrendd.$1.render.dir")
   if [ -z "$RENDER_DIR" ] || [ "$RENDER_DIR" == "null" ]; then
     export RENDER_DIR=$(shrenddOrDefault "shrendd.default.render.dir")
   fi
@@ -42,7 +43,7 @@ function checkRenderDirectory {
       echo "rendered folder already exists, clearing directory."
       rm -rf $RENDER_DIR
     fi
-    mkdir $RENDER_DIR
+    mkdir -p $RENDER_DIR
   fi
 }
 
@@ -51,10 +52,10 @@ function render {
   prePostAfter "$1" "beforerender"
   prePostRender "$1" "beforerender"
   if [ "$SKIP_TEMPLATE" == "false" ]; then
-    echo "rendering templates"
+    echo -e "${_TEXT_INFO}rendering templates${_CLEAR_TEXT_COLOR}"
     doRender $TEMPLATE_DIR
   else
-    echo "skipping template rendering"
+    echo -e "${_TEXT_WARN}skipping template rendering${_CLEAR_TEXT_COLOR}"
   fi
   prePostRender "$1" "afterrender"
   prePostAfter "$1" "afterrender"
@@ -82,7 +83,9 @@ function doDeploy {
   prePostAfter "$1" "pre"
   if [ "$SKIP_STANDARD" == "false" ]; then
     echo "running standard setup."
-    source $SHRENDD_WORKING_DIR/.shrendd/$1/${deploy_action}/deploy.sh
+    if [ -f $SHRENDD_WORKING_DIR/.shrendd/$1/${deploy_action}/deploy.sh ]; then
+      source $SHRENDD_WORKING_DIR/.shrendd/$1/${deploy_action}/deploy.sh
+    fi
   else
     echo "skipping standard $1/$deploy_action"
   fi
@@ -92,32 +95,38 @@ function doDeploy {
 function initConfig {
   _config_keys=$(keysFor "$_SHRENDD_CONFIG")
   _provided_keys="$(keysFor "$_PROVIDED_CONFIG") "
-  echo "configuring: $_config_keys"
+  echo -e "${_TEXT_INFO}configuring:${_CLEAR_TEXT_COLOR}"
   _initialized="true"
   for _config_key in $_config_keys; do
     _name=$(trueName $_config_key)
     _provided_keys=$(echo "$_provided_keys" | sed -e "s/$_config_key //g")
     _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_config_key" -)
+    _template_value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_config_key" -)
+    _is_sensitive=$(echo "$_template_value" | yq e ".sensitive" -)
     if [ "${_value}" == "null" ]; then
       echo "  $_config_key was null, checking if required or default present."
-      _template_value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_config_key" -)
       _value_required=$(echo "$_template_value" | yq e ".required" -)
+      _value_description=$(echo "$_template_value" | yq e ".description" -)
+      if [ "$_value_description" == "null" ]; then
+        _value_description=""
+      fi
       if [ "${_value_required}" == "true" ]; then
-        echo "  $_config_key is required but was not provided."
-        echo "$_config_key is required but was not provided." >> $_DEPLOY_ERROR_DIR/render_error.log
+        echo "  $_config_key is required but was not provided. Description: $_value_description"
+        echo "$_config_key is required but was not provided. Description: $_value_description" >> $_DEPLOY_ERROR_DIR/render_error.log
         _initialized="false"
       else
         _value_default=$(echo "$_template_value" | yq e ".default" -)
         if [ "${_value_default}" == "null" ]; then
           echo "  $_config_key no default has been defined."
           if [ "${_strict}" == "true" ]; then
-            echo "$_config_key is not required and was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_error.log
+            echo "$_config_key is not required and was not provided and no default has been defined. Description: $_value_description" >> $_DEPLOY_ERROR_DIR/render_error.log
             _initialized="false"
           else
-            echo "$_config_key is not required and was not provided and no default has been defined." >> $_DEPLOY_ERROR_DIR/render_warning.log
+            echo "$_config_key is not required and was not provided and no default has been defined. Description: $_value_description" >> $_DEPLOY_ERROR_DIR/render_warning.log
           fi
         else
           echo "  $_config_key using default value"
+          echo "$_config_key is not required and was not provided, so the default was used. Description: $_value_description" >> $_DEPLOY_ERROR_DIR/render_info.log
           _value="${_value_default}"
         fi
       fi
@@ -125,25 +134,36 @@ function initConfig {
     if [ "${_value}" == "null" ]; then
       echo "not initializing> $_config_key"
     else
-      echo "initializing> $_config_key: $_name: $_value"
+      if [ "$_is_sensitive" == "true" ]; then
+        echo -e "${_TEXT_DEBUG}initializing> $_config_key: $_name: ${_TEXT_INFO}*****${_CLEAR_TEXT_COLOR}"
+        if [ -z "$_TUXEDO_MASK" ]; then
+          :
+        else
+          _TUXEDO_MASK="$_TUXEDO_MASK;"
+        fi
+        _value_t=$(echo "${_value}" | sed "s/\./\\./g" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g' | sed ':a;N;$!ba;s/\r//g')
+        _TUXEDO_MASK="${_TUXEDO_MASK}s/${_value_t}/*****/g"
+      else
+        echo -e "${_TEXT_DEBUG}initializing> $_config_key: $_name: ${_TEXT_INFO}$_value${_CLEAR_TEXT_COLOR}"
+      fi
       export $_name="$_value"
     fi
   done
   for _config_key in $_provided_keys; do
-    echo "  $_config_key not defined in the template."
+    echo "  $_config_key was provided but not defined in the template."
     if [ "${_strict}" == "true" ]; then
-      echo "$_config_key not defined in the template." >> $_DEPLOY_ERROR_DIR/render_error.log
+      echo "$_config_key was provided but not defined in the template." >> $_DEPLOY_ERROR_DIR/render_error.log
       _initialized="false"
     else
       _name=$(trueName $_config_key)
       _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_config_key" -)
-      echo "  initializing> $_config_key: $_name: $_value"
+      echo -e "  ${_TEXT_DEBUG}initializing> $_config_key: $_name: ${_TEXT_INFO}$_value\n    ${_TEXT_WARN}if this is a sensitive value, you should add it to the config-template.yml file and mark it as sensitive.${_CLEAR_TEXT_COLOR}"
       export $_name="$_value"
-      echo "$_config_key not defined in the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
+      echo "$_config_key was provide but not defined in the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
     fi
   done
   if [ "$_initialized" == "false" ]; then
-    echo "something was missing in the template, please update the template and try again."
+    echo -e "${_TEXT_ERROR}something was missing in the template, please update the template and try again.${_CLEAR_TEXT_COLOR}"
     exit 1
   fi
 }
@@ -302,24 +322,29 @@ function moduleRender {
   fi
 
   if [ "$_config" == "false" ]; then
-    echo "${_TEXT_WARN}sure, I can render without a config file, but it's much easier if there is one.${_CLEAR_TEXT_COLOR}"
+    echo -e "${_TEXT_WARN}sure, I can render without a config file, but it's much easier if there is one.${_CLEAR_TEXT_COLOR}"
     echo "rendered ${_TEXT_WARN}without${_CLEAR_TEXT_COLOR} a config." >> $_DEPLOY_ERROR_DIR/render_warning.log
   fi
   export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
-  echo "config:"
-  cat $_config_path
-  echo ""
 
   if [ -f $_config_path ]; then
-    if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
-      export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
-    else
-      export _SHRENDD_CONFIG=$(cat $_config_path)
+    if [[ "$_SHRENDD_UNWIND" == "true" && "$_reconfigured" == "false" && "$_config_path_proper" != "$_config_path" ]]; then
+      echo "looks like i need to unwind some configs first..."
+      unConfig
+      export _reconfigured="true"
     fi
-    export _PROVIDED_CONFIG=$(cat $_config_path)
-    echo "found $_config."
-    initConfig
-    echo "done initializing"
+    if [[ "$_reconfigured" == "true" ||  "$_config_path_proper" != "$_config_path" ]]; then
+      if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
+        export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
+      else
+        export _SHRENDD_CONFIG=$(cat $_config_path)
+      fi
+      export _PROVIDED_CONFIG=$(cat $_config_path)
+      echo "found $_config."
+      initConfig
+      echo "done initializing"
+      export _reconfigured="false"
+    fi
   else
     echo "no $_config found, no custom parameters defined."
     export _SHRENDD_CONFIG=""
@@ -348,7 +373,7 @@ function moduleRender {
     checkRenderDirectory "$target"
     echo "rendering"
     render "$target"
-    echo "render complete"
+    echo -e "${_TEXT_INFO}render complete${_CLEAR_TEXT_COLOR}"
     if [ "$SKIP_DEPLOY" == "false" ]; then
       echo "deploying $target"
       doDeploy "$target"
@@ -365,16 +390,17 @@ function moduleRender {
   fi
   cd $_STARTING_DIR
   if [ -f $_config_path ]; then
-    if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
-      export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
-    else
-      export _SHRENDD_CONFIG=$(cat $_config_path)
-    fi
-    export _PROVIDED_CONFIG=$(cat $_config_path)
-    echo "found $_config."
-    if [ "$_SHRENDD_UNWIND" == "true" ]; then
+#    if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
+#      export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
+#    else
+#      export _SHRENDD_CONFIG=$(cat $_config_path)
+#    fi
+#    export _PROVIDED_CONFIG=$(cat $_config_path)
+#    echo "found $_config."
+    if [[ "$_SHRENDD_UNWIND" == "true" && "$_config_path_proper" != "$_config_path" ]]; then
       echo "unwinding config"
       unConfig
+      export _reconfigured="false"
     else
       echo "sharing config(s) between modules, but only those not overridden by the current module."
     fi
@@ -398,9 +424,22 @@ if [ "$_requested_help" == "true" ]; then
   exit 0
 fi
 
+export _TUXEDO_MASK=""
 export _SHRENDDO="$_SHRENDD"
 export _configo="$_config"
 export _SHRENDD_UNWIND=$(shrenddOrDefault "shrendd.config.unwind")
+if [ "$_config" != "false" ]; then
+  export _config_path_proper=$(shrenddOrDefault shrendd.config.path)/${_config}
+  if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
+    export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
+  else
+    export _SHRENDD_CONFIG=$(cat $_config_path_proper)
+  fi
+  export _PROVIDED_CONFIG=$(cat $_config_path_proper)
+  initConfig
+fi
+export _reconfigured="false"
+
 for _specific_module in $_module; do
   moduleRender $_specific_module
 done

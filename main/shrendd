@@ -4,30 +4,39 @@ set -euo pipefail
 trap resetLocal EXIT
 
 function resetLocal {
+  if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
+    echo "information during shrendd:"
+    cat $_DEPLOY_ERROR_DIR/render_info.log | sed -e "s/^/  /g"
+  fi
   if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
-    echo "warnings during shrendd:"
+    echo -e "${_TEXT_WARN}warnings during shrendd:"
     cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
   fi
   if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-    echo "It seems there was an error during the process. Please review the logs for more information."
+    echo -e "${_TEXT_ERROR}It seems there was an error during the process. Please review the logs for more information."
     if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
       echo "errors during shrendd:"
       cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
     fi
   fi
+  echo -en "${_CLEAR_TEXT_COLOR}"
   if [ "$_is_debug" == true ]; then
     echo "running as debug, not deleting render directories"
   else
     echo "was live, should be deleting render directories"
     stageLeft
   fi
+  echo -e "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
 }
+
 export _RED='\033[0;31m'
 export _BLUE='\033[0;34m'
+export _MAGENTA='\033[0;35m'
 export _LIGHT_BLUE='\033[1;34m'
 export _SUPER_GREEN='\033[0;32m'
 export _YELLOW='\033[0;33m'
 export _CLEAR_TEXT_COLOR='\033[0m' # No Color
+export _NEW_LINE_PLACE_HOLDER="_shrend_new_line_axcvert5"
 
 function checkShrenddVersion {
   _UPSHRENDD_VERSION="0.0.0-dev"
@@ -81,16 +90,21 @@ shrendd:
     warn: $_YELLOW
     pass: $_SUPER_GREEN
     info: $_LIGHT_BLUE
-    debug: $_BLUE
+    debug: $_MAGENTA
   targets:
-  - name: k8s
-    description: just testing extra fields in the array element
+  - name: render
+    description: the default target is just render.
   config:
     path: ./config
     validate: true
     unwind: true
     default: localdev.yml
     definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
+  render:
+    template:
+      dir: $_MODULE_DIR/resources/templates
+    render:
+      dir: $_MODULE_DIR/target/rendered
   k8s:
     source: "cloneShrendd \"$_GETTER\" \"k8s\""
     yaml:
@@ -248,15 +262,13 @@ function isUpToDate {
 }
 
 function initTargets {
-  echo "getting keys for config"
   export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
-  echo "getting keys for default"
   export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
-  echo "config keys: $_SHRENDD_CONFIG_KEYS"
-  echo "default keys: $_SHRENDD_DEFAULT_KEYS"
+  #echo "config keys: $_SHRENDD_CONFIG_KEYS"
+  #echo "default keys: $_SHRENDD_DEFAULT_KEYS"
   #getTargetsD "$_SHRENDD_CONFIG_KEYS"
   _target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
-  echo "trying to load array of targets: $_target_keys"
+  #echo "trying to load array of targets: $_target_keys"
   if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
     echo "no targets... using default list"
     #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
@@ -273,13 +285,14 @@ function initTargets {
       _targets="$_targets "
     fi
     _targets="$_targets$_target"
-    if [ $# -gt 0 ]; then
+    if [[ $# -gt 0 && "${_target}" != "render" ]]; then
       _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
       #cloneShrendd "$_GETTER" "$_target"
       echo "shrendd.${_target}.source: ${_target_source}"
       eval "${_target_source}"
     fi
   done
+  echo "targets initialized"
   export targets="$_targets"
 }
 
@@ -388,7 +401,7 @@ fi
 
 export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
 echo "======================================================="
-echo "                 best shrendds forever                 "
+echo -e "${_TEXT_INFO}                 best shrendds forever                 ${_CLEAR_TEXT_COLOR}"
 echo "using: $_config_path"
 if [[ $_stub == "false" ]]; then
   source ./.shrendd/deploy.sh

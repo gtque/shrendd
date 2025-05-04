@@ -50,9 +50,9 @@ process_k8s_script_maps() {
             fi
           done
       done
-      echo -e "+++++++++++++++rendered $fname+++++++++++++++"
+      echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
       cat $RENDER_DIR/$_CM_FILE
-      echo -e "+++++++++++++++rendered $fname+++++++++++++++"
+      echo -e "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
       echo -e "finished processing scripts for $fname\n======================================================"
       cd $_curdir
     done

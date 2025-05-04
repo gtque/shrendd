@@ -1,3 +1,4 @@
 required: true
 description: "something to summarize or express what this value is and used for"
+sensitive: false
 #default: "the default value to use"
