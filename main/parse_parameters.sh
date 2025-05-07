@@ -5,10 +5,12 @@ config=${config:-notset}
 is_debug=${is_debug:-true}
 stub=${stub:-false}
 deployaction=${deployaction:-setup}
+spawn=${spawn:-}
 
 export SKIP_TEMPLATE=false
 export SKIP_STANDARD=false
 export SKIP_DEPLOY="false"
+export SHRENDD_EXTRACT="false"
 export _requested_help="false"
 export _strict="false"
 export _JUST_INITIALIZE="false"
@@ -28,6 +30,8 @@ while [ $# -gt 0 ]; do
     declare $param="false"
   elif [[ $1 == "-share" ]]; then
     export SHRENDD_CONFIG_UNWIND="false"
+  elif [[ $1 == "-extract" ]]; then
+    export SHRENDD_EXTRACT="true"
   elif [[ $1 == "-S" ]]; then
     export _strict="true"
   elif [[ $1 == "-s" ]]; then
@@ -45,6 +49,8 @@ while [ $# -gt 0 ]; do
     echo -e "  -debug\n\t  run as local debug deployment/teardown, preserves rendered templates, this is the default mode"
     echo -e "  -live\n\t  run as live deployment/teardown, including auto clean up of rendered templates."
     echo -e "  -share\n\t  preserve config between modules, even with custom config, ie no unwinding.\n\t You can also set 'shrendd.config.unwind: false' in the shrendd.yml file."
+    echo -e "  -extract\n\t  produce a config-template.yml file from template files. This only considers those referenced in \${} or \$(getConfig) declarations"
+    echo -e "  --spawn [config yaml file name]\n\t generate a config yaml file based existing config-template.yml file."
     echo -e "  --stub [deployment type to stub]\n\t  stub some default template definitions, if defined, for the specified deployment type.\n\t  if stub is specified, render will be skipped, regardless of the order of parameters specified when running shrendd.\nt\t  example: --stub k8s"
     echo -e "  --module [relative\\path\\\to\\module]\n\t  the path to the module to be deployed, defaults to current directory.\n\t example: --module infrastructure\n\t example: --module simpleApiServer"
     echo -e "  --config [relative\\path\\\to\\\config.yml]\n\t  the path to the config.yml file to use for the deployment, relative to the configured config path (shrendd.config.path which defaults to './config').\n\t  default value: localdev.yml"
@@ -70,3 +76,4 @@ fi
 export _config=$config
 export _is_debug=$is_debug
 export deploy_action=${deployaction}
+export SHRENDD_SPAWN="$spawn"

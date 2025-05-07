@@ -301,54 +301,81 @@ function padding {
   echo "$spaces"
 }
 
+function loadConfig {
+  _the_module="$1"
+  if [ "$_the_module" == "." ]; then
+      export _SHRENDD="$_SHRENDDO"
+    else
+      _module_shrendd_yaml=$(shrenddOrDefault "shrendd.module.$_the_module.properties" || echo "./$_the_module/shrendd.yml")
+      if [ "${_module_shrendd_yaml}" == "null" ]; then
+        _module_shrendd_yaml="./$_the_module/shrendd.yml"
+      fi
+      echo "looking for: $_module_shrendd_yaml"
+      if [ -f $_module_shrendd_yaml ]; then
+        echo "found module's shrendd propeties, will use values defined there, if no value specified, will use default values."
+        export _SHRENDD=$(echo "$_SHRENDDO" | yq eval-all '. as $item ireduce ({}; . * $item )' - $_module_shrendd_yaml)
+      else
+        echo "no shrendd.yml found for the module, using defaults. For more information on configuring shrendd, please see:"
+        export _SHRENDD="$_SHRENDDO"
+      fi
+    fi
+
+    if [ "$_config" == "false" ]; then
+      echo -e "${_TEXT_WARN}sure, I can render without a config file, but it's much easier if there is one.${_CLEAR_TEXT_COLOR}"
+      echo "rendered ${_TEXT_WARN}without${_CLEAR_TEXT_COLOR} a config." >> $_DEPLOY_ERROR_DIR/render_warning.log
+    fi
+    export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
+
+    if [ -f $_config_path ]; then
+      if [[ "$_SHRENDD_UNWIND" == "true" && "$_reconfigured" == "false" && "$_config_path_proper" != "$_config_path" ]]; then
+        echo "looks like i need to unwind some configs first..."
+        unConfig
+        export _reconfigured="true"
+      fi
+      if [[ "$_reconfigured" == "true" ||  "$_config_path_proper" != "$_config_path" ]]; then
+        if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
+          export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
+        else
+          export _SHRENDD_CONFIG=$(cat $_config_path)
+        fi
+        export _PROVIDED_CONFIG=$(cat $_config_path)
+        echo "found $_config."
+        initConfig
+        echo "done initializing"
+        export _reconfigured="false"
+      fi
+    else
+      echo "no $_config found, no custom parameters defined."
+      export _SHRENDD_CONFIG=""
+    fi
+}
+
+function unwindConfig {
+    if [ -f $_config_path ]; then
+  #    if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
+  #      export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
+  #    else
+  #      export _SHRENDD_CONFIG=$(cat $_config_path)
+  #    fi
+  #    export _PROVIDED_CONFIG=$(cat $_config_path)
+  #    echo "found $_config."
+      echo "config was found, checking to see if it should be unwound."
+      if [[ "$_SHRENDD_UNWIND" == "true" && "$_config_path_proper" != "$_config_path" ]]; then
+        echo "unwinding config"
+        unConfig
+        export _reconfigured="false"
+      else
+        echo "sharing config(s) between modules, but only those not overridden by the current module."
+      fi
+    else
+      echo "no $_config, nothing to unset"
+    fi
+}
+
 function moduleRender {
   export _the_module="$1"
   echo "rendering: $_the_module"
-  if [ "$_the_module" == "." ]; then
-    export _SHRENDD="$_SHRENDDO"
-  else
-    _module_shrendd_yaml=$(shrenddOrDefault "shrendd.module.$_the_module.properties" || echo "./$_the_module/shrendd.yml")
-    if [ "${_module_shrendd_yaml}" == "null" ]; then
-      _module_shrendd_yaml="./$_the_module/shrendd.yml"
-    fi
-    echo "looking for: $_module_shrendd_yaml"
-    if [ -f $_module_shrendd_yaml ]; then
-      echo "found module's shrendd propeties, will use values defined there, if no value specified, will use default values."
-      export _SHRENDD=$(echo "$_SHRENDDO" | yq eval-all '. as $item ireduce ({}; . * $item )' - $_module_shrendd_yaml)
-    else
-      echo "no shrendd.yml found for the module, using defaults. For more information on configuring shrendd, please see:"
-      export _SHRENDD="$_SHRENDDO"
-    fi
-  fi
 
-  if [ "$_config" == "false" ]; then
-    echo -e "${_TEXT_WARN}sure, I can render without a config file, but it's much easier if there is one.${_CLEAR_TEXT_COLOR}"
-    echo "rendered ${_TEXT_WARN}without${_CLEAR_TEXT_COLOR} a config." >> $_DEPLOY_ERROR_DIR/render_warning.log
-  fi
-  export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
-
-  if [ -f $_config_path ]; then
-    if [[ "$_SHRENDD_UNWIND" == "true" && "$_reconfigured" == "false" && "$_config_path_proper" != "$_config_path" ]]; then
-      echo "looks like i need to unwind some configs first..."
-      unConfig
-      export _reconfigured="true"
-    fi
-    if [[ "$_reconfigured" == "true" ||  "$_config_path_proper" != "$_config_path" ]]; then
-      if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
-        export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
-      else
-        export _SHRENDD_CONFIG=$(cat $_config_path)
-      fi
-      export _PROVIDED_CONFIG=$(cat $_config_path)
-      echo "found $_config."
-      initConfig
-      echo "done initializing"
-      export _reconfigured="false"
-    fi
-  else
-    echo "no $_config found, no custom parameters defined."
-    export _SHRENDD_CONFIG=""
-  fi
   export _STARTING_DIR=$(pwd)
   echo "switching to module: $_the_module"
   cd $_the_module
@@ -389,24 +416,6 @@ function moduleRender {
     echo "no ./deploy/$deploy_action/post.sh"
   fi
   cd $_STARTING_DIR
-  if [ -f $_config_path ]; then
-#    if [ "$(shrenddOrDefault "shrendd.config.validate")" == "true" ]; then
-#      export _SHRENDD_CONFIG=$(cat "$(shrenddOrDefault "shrendd.config.definition")")
-#    else
-#      export _SHRENDD_CONFIG=$(cat $_config_path)
-#    fi
-#    export _PROVIDED_CONFIG=$(cat $_config_path)
-#    echo "found $_config."
-    if [[ "$_SHRENDD_UNWIND" == "true" && "$_config_path_proper" != "$_config_path" ]]; then
-      echo "unwinding config"
-      unConfig
-      export _reconfigured="false"
-    else
-      echo "sharing config(s) between modules, but only those not overridden by the current module."
-    fi
-  else
-    echo "no $_config, nothing to unset"
-  fi
 }
 
 export _DEPLOY_ERROR_DIR="$SHRENDD_WORKING_DIR/.shrendd/errors"
@@ -441,5 +450,7 @@ fi
 export _reconfigured="false"
 
 for _specific_module in $_module; do
+  loadConfig $_specific_module
   moduleRender $_specific_module
+  unwindConfig
 done
