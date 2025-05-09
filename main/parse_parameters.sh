@@ -14,6 +14,7 @@ export SHRENDD_EXTRACT="false"
 export _requested_help="false"
 export _strict="false"
 export _JUST_INITIALIZE="false"
+_do_something=""
 
 while [ $# -gt 0 ]; do
   if [[ $1 == *"--"* ]]; then
@@ -37,11 +38,14 @@ while [ $# -gt 0 ]; do
   elif [[ $1 == "-s" ]]; then
     param="deployaction"
     declare $param="setup"
+    _do_something="true"
   elif [[ $1 == "-t" ]]; then
     param="deployaction"
     declare $param="teardown"
+    _do_something="true"
   elif [[ $1 == "-r" ]]; then
     export SKIP_DEPLOY="true"
+    _do_something="true"
   elif [[ $1 == "?" ]]; then
     export helped=true
     echo "Usage:"
@@ -75,5 +79,12 @@ if [[ $config == "notset" ]]; then
 fi
 export _config=$config
 export _is_debug=$is_debug
+if [ "$_do_something" == "true" ]; then
+  :
+else
+  if [ "$SHRENDD_EXTRACT" == "true" ]; then
+    deployaction="skip"
+  fi
+fi
 export deploy_action=${deployaction}
 export SHRENDD_SPAWN="$spawn"

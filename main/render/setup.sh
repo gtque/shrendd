@@ -17,22 +17,7 @@ function actualRender {
 #  fi
   echo "eval finished"
   echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
-  if [ -z "${_TUXEDO_MASK+x}" ]; then
-    cat "$_rname"
-  else
-    replacement=$'\n' # Define replacement as a newline character
-    _new_string=$(cat "$_rname")
-    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\r//g')
-    #echo "processing newlines: $_new_string"
-    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g')
-    #echo "curent string: $_new_string"
-    #echo "processing sensitive values: $_TUXEDO_MASK"
-    _new_string=$(echo "$_new_string" | sed "$_TUXEDO_MASK")
-    #echo "replacing new lines: $_new_string"
-    _new_string="${_new_string//$_NEW_LINE_PLACE_HOLDER/$replacement}"
-    #echo "processed"
-    echo -e "$_new_string"
-  fi
+  echoSensitive "$(cat $_rname)"
   echo -e "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
   if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
     _render_errors=$(cat $_DEPLOY_ERROR_DIR/config_error.log)

@@ -3,6 +3,17 @@ set -euo pipefail
 
 trap resetLocal EXIT
 
+export _RED='\033[0;31m'
+export _BLUE='\033[0;34m'
+export _MAGENTA='\033[0;35m'
+export _LIGHT_BLUE='\033[1;34m'
+export _SUPER_GREEN='\033[0;32m'
+export _YELLOW='\033[0;33m'
+export _CLEAR_TEXT_COLOR='\033[0m' # No Color
+export _NEW_LINE_PLACE_HOLDER="_shrendd_new_line_axcvert5"
+export _SPACE_PLACE_HOLDER="_shrendd_space_joasd7rfc"
+export _TUXEDO_MASK=""
+
 function resetLocal {
   if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
     echo "information during shrendd:"
@@ -28,15 +39,6 @@ function resetLocal {
   fi
   echo -e "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
 }
-
-export _RED='\033[0;31m'
-export _BLUE='\033[0;34m'
-export _MAGENTA='\033[0;35m'
-export _LIGHT_BLUE='\033[1;34m'
-export _SUPER_GREEN='\033[0;32m'
-export _YELLOW='\033[0;33m'
-export _CLEAR_TEXT_COLOR='\033[0m' # No Color
-export _NEW_LINE_PLACE_HOLDER="_shrend_new_line_axcvert5"
 
 function checkShrenddVersion {
   _UPSHRENDD_VERSION="0.0.0-dev"
@@ -71,7 +73,7 @@ function checkFile {
 }
 
 function keysFor {
-  echo $(echo -e "$1" | yq e "(.. | select(. == \"*\") | {(path | join(\".\")): .}) | keys " - | sed -e "s/\- //g")
+  echo $(echo -e "$1" | yq e "(.. | select(. == \"*\") | {(path | join(\".\")): .}) | keys " - | sed -e "s/\- //g" | sed -e "s/ /$_SPACE_PLACE_HOLDER/g")
 }
 
 function defaultShrendd {
@@ -141,7 +143,18 @@ function wgetD {
 }
 
 function trueName {
-  echo "$(echo "$1" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]" | cut -d'[' -f1)"
+#            match=$(echo "$match" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+#            match=$(echo "$match" | sed -E 's/([a-zA-Z0-9\ _\-]+ +[a-zA-Z0-9\ _\-]+)/[\"\1\"]/g')
+#            if [[ "$match" == *"-"* ]]; then
+#              :
+#            else
+#              match=$(echo "$match" | sed -e "s/_/\./g")
+#            fi
+  echo "$(echo "$1" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g" | sed -e "s/ /_/g" | sed -e "s/-/_/g" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]" | sed "s/\[\"//g" | sed "s/\"\]//g" | cut -d'[' -f1)"
+}
+
+function yqName {
+  echo "$(echo "$1" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g" | sed -e 's/\([a-zA-Z0-9 _-]\+ \+[a-zA-Z0-9 _-]\+\)/[\"\1\"]/g')"
 }
 
 function testIf {
@@ -277,6 +290,7 @@ function initTargets {
 
   _targets=""
   for index in $_target_keys; do
+    index=$(echo "$index" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
     _target=$(shrenddOrDefault "$index" 0)
     echo -e "checking: $_target"
     if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
@@ -332,7 +346,27 @@ function cloneShrendd {
   fi
 }
 
+function echoSensitive {
+  if [ -z "${_TUXEDO_MASK+x}" ]; then
+    echo -e "$1"
+  else
+    replacement=$'\n' # Define replacement as a newline character
+    _new_string=$(echo "$1")
+    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\r//g')
+    #echo "processing newlines: $_new_string"
+    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g')
+    #echo "curent string: $_new_string"
+    #echo "processing sensitive values: $_TUXEDO_MASK"
+    _new_string=$(echo "$_new_string" | sed "$_TUXEDO_MASK")
+    #echo "replacing new lines: $_new_string"
+    _new_string="${_new_string//$_NEW_LINE_PLACE_HOLDER/$replacement}"
+    #echo "processed"
+    echo -e "$_new_string"
+  fi
+}
+
 #load shrendd.yml for properties
+echo "shrendding..."
 export _SHREND_YML="./shrendd.yml"
 if [[ -n "${SHREND_YML+x}" ]]; then
   export _SHREND_YML="$SHREND_YML"
@@ -344,6 +378,7 @@ else
   echo "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
   export _SHRENDD=""
 fi
+
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
 export TEST_SHRENDD_VERSION="hello world"
 testIf "test.shrendd.version"
@@ -354,7 +389,7 @@ export _DEPLOY_ERROR_DIR="$SHRENDD_WORKING_DIR/.shrendd/errors"
 echo "shrendd version: $_SHRENDD_VERSION"
 initColors
 
-#check for yq, error if not present with message
+##check for yq, error if not present with message
 checkCommand "yq" 1
 
 if [ -d $(shrenddOrDefault "shrendd.test.local") ]; then
@@ -377,7 +412,7 @@ cloneShrendd "$_GETTER" "render"
 
 source ./.shrendd/parse_parameters.sh
 
-##bootstrap any add ons or other stuff before shrendding.
+#bootstrap any add ons or other stuff before shrendding.
 if [ -f ./boot.shrendd ]; then
   echo "found a boot.shrendd file, sourcing it now..."
   source ./boot.shrendd
@@ -405,8 +440,9 @@ echo -e "${_TEXT_INFO}                 best shrendds forever                 ${_
 echo "using: $_config_path"
 if [[ $_stub == "false" ]]; then
   source ./.shrendd/deploy.sh
+  shrenddDeployRun
 else
   echo "stubbing: $_stub/toes"
   source ./.shrendd/stub.sh
 fi
-checkShrenddVersion
+#checkShrenddVersion
