@@ -82,7 +82,7 @@ export _is_debug=$is_debug
 if [ "$_do_something" == "true" ]; then
   :
 else
-  if [ "$SHRENDD_EXTRACT" == "true" ]; then
+  if [ "$SHRENDD_EXTRACT" == "true" ] || [ -n "$spawn" ]; then
     deployaction="skip"
   fi
 fi

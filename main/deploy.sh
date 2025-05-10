@@ -400,7 +400,7 @@ function unwindConfig {
 }
 
 function extractTemplate {
-  echo "{{{{extraction started}}}}"
+  echo "$_TEXT_WARN{{{{${_CLEAR_TEXT_COLOR}extraction started$_TEXT_WARN}}}}${_CLEAR_TEXT_COLOR}"
   if [ -f "$_SHRENDD_CONFIG_TEMPLATE_PATH" ]; then
     :
   else
@@ -449,31 +449,23 @@ function extractTemplate {
           echo "  extracted: $match"  # Example: Print the match
           _found="empty"
           _current_template_yaml=$(cat $_actual_template_path)
-#          if [[ "$match" == *"burton"* ]]; then
-#            echo "  guster: $match"
-#          else
-            if [ -z "$_current_template_yaml" ]; then
-              echo "  template is empty"
+          if [ -z "$_current_template_yaml" ]; then
+            echo "  template is empty"
+          else
+            echo "  template is not empty"
+            _found=$(cat "$_actual_template_path" | yq e ".$match" -)
+          fi
+          if [ "$_found" ==  "null" ]; then
+            echo "  adding to template."
+            yq -i ".$match = strenv(_template_stub)" $_actual_template_path
+          else
+            if [ "$_found" == "empty" ]; then
+              echo "  creating new template yaml:$match"
+              yq -n ".$match = strenv(_template_stub)" > $_actual_template_path
             else
-              echo "  template is not empty"
-              _found=$(cat "$_actual_template_path" | yq e ".$match" -)
-#              _found="null"
+              echo "  already in template."
             fi
-  #          _found=$(cat "$_actual_template_path" | yq e ".$match" -)
-            if [ "$_found" ==  "null" ]; then
-              echo "  adding to template."
-              yq -i ".$match = strenv(_template_stub)" $_actual_template_path
-              #echo "$_current_template" | yq e -i ".$match = hello" -
-            else
-              if [ "$_found" == "empty" ]; then
-                echo "  creating new template yaml:$match"
-                yq -n ".$match = strenv(_template_stub)" > $_actual_template_path
-              else
-                echo "  already in template."
-              fi
-            fi
-#          fi
-          # Replace this with your desired action
+          fi
         done
         echo -e "end $fname\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
       done
@@ -484,7 +476,83 @@ function extractTemplate {
 }
 
 function spawnTemplate {
-  echo "}}}}spawning{{{{"
+  echo -e "$_TEXT_WARN}}}}spawning{{{{${_CLEAR_TEXT_COLOR}"
+  if [ -z "$_SHRENDD_CONFIG" ]; then
+    echo "no shrendd_config"
+    _config_keys=""
+  else
+    _config_keys=$(keysFor "$_SHRENDD_CONFIG")
+  fi
+  _spawn_path=$(echo "$_STARTING_DIR/$(shrenddOrDefault shrendd.config.path)/${SHRENDD_SPAWN}" | sed -e "s/\/\.\//\//g")
+  if [ -f $_spawn_path ]; then
+    echo "spawn does exist: $_spawn_path"
+  else
+    echo "${_TEXT_INFO}spawn does not exist: $_spawn_path${_CLEAR_TEXT_COLOR}"
+    VAR="$_spawn_path"
+    DIR="."
+    if [[ "$VAR" == *"/"* ]]; then
+      DIR=${VAR%/*}
+      echo "config dir: $DIR"
+      if [ -d $DIR ]; then
+        :
+      else
+        mkdir -p $DIR
+      fi
+    fi
+  fi
+  for _config_key in $_config_keys; do
+    _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
+    _yq_name=$(yqName "$_config_key")
+    _found="empty"
+    export _template_stub=""
+    echo -e "${_TEXT_DEBUG}spawning:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
+    _spawn_default=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".default" -)
+    _has_array="false"
+    if [ "$_spawn_default" == "null" ]; then
+      echo "  no default value found."
+    else
+      echo "  found a default value"
+      export _template_stub="$_spawn_default"
+      _default_array=$(echo "$_spawn_default" | yq e ".[]" - )
+      if [ -z "$_default_array" ]; then
+        _has_array="false"
+      else
+        _has_array="true"
+        export _template_stub="$(echo "[${_template_stub/-/{}}]" | sed -e "s/-/},{/g" | sed ':a;N;$!ba;s/\([^{]\)\n\([^}]\)/\1,\2/g'  | sed ':a;N;$!ba;s/\([^}]\)\n\([}]\)/\1,\2/g')"
+      fi
+      echo "  has array:$_has_array"
+    fi
+    if [ -f $_spawn_path ]; then
+      echo "  spawn is present"
+    #      cat "${_spawn_path}"
+      _found=$(cat $_spawn_path | yq e ".$_yq_name" -)
+    else
+      echo "  no spawn, will try to create it this time."
+    fi
+    if [ "$_found" ==  "null" ]; then
+      echo "  adding to config."
+      if [ "$_has_array" == "false" ]; then
+        yq -i ".${_yq_name} = strenv(_template_stub)" $_spawn_path
+      else
+        echo -e "  trying to add array:\n$_template_stub"
+        yq -i ".${_yq_name} = []" $_spawn_path
+        yq -i ".${_yq_name} += env(_template_stub)" $_spawn_path
+      fi
+    else
+      if [ "$_found" == "empty" ]; then
+        echo "  creating new config yaml:$_yq_name"
+        if [ "$_has_array" == "false" ]; then
+          yq -n ".${_yq_name} = strenv(_template_stub)" > $_spawn_path
+        else
+          echo "  trying to add array"
+          yq -i ".${_yq_name} = []"  > $_spawn_path
+          yq -i ".${_yq_name} += env(_template_stub)" $_spawn_path
+        fi
+      else
+        echo "  already in spawn."
+      fi
+    fi
+  done
 }
 
 function moduleRender {
