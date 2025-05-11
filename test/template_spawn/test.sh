@@ -3,7 +3,9 @@ set -euo pipefail
 
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
-rm -f ./config/testspawn.yml
+rm -rf ./config
+mkdir ./config
+cp ./test-init/config-template.yml ./config/.
 echo "attempting spawn"
 _valid=$(./shrendd --spawn testspawn.yml)
 echo -e "$_valid"

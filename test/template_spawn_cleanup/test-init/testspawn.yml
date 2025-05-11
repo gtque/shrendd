@@ -10,13 +10,13 @@ test:
     - {name: t, age: 27}
     - {name: e, age: 44}
 test-howdy: ""
+i:
+  should:
+    not: "exist"
 psych:
   spencer:
     shawn: ""
     henry: ""
   juliet: "42"
-  burton guster: "true"
   fru it:
-    pin-a p_pl e: pen
-left:
-  overs: chinese
+    pin-a p_pl e: "cheeseburger"
