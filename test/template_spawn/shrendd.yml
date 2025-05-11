@@ -1,0 +1,10 @@
+shrendd:
+  test:
+    local: ../../main
+    array:
+      - name: a
+        age: 15
+      - name: t
+        age: 27
+      - name: e
+        age: 44

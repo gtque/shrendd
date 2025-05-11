@@ -39,6 +39,9 @@ template rendering and deployment
       1. native bash functions
       2. custom functions
    6. config template
+      1. utilize template
+      2. extract template
+      3. generate config from template
    7. k8s
    8. ~~custom module source~~
    9. bootstrap

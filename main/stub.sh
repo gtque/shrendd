@@ -31,6 +31,7 @@ function stubConfig {
     _template=$(cat $_template_path)
     _config_keys=$(keysFor "$_template")
     for _config_key in $_config_keys; do
+      _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
       echo "key: $_config_key"
       yq -i ".$_config_key |= load_str(\"$SHRENDD_WORKING_DIR/.shrendd/render/config/template.yml\")" ${_template_path}
     done
