@@ -400,11 +400,12 @@ function unwindConfig {
 }
 
 function extractTemplate {
-  echo "$_TEXT_WARN{{{{${_CLEAR_TEXT_COLOR}extraction started$_TEXT_WARN}}}}${_CLEAR_TEXT_COLOR}"
-  if [ -f "$_SHRENDD_CONFIG_TEMPLATE_PATH" ]; then
+  echo "$_TEXT_WARN{{{{temp extraction started}}}}${_CLEAR_TEXT_COLOR}"
+  _template_path="${_SHRENDD_CONFIG_TEMPLATE_PATH}.temp"
+  if [ -f $_template_path ]; then
     :
   else
-    VAR="$_SHRENDD_CONFIG_TEMPLATE_PATH"
+    VAR="$_template_path"
     DIR="."
     if [[ "$VAR" == *"/"* ]]; then
       DIR=${VAR%/*}
@@ -414,15 +415,15 @@ function extractTemplate {
         mkdir -p $DIR
       fi
     fi
-    echo "" > $_SHRENDD_CONFIG_TEMPLATE_PATH
+    echo "" > $_template_path
   fi
   _actual_template_path=$(pwd)
-  _actual_template_path=$(echo "$_actual_template_path/$_SHRENDD_CONFIG_TEMPLATE_PATH")
+  _actual_template_path=$(echo "$_actual_template_path/$_template_path")
   export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
   _current_template=""
   for _target in $targets; do
     export target="$_target"
-    echo "deploying: $target"
+    echo "extracting: $target"
     echo "initializing target template directory"
     targetDirs "$target"
     if [ -d "$TEMPLATE_DIR" ]; then
@@ -475,6 +476,94 @@ function extractTemplate {
 #    echo $_current_template
 }
 
+function extractCleanUp {
+  echo "$_TEXT_WARN{{{{extraction started}}}}${_CLEAR_TEXT_COLOR}"
+  _template_path="${_SHRENDD_CONFIG_TEMPLATE_PATH}"
+  _template_path_temp="${_SHRENDD_CONFIG_TEMPLATE_PATH}.temp"
+  if [ -f $_template_path_temp ]; then
+    if [ -f $_template_path ]; then
+      :
+    else
+      VAR="$_template_path"
+      DIR="."
+      if [[ "$VAR" == *"/"* ]]; then
+        DIR=${VAR%/*}
+        if [ -d $DIR ]; then
+          :
+        else
+          mkdir -p $DIR
+        fi
+      fi
+      echo "" > $_template_path
+    fi
+    _actual_template_path=$(pwd)
+    _actual_template_path=$(echo "$_actual_template_path/$_template_path")
+    _actual_template_path_temp=$(echo "$(pwd)/$_template_path_temp")
+    echo "temp path: $_actual_template_path_temp"
+    export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
+    _template_keys=""
+    if [ -f $_actual_template_path ]; then
+      echo "${_TEXT_WARN}template is present${_CLEAR_TEXT_COLOR}"
+      _template_keys=$(keysFor "$(cat $_actual_template_path)")
+      echo "current keys: \"$_template_keys\""
+    fi
+    _template_keys_temp=""
+    if [ -f $_actual_template_path_temp ]; then
+      echo "${_TEXT_WARN}temp template is present${_CLEAR_TEXT_COLOR}"
+      _template_keys_temp=$(keysFor "$(cat $_actual_template_path_temp)")
+      echo "current temp keys: \"$_template_keys_temp\""
+    fi
+    for _config_key in $_template_keys_temp; do
+      _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
+      _yq_name=$(yqName "$_config_key")
+      _found="empty"
+      echo -e "${_TEXT_DEBUG}templating:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
+      _has_array="false"
+      _drop_key=$(echo "$_config_key" | sed "s/ /$_SPACE_PLACE_HOLDER/g")
+      _template_keys=$(echo "$_template_keys"| sed "s/$_drop_key[^ ]*//g" | sed "s/^ //g" | sed "s/  */ /g")
+      if [ -f $_actual_template_path ]; then
+        _found=$(cat $_actual_template_path | yq e ".$_yq_name" -)
+      else
+        echo "  no template, will try to create it this time."
+      fi
+      if [ "$_found" ==  "null" ]; then
+        echo "  adding to config."
+        if [ "$_has_array" == "false" ]; then
+          yq -i ".${_yq_name} = strenv(_template_stub)" $_actual_template_path
+        else
+          echo -e "  trying to add array:\n$_template_stub"
+          yq -i ".${_yq_name} = []" $_actual_template_path
+          yq -i ".${_yq_name} += env(_template_stub)" $_actual_template_path
+        fi
+      else
+        if [ "$_found" == "empty" ]; then
+          echo "  creating new config yaml:$_yq_name"
+          if [ "$_has_array" == "false" ]; then
+            yq -n ".${_yq_name} = strenv(_template_stub)" > $_actual_template_path
+          else
+            echo "  trying to add array"
+            yq -i ".${_yq_name} = []"  > $_actual_template_path
+            yq -i ".${_yq_name} += env(_template_stub)" $_actual_template_path
+          fi
+        else
+          echo "  already in template."
+        fi
+      fi
+    done
+    if [ -f $_template_path ]; then
+      for _config_key in $_template_keys; do
+        _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
+        _yq_name=$(yqName "$_config_key")
+        echo "${_TEXT_WARN}dropping key:$_config_key${_CLEAR_TEXT_COLOR}"
+        yq -i "del(.${_yq_name})" $_actual_template_path
+      done
+      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
+      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
+    fi
+    rm -rf $_actual_template_path_temp
+  fi
+}
+
 function spawnTemplate {
   echo -e "$_TEXT_WARN}}}}spawning{{{{${_CLEAR_TEXT_COLOR}"
   if [ -z "$_SHRENDD_CONFIG" ]; then
@@ -484,6 +573,12 @@ function spawnTemplate {
     _config_keys=$(keysFor "$_SHRENDD_CONFIG")
   fi
   _spawn_path=$(echo "$_STARTING_DIR/$(shrenddOrDefault shrendd.config.path)/${SHRENDD_SPAWN}" | sed -e "s/\/\.\//\//g")
+  _spawned_keys=""
+  if [ -f $_spawn_path ]; then
+    echo "${_TEXT_WARN}spawn is present${_CLEAR_TEXT_COLOR}"
+  #      cat "${_spawn_path}"
+    _spawned_keys=$(keysFor "$(cat $_spawn_path)")
+  fi
   if [ -f $_spawn_path ]; then
     echo "spawn does exist: $_spawn_path"
   else
@@ -508,6 +603,8 @@ function spawnTemplate {
     echo -e "${_TEXT_DEBUG}spawning:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
     _spawn_default=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".default" -)
     _has_array="false"
+    _drop_key=$(echo "$_config_key" | sed "s/ /$_SPACE_PLACE_HOLDER/g")
+    _spawned_keys=$(echo "$_spawned_keys"| sed "s/$_drop_key[^ ]*//g" | sed "s/^ //g" | sed "s/  */ /g")
     if [ "$_spawn_default" == "null" ]; then
       echo "  no default value found."
     else
@@ -553,6 +650,15 @@ function spawnTemplate {
       fi
     fi
   done
+  if [ -f $_spawn_path ]; then
+    for _config_key in $_spawned_keys; do
+      _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
+      _yq_name=$(yqName "$_config_key")
+      echo "${_TEXT_WARN}dropping key:$_config_key${_CLEAR_TEXT_COLOR}"
+      yq -i "del(.${_yq_name})" $_spawn_path
+    done
+    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_spawn_path
+  fi
 }
 
 function moduleRender {
@@ -674,27 +780,57 @@ function shrenddDeployRun {
   export _reconfigured="false"
   export _STARTING_DIR=$(pwd)
 
-  for _specific_module in $_module; do
-    loadConfig $_specific_module
-
-    echo "switching to module: $_the_module"
-    cd $_the_module
-
-    export _MODULE_DIR=$(pwd)
-    echo "trying to load array of targets for: $_MODULE_DIR"
-    initTargets
-    if [ "$SHRENDD_EXTRACT" == "true" ]; then
+  if [ "$SHRENDD_EXTRACT" == "true" ]; then
+    #write to temp file
+    for _specific_module in $_module; do
+      loadConfig $_specific_module
+      echo "switching to module: $_the_module"
+      cd $_the_module
+      export _MODULE_DIR=$(pwd)
+      initTargets
       extractTemplate $_specific_module
-    fi
-    if [ -z "$SHRENDD_SPAWN" ]; then
+      unwindConfig
+      cd $_STARTING_DIR
+    done
+    #merge and clean up actual config template file
+    for _specific_module in $_module; do
+      loadConfig $_specific_module
+      echo "switching to module: $_the_module"
+      cd $_the_module
+      export _MODULE_DIR=$(pwd)
+      initTargets
+      extractCleanUp $_specific_module
+      unwindConfig
+      cd $_STARTING_DIR
+    done
+  fi
+
+  if [ -z "$SHRENDD_SPAWN" ]; then
       :
-    else
+  else
+    for _specific_module in $_module; do
+      loadConfig $_specific_module
+      echo "switching to module: $_the_module"
+      cd $_the_module
+      export _MODULE_DIR=$(pwd)
+      echo "trying to load array of targets for: $_MODULE_DIR"
+      initTargets
       spawnTemplate $_specific_module
-    fi
-    if [[ "$deploy_action" != "skip" ]]; then
+      unwindConfig
+      cd $_STARTING_DIR
+    done
+  fi
+  if [[ "$deploy_action" != "skip" ]]; then
+    for _specific_module in $_module; do
+      loadConfig $_specific_module
+      echo "switching to module: $_the_module"
+      cd $_the_module
+      export _MODULE_DIR=$(pwd)
+      echo "trying to load array of targets for: $_MODULE_DIR"
+      initTargets
       moduleRender $_specific_module
-    fi
-    unwindConfig
-    cd $_STARTING_DIR
-  done
+      unwindConfig
+      cd $_STARTING_DIR
+    done
+  fi
 }

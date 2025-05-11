@@ -1,0 +1,70 @@
+test:
+  hello: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  howdy: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  multipass: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  corbin: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  multipass2: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  array: |-
+    required: false
+    description: "this is an example of an array default"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    default:
+      - name: a
+        age: 15
+      - name: t
+        age: 27
+      - name: e
+        age: 44
+test-howdy: |-
+  required: false
+  description: "something to summarize or express what this value is and used for"
+  sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+  #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+psych:
+  spencer:
+    shawn: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    henry: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  juliet: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    default: 42
+  burton guster: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    default: true
+  fru it:
+    pin-a p_pl e: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      default: "pen"

@@ -1,0 +1,22 @@
+test:
+  hello: ""
+  howdy: ""
+  multipass: ""
+  corbin: ""
+  ex tra: "remains"
+  multipass2: ""
+  array:
+    - {name: a, age: 15}
+    - {name: t, age: 27}
+    - {name: e, age: 44}
+test-howdy: ""
+psych:
+  spencer:
+    shawn: ""
+    henry: ""
+  juliet: "42"
+  burton guster: "true"
+  fru it:
+    pin-a p_pl e: pen
+left:
+  overs: chinese

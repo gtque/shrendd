@@ -4,6 +4,7 @@ set -euo pipefail
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
 rm -f ./config/testspawn.yml
+cp ./test-init/testspawn.yml ./config/.
 echo "attempting spawn"
 _valid=$(./shrendd --spawn testspawn.yml)
 echo -e "$_valid"
@@ -12,6 +13,9 @@ _test_array=$(yq e ".test.array" "./config/config-template.yml")
 _test_array_age_actual=$(yq e ".test.array.[2].age" "./config/testspawn.yml")
 _test_array_age_expected=$(echo "$_test_array" | yq e ".default.[2].age" -)
 _test_array_age_description=$(echo "$_test_array" | yq e ".description" -)
+#_test_hello_description=$(echo "$_test_hello" | yq e ".description" -)
+#_test_hello_sensitive=$(echo "$_test_hello" | yq e ".sensitive" -)
+#_test_hello_default=$(echo -e "$_test_hello" | grep "#default:" || echo "not found")
 _shawn=$(yq e ".psych.spencer.shawn" "./config/config-template.yml")
 _shawn_expected=$(echo "$_shawn" | yq e ".default" -)
 if [ "$_shawn_expected" == "null" ]; then
@@ -50,5 +54,40 @@ if [ "$_pineapple_expected" == "$_pineapple_actual" ]; then
 else
   export test_results="$test_results\t${_TEST_ERROR}nested complex key: not equal. \"$_pineapple_expected\" == \"$_pineapple_actual\" failed${_CLEAR_TEXT_COLOR}\n"
 fi
+#if [ "$_shawn" == "null" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}nested key: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tnested key: stubbed. passed\n"
+#fi
+#if [ "$_gus" == "null" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}key with space: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tkey with space: stubbed. passed\n"
+#fi
+#if [ "$_pineapple" == "null" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}complex key: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tcomplex key: stubbed. passed\n"
+#fi
+#if [ "$_test_hello_required" == "null" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}stubbed required: required not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tstubbed required: required stubbed. passed\n"
+#fi
+#if [ "$_test_hello_description" == "null" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}stubbed description: description not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tstubbed description: description stubbed. passed\n"
+#fi
+#if [ "$_test_hello_sensitive" == "null" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}stubbed sensitive: sensitive not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tstubbed sensitive: sensitive stubbed. passed\n"
+#fi
+#if [ "$_test_hello_default" == "not found" ]; then
+#  export test_results="$test_results\t${_TEST_ERROR}stubbed default: default value (comment) not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+#else
+#  export test_results="$test_results\tstubbed default: default value (comment) stubbed. passed\n"
+#fi
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh
