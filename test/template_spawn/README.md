@@ -1,1 +1,1 @@
-test extracting a config-template file.
+test spawning a config file from a config-template.

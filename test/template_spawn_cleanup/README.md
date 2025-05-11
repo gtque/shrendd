@@ -1,1 +1,1 @@
-test extracting a config-template file.
+test updating spawnd config with removing entries that no longer exist.

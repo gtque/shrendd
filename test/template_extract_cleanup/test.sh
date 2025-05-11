@@ -4,6 +4,7 @@ set -euo pipefail
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
 rm -rf ./config/config-template.yml
+cp ./test-init/config-template.yml ./config/.
 echo "attempting extract"
 _valid=$(./shrendd -extract)
 echo -e "$_valid"
