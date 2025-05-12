@@ -128,7 +128,7 @@ function initConfig {
         if [ "$_value_description" == "null" ]; then
           _value_description=""
         fi
-        if [ "${_value_required}" == "true" ]; then
+        if [ "${_value_required}" == "true" ] && [ "$_IGNORE_REQUIRED" == "false" ]; then
           echo "  \"$_config_key\" is required but was not provided. Description: $_value_description"
           echo "\"$_config_key\" is required but was not provided. Description: $_value_description" >> $_DEPLOY_ERROR_DIR/render_error.log
           _initialized="false"
@@ -602,6 +602,7 @@ function spawnTemplate {
     export _template_stub=""
     echo -e "${_TEXT_DEBUG}spawning:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
     _spawn_default=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".default" -)
+    _spawn_comment=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".description" -)
     _has_array="false"
     _drop_key=$(echo "$_config_key" | sed "s/ /$_SPACE_PLACE_HOLDER/g")
     _spawned_keys=$(echo "$_spawned_keys"| sed "s/$_drop_key[^ ]*//g" | sed "s/^ //g" | sed "s/  */ /g")
@@ -630,9 +631,17 @@ function spawnTemplate {
       echo "  adding to config."
       if [ "$_has_array" == "false" ]; then
         yq -i ".${_yq_name} = strenv(_template_stub)" $_spawn_path
+        if [ "$_spawn_comment" != "null" ]; then
+          echo "  adding comment."
+          yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" $_spawn_path
+        fi
       else
         echo -e "  trying to add array:\n$_template_stub"
         yq -i ".${_yq_name} = []" $_spawn_path
+        if [ "$_spawn_comment" != "null" ]; then
+          echo "  adding comment."
+          yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" $_spawn_path
+        fi
         yq -i ".${_yq_name} += env(_template_stub)" $_spawn_path
       fi
     else
@@ -640,13 +649,25 @@ function spawnTemplate {
         echo "  creating new config yaml:$_yq_name"
         if [ "$_has_array" == "false" ]; then
           yq -n ".${_yq_name} = strenv(_template_stub)" > $_spawn_path
+          if [ "$_spawn_comment" != "null" ]; then
+            echo "  adding comment."
+            yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" $_spawn_path
+          fi
         else
           echo "  trying to add array"
           yq -i ".${_yq_name} = []"  > $_spawn_path
+          if [ "$_spawn_comment" != "null" ]; then
+            echo "  adding comment."
+            yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" $_spawn_path
+          fi
           yq -i ".${_yq_name} += env(_template_stub)" $_spawn_path
         fi
       else
         echo "  already in spawn."
+        if [ "$_spawn_comment" != "null" ]; then
+          echo "  adding comment."
+          yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" $_spawn_path
+        fi
       fi
     fi
   done
@@ -775,13 +796,13 @@ function shrenddDeployRun {
       echo "" > "$VAR"
       export _PROVIDED_CONFIG=""
     fi
-    initConfig
   fi
   export _reconfigured="false"
   export _STARTING_DIR=$(pwd)
-
+  export _IGNORE_REQUIRED="false"
   if [ "$SHRENDD_EXTRACT" == "true" ]; then
     #write to temp file
+    export _IGNORE_REQUIRED="true"
     for _specific_module in $_module; do
       loadConfig $_specific_module
       echo "switching to module: $_the_module"
@@ -804,10 +825,11 @@ function shrenddDeployRun {
       cd $_STARTING_DIR
     done
   fi
-
+  export _IGNORE_REQUIRED="false"
   if [ -z "$SHRENDD_SPAWN" ]; then
       :
   else
+    export _IGNORE_REQUIRED="true"
     for _specific_module in $_module; do
       loadConfig $_specific_module
       echo "switching to module: $_the_module"
@@ -820,7 +842,9 @@ function shrenddDeployRun {
       cd $_STARTING_DIR
     done
   fi
+  export _IGNORE_REQUIRED="false"
   if [[ "$deploy_action" != "skip" ]]; then
+    initConfig
     for _specific_module in $_module; do
       loadConfig $_specific_module
       echo "switching to module: $_the_module"

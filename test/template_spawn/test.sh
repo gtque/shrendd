@@ -19,8 +19,11 @@ _shawn_expected=$(echo "$_shawn" | yq e ".default" -)
 if [ "$_shawn_expected" == "null" ]; then
   _shawn_expected=""
 fi
+_test_howdy_description_actual=$(yq e "(.test.howdy | key) | head_comment" "./config/testspawn.yml")
 _shawn_actual=$(yq e ".psych.spencer.shawn" "./config/testspawn.yml")
 _gus=$(yq e ".psych.[\"burton guster\"]" "./config/config-template.yml")
+_gus_description_actual=$(yq e "(.psych.[\"burton guster\"] | key) | head_comment" "./config/testspawn.yml")
+_gus_description_expected=$(echo "$_gus" | yq e ".description" -)
 _gus_expected=$(echo "$_gus" | yq e ".default" -)
 if [ "$_gus_expected" == "null" ]; then
   _gus_expected=""
@@ -46,6 +49,16 @@ if [ "$_gus_expected" == "$_gus_actual" ]; then
   export test_results="$test_results\tspace in key: set. \"$_gus_expected\" == \"$_gus_actual\" passed\n"
 else
   export test_results="$test_results\t${_TEST_ERROR}space in key: not equal. \"$_gus_expected\" == \"$_gus_actual\" failed${_CLEAR_TEXT_COLOR}\n"
+fi
+if [ "$_gus_description_expected" == "$_gus_description_actual" ]; then
+  export test_results="$test_results\tdescription on key: present. passed\n"
+else
+  export test_results="$test_results\t${_TEST_ERROR}description on key: not present, \"$_gus_description_expected\" == \"$_gus_description_actual\". failed${_CLEAR_TEXT_COLOR}\n"
+fi
+if [ "$_test_howdy_description_actual" == "" ]; then
+  export test_results="$test_results\tno description: not present. passed\n"
+else
+  export test_results="$test_results\t${_TEST_ERROR}no description: present, \"$_test_howdy_description_actual\". failed${_CLEAR_TEXT_COLOR}\n"
 fi
 if [ "$_pineapple_expected" == "$_pineapple_actual" ]; then
   export test_results="$test_results\tnested complex key: set. \"$_pineapple_expected\" == \"$_pineapple_actual\" passed\n"

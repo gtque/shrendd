@@ -40,8 +40,8 @@ template rendering and deployment
       2. custom functions
    6. config template
       1. utilize template
-      2. extract template
-      3. generate config from template
+      2. ~~extract template~~
+      3. ~~generate config from template~~
    7. k8s
    8. ~~custom module source~~
    9. bootstrap
@@ -74,7 +74,7 @@ template rendering and deployment
    12. **config-template**
        1. ~~include description in error/warning logs~~
        2. stub config-template from template files.
-           1. stub everything as required
+           1. ~~stub everything as required~~
            2. add description as comment
            3. ~~add commented out default value to config-template~~
            4. ~~update config-template~~
