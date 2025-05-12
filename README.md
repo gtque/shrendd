@@ -71,11 +71,11 @@ template rendering and deployment
    11. ~~color code log output~~
        1. ~~implement color coding of log output~~
        2. ~~support customizing colors for log output~~
-   12. **config-template**
+   12. ~~**config-template**~~
        1. ~~include description in error/warning logs~~
-       2. stub config-template from template files.
+       2. ~~stub config-template from template files.~~
            1. ~~stub everything as required~~
-           2. add description as comment
+           2. ~~add description as comment~~
            3. ~~add commented out default value to config-template~~
            4. ~~update config-template~~
        3. ~~generate a <config>.yml file from config-template~~
