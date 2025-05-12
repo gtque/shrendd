@@ -1,4 +1,4 @@
-required: false
+required: true
 description: "something to summarize or express what this value is and used for"
 sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
 #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
