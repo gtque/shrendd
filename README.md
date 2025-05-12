@@ -40,8 +40,8 @@ template rendering and deployment
       2. custom functions
    6. config template
       1. utilize template
-      2. extract template
-      3. generate config from template
+      2. ~~extract template~~
+      3. ~~generate config from template~~
    7. k8s
    8. ~~custom module source~~
    9. bootstrap
@@ -71,14 +71,14 @@ template rendering and deployment
    11. ~~color code log output~~
        1. ~~implement color coding of log output~~
        2. ~~support customizing colors for log output~~
-   12. **config-template**
+   12. ~~**config-template**~~
        1. ~~include description in error/warning logs~~
-       2. stub config-template from template files.
-           1. stub everything as required
-           2. add commented out description line
-           3. add commented out default value
-           4. update config-template
-       3. generate a <config>.yml file from config-template
+       2. ~~stub config-template from template files.~~
+           1. ~~stub everything as required~~
+           2. ~~add description as comment~~
+           3. ~~add commented out default value to config-template~~
+           4. ~~update config-template~~
+       3. ~~generate a <config>.yml file from config-template~~
    13. support setting configuration(s) in shrendd.yml by running `shrendd -set <key>=<value>`
        1. main shrendd properties by default
           1. will still respect custom location for shrendd.yml
