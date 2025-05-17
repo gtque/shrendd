@@ -1,6 +1,8 @@
 i:
   should:
     not: "exist"
+    exist: |-
+      indirect: true
 test:
   howdy: |-
     required: false

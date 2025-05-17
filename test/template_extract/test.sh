@@ -9,6 +9,7 @@ _valid=$(./shrendd -extract)
 echo -e "$_valid"
 export test_results="template extract:\n"
 _test_hello=$(yq e ".test.hello" "./config/config-template.yml")
+_test_world=$(yq e ".test.world" "./config/config-template.yml")
 _test_hello_required=$(echo "$_test_hello" | yq e ".required" -)
 _test_hello_description=$(echo "$_test_hello" | yq e ".description" -)
 _test_hello_sensitive=$(echo "$_test_hello" | yq e ".sensitive" -)
@@ -20,6 +21,11 @@ if [ "$_test_hello" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}basic key: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\tbasic key: stubbed. passed\n"
+fi
+if [ "$_test_world" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}same line: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tsame line: stubbed. passed\n"
 fi
 if [ "$_shawn" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}nested key: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
