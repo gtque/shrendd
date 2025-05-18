@@ -1,8 +1,8 @@
 hello:
-  greeting1: ${TEST_HELLO}
+  greeting1: ${TEST_HELLO}-${test.world}
   greeting2: ${test.hello}
-  greeting3: $(getConfig "test.howdy")
-  greeting4: $(getConfig "TEST_HOWDY")
+  greeting3: "$(getConfig "$(getConfig ${BARTHOLOMEW_JOJO_SIMPSON}")")"
+  greeting4: $(getConfig "$(getConfigOrEmpty "TEST_HOWDY")")"
   greeting5: $(getConfig "TEST-HOWDY")
   leelodallas: |
     ${PSYCH_SPENCER_SHAWN}
@@ -13,4 +13,4 @@ hello:
   cookies:
     $(getConfig "psych.burton guster")
   cakes:
-    $(getConfig "psych.fru it.pin-a p_pl e")
+    $(getConfigOrEmpty "psych.fru it.pin-a p_pl e")

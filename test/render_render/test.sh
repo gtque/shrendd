@@ -3,17 +3,17 @@ set -euo pipefail
 
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
-
+rm -rf ./deploy/target
 _valid=$(./shrendd)
 echo -e "$_valid"
 export test_results="render with just render (by default):\n"
-_greeting1=$(yq e ".hello.greeting1" "./target/rendered/test1.yml")
-_greeting2=$(yq e ".hello.greeting2" "./target/rendered/test1.yml")
-_greeting3=$(yq e ".hello.greeting3" "./target/rendered/test1.yml")
-_greeting4=$(yq e ".hello.greeting4" "./target/rendered/test1.yml")
-_leelo=$(yq e ".hello.leelodallas" "./target/rendered/test1.yml")
-_dallas=$(yq e ".hello.dallas" "./target/rendered/test1.yml")
-_fhloston=$(yq e ".hello.fhloston" "./target/rendered/test1.yml")
+_greeting1=$(yq e ".hello.greeting1" "./deploy/target/render/rendered/test1.yml")
+_greeting2=$(yq e ".hello.greeting2" "./deploy/target/render/rendered/test1.yml")
+_greeting3=$(yq e ".hello.greeting3" "./deploy/target/render/rendered/test1.yml")
+_greeting4=$(yq e ".hello.greeting4" "./deploy/target/render/rendered/test1.yml")
+_leelo=$(yq e ".hello.leelodallas" "./deploy/target/render/rendered/test1.yml")
+_dallas=$(yq e ".hello.dallas" "./deploy/target/render/rendered/test1.yml")
+_fhloston=$(yq e ".hello.fhloston" "./deploy/target/render/rendered/test1.yml")
 echo "leelo: $_leelo"
 echo "corbin: $_dallas"
 echo "fhloston: $_fhloston"

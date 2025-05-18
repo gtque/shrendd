@@ -84,9 +84,11 @@ shrendd:
     url: https://github.com/gtque/shrendd
   default:
     template:
-      dir: $_MODULE_DIR/deploy/${target}/templates
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
     render:
-      dir: $_MODULE_DIR/deploy/${target}/rendered
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/${target}/rendered
+  deploy:
+    dir: $_MODULE_DIR/deploy
   text:
     error: $_RED
     warn: $_YELLOW
@@ -104,9 +106,9 @@ shrendd:
     definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
   render:
     template:
-      dir: $_MODULE_DIR/resources/templates
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
     render:
-      dir: $_MODULE_DIR/target/rendered
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/rendered
   k8s:
     source: "cloneShrendd \"$_GETTER\" \"k8s\""
     yaml:

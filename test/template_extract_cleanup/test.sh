@@ -9,10 +9,12 @@ cp ./test-init/config-template.yml ./config/.
 echo "attempting extract"
 _i_should_not_expected=$(yq e ".i.should.not" "./test-init/config-template.yml")
 _i_should_not_actual_before=$(yq e ".i.should.not" "./config/config-template.yml")
+_i_should_actual_before=$(yq e ".i.should.exist" "./config/config-template.yml")
 _valid=$(./shrendd -extract)
 echo -e "$_valid"
-export test_results="template extract:\n"
+export test_results="template extract cleanup:\n"
 _i_should_not_actual_after=$(yq e ".i.should.not" "./config/config-template.yml")
+_i_should_actual_after=$(yq e ".i.should.exist" "./config/config-template.yml")
 _test_hello=$(yq e ".test.hello" "./config/config-template.yml")
 _test_hello_required=$(echo "$_test_hello" | yq e ".required" -)
 _test_hello_description=$(echo "$_test_hello" | yq e ".description" -)
@@ -91,6 +93,11 @@ if [ "$_i_should_not_actual_after" != "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}removed key: stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\tremoved key: not stubbed. passed\n"
+fi
+if [ "$_i_should_actual_after" == "$_i_should_actual_before" ]; then
+  export test_results="$test_results\tindirect key: is present. passed\n"
+else
+  export test_results="$test_results\t${_TEST_ERROR}indirect key: is present. failed${_CLEAR_TEXT_COLOR}\n"
 fi
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh
