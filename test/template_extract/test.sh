@@ -17,6 +17,16 @@ _test_hello_default=$(echo -e "$_test_hello" | grep "#default:" || echo "not fou
 _shawn=$(yq e ".psych.spencer.shawn" "./config/config-template.yml")
 _gus=$(yq e ".psych.[\"burton guster\"]" "./config/config-template.yml")
 _pineapple=$(yq e ".psych.[\"fru it\"].[\"pin-a p_pl e\"]" "./config/config-template.yml")
+count=0
+_count=$(echo "$_valid" | grep -o "nested reference found:" || echo "not found")
+if [ "$_count" != "not found" ]; then
+  count=$(echo -e "$_count" | wc -l)
+fi
+if [ "$count" -gt 2 ] || [ "$count" -lt 2 ]; then
+  export test_results="$test_results\t${_TEST_ERROR}warnings: nested reference. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\twarinings: nested reference. passed\n"
+fi
 if [ "$_test_hello" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}basic key: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else

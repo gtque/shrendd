@@ -1,3 +1,8 @@
 shrendd:
   test:
     local: ../../main
+  render:
+    template:
+      dir: ./resources/templates
+    render:
+      dir: ./target/render/rendered

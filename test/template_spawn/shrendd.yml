@@ -8,3 +8,8 @@ shrendd:
         age: 27
       - name: e
         age: 44
+  render:
+    template:
+      dir: ./resources/templates
+    render:
+      dir: ./target/render/rendered

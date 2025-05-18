@@ -12,7 +12,7 @@ _i_should_not_actual_before=$(yq e ".i.should.not" "./config/config-template.yml
 _i_should_actual_before=$(yq e ".i.should.exist" "./config/config-template.yml")
 _valid=$(./shrendd -extract)
 echo -e "$_valid"
-export test_results="template extract:\n"
+export test_results="template extract cleanup:\n"
 _i_should_not_actual_after=$(yq e ".i.should.not" "./config/config-template.yml")
 _i_should_actual_after=$(yq e ".i.should.exist" "./config/config-template.yml")
 _test_hello=$(yq e ".test.hello" "./config/config-template.yml")

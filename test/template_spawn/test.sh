@@ -9,7 +9,7 @@ cp ./test-init/config-template.yml ./config/.
 echo "attempting spawn"
 _valid=$(./shrendd --spawn testspawn.yml)
 echo -e "$_valid"
-export test_results="template extract:\n"
+export test_results="template spawn:\n"
 _test_array=$(yq e ".test.array" "./config/config-template.yml")
 _test_array_age_actual=$(yq e ".test.array.[2].age" "./config/testspawn.yml")
 _test_array_age_expected=$(echo "$_test_array" | yq e ".default.[2].age" -)
