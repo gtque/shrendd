@@ -37,7 +37,7 @@ template rendering and deployment
    4. custom template targets
    5. complex rendering
       1. native bash functions
-      2. custom functions
+      2. ~~custom functions~~
    6. config template
       1. utilize template
       2. ~~extract template~~
