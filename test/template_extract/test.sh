@@ -15,6 +15,8 @@ _test_hello_description=$(echo "$_test_hello" | yq e ".description" -)
 _test_hello_sensitive=$(echo "$_test_hello" | yq e ".sensitive" -)
 _test_hello_default=$(echo -e "$_test_hello" | grep "#default:" || echo "not found")
 _shawn=$(yq e ".psych.spencer.shawn" "./config/config-template.yml")
+_lassie=$(yq e ".psych.lassie" "./config/config-template.yml")
+_vic=$(yq e ".psych.[\"chief vic\"]" "./config/config-template.yml")
 _gus=$(yq e ".psych.[\"burton guster\"]" "./config/config-template.yml")
 _pineapple=$(yq e ".psych.[\"fru it\"].[\"pin-a p_pl e\"]" "./config/config-template.yml")
 count=0
@@ -41,6 +43,16 @@ if [ "$_shawn" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}nested key: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\tnested key: stubbed. passed\n"
+fi
+if [ "$_lassie" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}second deploy file: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tsecond deploy file: stubbed. passed\n"
+fi
+if [ "$_vic" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}deploy file: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tdeploy file: stubbed. passed\n"
 fi
 if [ "$_gus" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}key with space: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"

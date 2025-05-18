@@ -68,11 +68,11 @@ function render {
 }
 
 function prePostAfter {
-  if [ -f ./deploy/$1/$deploy_action/$2.sh ]; then
-    echo "processing ./deploy/$1/$deploy_action/$2.sh"
-    source ./deploy/$1/$deploy_action/$2.sh
+  if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh ]; then
+    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh"
+    source $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh
   else
-    echo "no ./deploy/$1/$deploy_action/$2.sh"
+    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh, nothing to do."
   fi
 }
 

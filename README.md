@@ -78,6 +78,7 @@ template rendering and deployment
            2. ~~add description as comment~~
            3. ~~add commented out default value to config-template~~
            4. ~~update config-template~~
+           5. scan and extract from script, aka non-template files.
        3. ~~generate a <config>.yml file from config-template~~
    13. support setting configuration(s) in shrendd.yml by running `shrendd -set <key>=<value>`
        1. main shrendd properties by default
