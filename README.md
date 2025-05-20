@@ -94,6 +94,7 @@ template rendering and deployment
    17. ~~sensitive values~~
        1. ~~mark as sensitive in config-template~~
        2. ~~mask when logging~~
+   18. template library
 9. how to contribute documentation
    1. submitting bugs
    2. requesting features

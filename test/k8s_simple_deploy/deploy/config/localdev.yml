@@ -8,10 +8,11 @@ app:
     test10: "i shouldn't be here."
     test1: "hello, world!"
     test2: |
-      cats:
-      - name: takis
-      - name: ruffles
-      - name: catniss
+      pets:
+        cats:
+        - name: takis
+        - name: ruffles
+        - name: catniss
     test4: "the chip sisters!!!"
     test8: "pre-sent"
 release:

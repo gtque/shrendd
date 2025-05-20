@@ -9,6 +9,8 @@ if [ "$SHRENDD_EXTRACT" == "true" ] || [ -n "$SHRENDD_SPAWN" ]; then
   source  $SHRENDD_WORKING_DIR/.shrendd/render/template.sh
 fi
 
+export _SOURCED_CONFIG_SRC=" "
+
 function stageLeft {
   _check="_MODULE_DIR"
   if [ -z "${!_check+x}" ]; then
@@ -126,7 +128,7 @@ function initConfig {
     else
       _is_sensitive=$(echo "$_template_value" | yq e ".sensitive" -)
       if [ "${_value}" == "null" ]; then
-        echo "  >$_yq_name was null, checking if required or default present."
+        echo -e "  ${_TEXT_WARN}${_yq_name}${_CLEAR_TEXT_COLOR} was null, checking if required or default present."
         _value_required=$(echo "$_template_value" | yq e ".required" -)
         _value_description=$(echo "$_template_value" | yq e ".description" -)
         if [ "$_value_description" == "null" ]; then
@@ -155,7 +157,7 @@ function initConfig {
       fi
     fi
     if [ "${_value}" == "null" ]; then
-      echo "not initializing> \"$_config_key\""
+      echo -e "${_TEXT_WARN}not initializing> \"$_config_key\"${_CLEAR_TEXT_COLOR}"
     else
       if [ "$_is_sensitive" == "true" ]; then
         echo -e "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}*****${_CLEAR_TEXT_COLOR}"
@@ -182,7 +184,7 @@ function initConfig {
     else
       _name=$(trueName $_config_key)
       _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_yq_name" -)
-      echo -e "  ${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}$_value\n    ${_TEXT_WARN}if this is a sensitive value, you should add it to the config-template.yml file and mark it as sensitive.${_CLEAR_TEXT_COLOR}"
+      echo -e "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}$_value\n  ${_TEXT_WARN}if this is a sensitive value, you should add it to the config-template.yml file and mark it as sensitive.${_CLEAR_TEXT_COLOR}"
       export $_name="$_value"
       echo "\"$_config_key\" was provide but not defined in the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
     fi
@@ -321,15 +323,27 @@ function getConfigOrEmpty {
 
 function toYaml {
   echo -e "$1" | yq e '. | to_yaml' -
+#  export _template_stub="$1"
+#  yq --null-input "$_template_stub"
 }
 
 function padding {
-  num_spaces=$1
+  num_spaces=$(($1 * $2))
   if [ -z "$num_spaces" ]; then
     num_spaces="0"
   fi
   spaces=$(printf "%${num_spaces}s")
   echo "$spaces"
+}
+
+function pad {
+  _padding=$(padding "0" "$(shrenddOrDefault "shrendd.k8s.yaml.padding")")
+  if [ -n "${2+x}" ]; then
+    if [ "$2" -gt 0 ]; then
+      _padding=$(padding "$2" "$(shrenddOrDefault "shrendd.k8s.yaml.padding")")
+    fi
+  fi
+  echo -e -n "$1" | sed -e "s/^\(.*\)/$_padding\1/g"
 }
 
 function loadConfig {
@@ -403,10 +417,27 @@ function unwindConfig {
     fi
 }
 
+function sourceConfigs {
+  _config_src=$(shrenddOrDefault "shrendd.config.src")
+  echo -e "${_TEXT_INFO}looking for sources: $_config_src${_CLEAR_TEXT_COLOR}"
+  if [ -d $_config_src ]; then
+    _config_src_files=$(find $_config_src -type f -print)
+    while IFS= read -r fname; do
+      _src_file="$(echo "$(pwd)$fname" | sed -e "s/\/\.\//\//g")"
+      if [ "$_SOURCED_CONFIG_SRC" != *" $_src_file "* ]; then
+        echo -e "  sourcing: ${_TEXT_INFO}$_src_file${_CLEAR_TEXT_COLOR}"
+        _SOURCED_CONFIG_SRC=$(echo "$_SOURCED_CONFIG_SRC $_src_file")
+        source $fname
+      fi
+    done <<< $_config_src_files
+  fi
+  echo -e "${_TEXT_INFO}sourced: $_config_src${_CLEAR_TEXT_COLOR}"
+}
+
 function moduleRender {
   export _the_module="$1"
   echo "rendering: $_the_module"
-
+  sourceConfigs
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh ]; then
     echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh
