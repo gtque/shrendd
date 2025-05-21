@@ -3,7 +3,7 @@
 function templateFileScanner {
   while IFS= read -r fname; do
     fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
-    if [ "$_files_extracted" != *"$fname_q "* ]; then
+    if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
       _files_extracted="$(echo "$_files_extracted $(pwd)$fname" | sed "s/\.\//\//g")"
       echo -e "extracting $fname>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
       _template=$(cat $fname | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")
@@ -112,7 +112,7 @@ function extractTemplate {
       for fname in $config_files; do
         rm -rf $_DEPLOY_ERROR_DIR/config_error.log
         fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
-        if [ "$_files_extracted" != *"$fname_q "* ]; then
+        if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
           _files_extracted="$(echo "$_files_extracted $fname_q")"
           echo -e "extracting $fname>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           _template=$(cat $fname | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")

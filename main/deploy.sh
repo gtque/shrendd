@@ -454,6 +454,7 @@ function moduleRender {
     checkRenderDirectory "$target"
     echo "rendering"
     render "$target"
+    rm -rf "$RENDER_DIR/temp"
     echo -e "${_TEXT_INFO}render complete${_CLEAR_TEXT_COLOR}"
     if [ "$SKIP_DEPLOY" == "false" ]; then
       echo "deploying $target"

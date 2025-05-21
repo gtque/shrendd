@@ -1,5 +1,11 @@
 #!/bin/bash
 echo "I want to be a triangle - Ralph Wiggum"
+echo "running tests..."
+./build/test.sh
+if [ $? -ne 0 ]; then
+  echo "There were test failures, stopping build."
+  exit 1
+fi
 export _SHRENDD=$(cat ./main/version.yml)
 _targets="render k8s test"
 export _BRANCH_NAME=$(git branch --show-current)
