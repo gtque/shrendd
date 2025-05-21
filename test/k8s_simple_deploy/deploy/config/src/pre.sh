@@ -30,12 +30,13 @@ function test_k8s_test5 {
 }
 
 function get_test6 {
-  _test6="pies: |
+  _PIES="pies: |
   - name: dutch apple
     crust: pastry
   - name: pecan
     crust: biscoff
   - name: chocolate cheesecake
     crust: oreo"
-  echo -e "$_test6"
+  _test6=$(pad "$_PIES" "$1")
+  echo "$_test6"
 }

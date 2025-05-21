@@ -10,6 +10,7 @@ echo -e "$_valid"
 export test_results="template extract:\n"
 _test_hello=$(yq e ".test.hello" "./config/config-template.yml")
 _test_world=$(yq e ".test.world" "./config/config-template.yml")
+_ralph=$(yq e ".ralph.wiggum" "./config/config-template.yml")
 _test_hello_required=$(echo "$_test_hello" | yq e ".required" -)
 _test_hello_description=$(echo "$_test_hello" | yq e ".description" -)
 _test_hello_sensitive=$(echo "$_test_hello" | yq e ".sensitive" -)
@@ -83,6 +84,11 @@ if [ "$_test_hello_default" == "not found" ]; then
   export test_results="$test_results\t${_TEST_ERROR}stubbed default: default value (comment) not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\tstubbed default: default value (comment) stubbed. passed\n"
+fi
+if [ "$_ralph" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}key from k8s script: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tkey from k8s script: stubbed. passed\n"
 fi
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

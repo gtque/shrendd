@@ -43,14 +43,16 @@ function doRender {
     export _RENDER_ERRORS=""
     for fname in $config_files
     do
-      rm -rf $_DEPLOY_ERROR_DIR/config_error.log
-      echo -e "------------------------------------------------------\nrendering $fname"
-      actualRender "$fname"
-      if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
-        echo "failed to render: $TEMPLATE_DIR/$fname" >> $_DEPLOY_ERROR_DIR/render_error.log
-        cat $_DEPLOY_ERROR_DIR/config_error.log | sed -e "s/^/  /g" >> $_DEPLOY_ERROR_DIR/render_error.log
+      if [ "$fname" != "*.srd" ]; then
+        rm -rf $_DEPLOY_ERROR_DIR/config_error.log
+        echo -e "------------------------------------------------------\nrendering $fname"
+        actualRender "$fname"
+        if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+          echo "failed to render: $TEMPLATE_DIR/$fname" >> $_DEPLOY_ERROR_DIR/render_error.log
+          cat $_DEPLOY_ERROR_DIR/config_error.log | sed -e "s/^/  /g" >> $_DEPLOY_ERROR_DIR/render_error.log
+        fi
+        echo -e "end $fname\n------------------------------------------------------"
       fi
-      echo -e "end $fname\n------------------------------------------------------"
     done
     cd $_curdir
     if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then

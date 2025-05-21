@@ -5,3 +5,4 @@ metadata:
   labels:
     kubernetes.io/metadata.name: "${APP_TEST_NAMESPACE}"
     shared-gateway-access: \"true\"
+    kubectl.kubernetes.io/last-applied-configuration: ""

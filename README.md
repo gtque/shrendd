@@ -7,7 +7,7 @@ template rendering and deployment
    2. ~~run tests~~
    3. ~~version bump support~~
    4. ~~branch and remove beta version.~~
-   5. run tests as part of build, don't build if tests fail.
+   5. ~~run tests as part of build, don't build if tests fail.~~
    6. ~~publish upshrendd compatibility~~
       1. ~~this is needed before even considering 1.0~~
       2. ~~indicate if version is backwards compatible or not~~
@@ -28,21 +28,21 @@ template rendering and deployment
       2. ~~version specified~~
       3. ~~latest - specified by default~~
       4. ~~latest - explicitly set to latest~~
-   2. render value with ${...} or $(getConfig ...) approach
+   2. ~~render value with ${...} or $(getConfig ...) approach~~
       1. ~~just the provided config, no template~~
       2. ~~just the template, no values from config, ie: default value from config-template~~
-      3. a mix of provided and template defaults
+      3. ~~a mix of provided and template defaults~~
       4. ~~render with default render target~~
-   3. custom render targets
-   4. custom template targets
+   3. ~~custom render targets~~
+   4. ~~custom template targets~~
    5. complex rendering
       1. native bash functions
-      2. custom functions
+      2. ~~custom functions~~
    6. config template
       1. utilize template
       2. ~~extract template~~
       3. ~~generate config from template~~
-   7. k8s
+   7. ~~k8s~~
    8. ~~custom module source~~
    9. bootstrap
 6. **how to**
@@ -94,6 +94,8 @@ template rendering and deployment
    17. ~~sensitive values~~
        1. ~~mark as sensitive in config-template~~
        2. ~~mask when logging~~
+   18. template library
+   19. offline mode (no downloading)
 9. how to contribute documentation
    1. submitting bugs
    2. requesting features

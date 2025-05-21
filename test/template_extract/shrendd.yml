@@ -1,6 +1,11 @@
 shrendd:
   test:
     local: ../../main
+  targets:
+    - name: render
+    - name: k8s
+  config:
+    src: $SHRENDD_WORKING_DIR/src_config
   render:
     template:
       dir: ./resources/templates

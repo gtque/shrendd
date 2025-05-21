@@ -14,7 +14,9 @@ function doRender {
   echo "files should be in: $config_files"
   for fname in $config_files
   do
-    actualRender "$fname"
+    if [ "$fname" != "*.srd" ]; then
+      actualRender "$fname"
+    fi
   done
   cd $_curdir
   pwd

@@ -1,39 +1,9 @@
 #!/bin/bash
 
-#need to figure out how/what other files beyond the template files need to be scanned
-#for the extract
-function extractTemplate {
-  echo "$_TEXT_WARN{{{{temp extraction started}}}}${_CLEAR_TEXT_COLOR}"
-  _template_path="${_SHRENDD_CONFIG_TEMPLATE_PATH}.temp"
-  if [ -f $_template_path ]; then
-    :
-  else
-    VAR="$_template_path"
-    DIR="."
-    if [[ "$VAR" == *"/"* ]]; then
-      DIR=${VAR%/*}
-      if [ -d $DIR ]; then
-        :
-      else
-        mkdir -p $DIR
-      fi
-    fi
-    echo "" > $_template_path
-  fi
-  _actual_template_path=$(pwd)
-  _actual_template_path=$(echo "$_actual_template_path/$_template_path")
-  export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
-  _current_template=""
-  _checker=""
-  _curdir=$(pwd)
-  _files_extracted=""
-  if [ -d $_SHRENDD_DEPLOY_DIRECTORY ]; then
-    echo "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
-    cd "$_SHRENDD_DEPLOY_DIRECTORY"
-    _deploy_files=$(find . -type f -print)
-#    find . -type f -print0 | while IFS= read -r -d $'\0' fname; do
-  #        rm -rf $_DEPLOY_ERROR_DIR/config_error.log
-    while IFS= read -r fname; do
+function templateFileScanner {
+  while IFS= read -r fname; do
+    fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
+    if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
       _files_extracted="$(echo "$_files_extracted $(pwd)$fname" | sed "s/\.\//\//g")"
       echo -e "extracting $fname>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
       _template=$(cat $fname | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")
@@ -81,7 +51,51 @@ function extractTemplate {
         fi
       done <<< "$_scanner"
       echo -e "end $fname<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    done <<< "$_deploy_files"
+    fi
+  done <<< "$1"
+}
+#need to figure out how/what other files beyond the template files need to be scanned
+#for the extract
+function extractTemplate {
+  echo "$_TEXT_WARN{{{{temp extraction started}}}}${_CLEAR_TEXT_COLOR}"
+  _template_path="${_SHRENDD_CONFIG_TEMPLATE_PATH}.temp"
+  if [ -f $_template_path ]; then
+    :
+  else
+    VAR="$_template_path"
+    DIR="."
+    if [[ "$VAR" == *"/"* ]]; then
+      DIR=${VAR%/*}
+      if [ -d $DIR ]; then
+        :
+      else
+        mkdir -p $DIR
+      fi
+    fi
+    echo "" > $_template_path
+  fi
+  _actual_template_path=$(pwd)
+  if [[ "$_template_path" == "$_actual_template_path"* ]]; then
+    _actual_template_path="$_template_path"
+  else
+    _actual_template_path=$(echo "$_actual_template_path/$_template_path")
+  fi
+  export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
+  _current_template=""
+  _checker=""
+  _curdir=$(pwd)
+  _files_extracted=""
+  if [ -d $_SHRENDD_DEPLOY_DIRECTORY ]; then
+    echo "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
+    cd "$_SHRENDD_DEPLOY_DIRECTORY"
+    _deploy_files=$(find . -type f -print)
+    templateFileScanner "$_deploy_files"
+    cd $_curdir
+  fi
+  if [ -d $(shrenddOrDefault "shrendd.config.src") ]; then
+    echo "${_TEXT_INFO}found config src directory, extracting from: $(shrenddOrDefault "shrendd.config.src")${_CLEAR_TEXT_COLOR}"
+    _deploy_files=$(find $(shrenddOrDefault "shrendd.config.src") -type f -print)
+    templateFileScanner "$_deploy_files"
     cd $_curdir
   fi
   for _target in $targets; do
@@ -98,7 +112,7 @@ function extractTemplate {
       for fname in $config_files; do
         rm -rf $_DEPLOY_ERROR_DIR/config_error.log
         fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
-        if [ "$_files_extracted" != *"$fname_q "* ]; then
+        if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
           _files_extracted="$(echo "$_files_extracted $fname_q")"
           echo -e "extracting $fname>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           _template=$(cat $fname | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")
@@ -210,8 +224,15 @@ function extractCleanUp {
       echo "" > $_template_path
     fi
     _actual_template_path=$(pwd)
-    _actual_template_path=$(echo "$_actual_template_path/$_template_path")
-    _actual_template_path_temp=$(echo "$(pwd)/$_template_path_temp")
+#    _actual_template_path=$(echo "$_actual_template_path/$_template_path")
+    if [[ "$_template_path" == "$_actual_template_path"* ]]; then
+      _actual_template_path="$_template_path"
+      _actual_template_path_temp="$_template_path_temp"
+    else
+      _actual_template_path=$(echo "$_actual_template_path/$_template_path")
+      _actual_template_path_temp=$(echo "$(pwd)/$_template_path_temp")
+    fi
+
     echo "temp path: $_actual_template_path_temp"
     export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
     _template_keys=""
@@ -293,7 +314,12 @@ function spawnTemplate {
   else
     _config_keys=$(keysFor "$_SHRENDD_CONFIG")
   fi
-  _spawn_path=$(echo "$_STARTING_DIR/$(shrenddOrDefault shrendd.config.path)/${SHRENDD_SPAWN}" | sed -e "s/\/\.\//\//g")
+  _spawn_path=$(echo "$(shrenddOrDefault shrendd.config.path)/${SHRENDD_SPAWN}" | sed -e "s/\/\.\//\//g")
+  if [[ "$_spawn_path" == "$_STARTING_DIR"* ]]; then
+    :
+  else
+    _spawn_path=$(echo "$_STARTING_DIR/$(shrenddOrDefault shrendd.config.path)/${SHRENDD_SPAWN}" | sed -e "s/\/\.\//\//g")
+  fi
   _spawned_keys=""
   if [ -f $_spawn_path ]; then
     echo "${_TEXT_WARN}spawn is present${_CLEAR_TEXT_COLOR}"

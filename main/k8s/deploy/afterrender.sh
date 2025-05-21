@@ -30,14 +30,20 @@ process_k8s_script_maps() {
       file_dir=$fname
       echo -e "======================================================\nprocessing scripts for $fname"
       cd $fname
-      doRender "$fname"
+#      doRender "$fname"
       #ansible-playbook $SHRENDD_WORKING_DIR/.shrendd/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$fname" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
       config_maps="*.srd"
       script_files="*.sh"
+      if [ -d $RENDER_DIR/temp/scripts ]; then
+        :
+      else
+        mkdir -p "$RENDER_DIR/temp/scripts/$fname"
+      fi
       for config_map in $config_maps
       do
         echo "  templating: $config_map"
         _CM_FILE=$(basename "$config_map" | sed 's/.srd//')
+        cp "$config_map" "$RENDER_DIR/temp/scripts/$fname/$config_map"
           for sname in $script_files
           do
             if [ "$sname" == "*.sh" ]; then
@@ -45,17 +51,19 @@ process_k8s_script_maps() {
             else
               _FILE=$(basename "$sname")
               echo "    adding $_FILE: $_CM_FILE"
-              echo "  $_FILE: |" >> $RENDER_DIR/$_CM_FILE
-              echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/$_CM_FILE
+              echo "  $_FILE: |" >> $RENDER_DIR/temp/scripts/$fname/$config_map
+              echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/temp/scripts/$fname/$config_map
             fi
           done
       done
+      doRender "$RENDER_DIR/temp/scripts/$fname"
       echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
       cat $RENDER_DIR/$_CM_FILE
       echo -e "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
       echo -e "finished processing scripts for $fname\n======================================================"
       cd $_curdir
     done
+    rm -rf "$RENDER_DIR/temp/scripts"
     sleep 1
   fi
 }
