@@ -9,6 +9,8 @@ if [ "$SHRENDD_EXTRACT" == "true" ] || [ -n "$SHRENDD_SPAWN" ]; then
   source  $SHRENDD_WORKING_DIR/.shrendd/render/template.sh
 fi
 
+source  $SHRENDD_WORKING_DIR/.shrendd/render/library.sh
+
 export _SOURCED_CONFIG_SRC=" "
 
 function stageLeft {

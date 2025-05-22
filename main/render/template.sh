@@ -299,11 +299,21 @@ function extractCleanUp {
           yq -i "del(.${_yq_name})" $_actual_template_path
         fi
       done
-      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
-      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
+      deleteEmptyKeys $_actual_template_path
+#      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
+#      yq -i 'del(.. | select(length == 0))' $_actual_template_path
+#      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
     fi
     rm -rf $_actual_template_path_temp
   fi
+  yq -i -P 'sort_keys(..)' $_actual_template_path
+}
+
+function deleteEmptyKeys {
+  while [ "$(cat "$1" | yq 'map(.. | select(tag == "!!map" and length == 0)) | any')" = "true" ]
+  do
+    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $1
+  done
 }
 
 function spawnTemplate {
@@ -425,8 +435,11 @@ function spawnTemplate {
       echo "${_TEXT_WARN}dropping key:$_config_key${_CLEAR_TEXT_COLOR}"
       yq -i "del(.${_yq_name})" $_spawn_path
     done
-    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_spawn_path
+    deleteEmptyKeys $_spawn_path
+#    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_spawn_path
+#    yq -i 'del(.. | select(length == 0))' $_spawn_path
   fi
+  yq -i -P 'sort_keys(..)' $_spawn_path
 }
 
 function doTemplate {

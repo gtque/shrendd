@@ -118,6 +118,14 @@ shrendd:
   test:
     source: "cloneShrendd \"$_GETTER\" \"test\""
     local: ./main
+  library:
+    cache:
+      dir: ~/.shrendd/cache
+    default:
+      type: auto
+      get:
+        method: "${_GETTER}Lib"
+        parameters: ""
 EndOfYml
 }
 
