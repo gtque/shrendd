@@ -7,5 +7,6 @@
 **/target
 test/template_extract/config
 test/template_extract_cleanup/config
+test/template_extract_library/config
 test/template_spawn/config
 test/template_spawn_cleanup/config
