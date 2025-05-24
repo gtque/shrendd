@@ -7,7 +7,7 @@ rm -rf ./config
 echo "attempting extract"
 _valid=$(./shrendd -extract)
 echo -e "$_valid"
-export test_results="template_extract:\n"
+export test_results="template_extract_library:\n"
 _test_hello=$(yq e ".test.hello" "./config/config-template.yml")
 _test_world=$(yq e ".test.world" "./config/config-template.yml")
 _ralph=$(yq e ".ralph.wiggum" "./config/config-template.yml")
@@ -20,6 +20,10 @@ _lassie=$(yq e ".psych.lassie" "./config/config-template.yml")
 _vic=$(yq e ".psych.[\"chief vic\"]" "./config/config-template.yml")
 _gus=$(yq e ".psych.[\"burton guster\"]" "./config/config-template.yml")
 _pineapple=$(yq e ".psych.[\"fru it\"].[\"pin-a p_pl e\"]" "./config/config-template.yml")
+_library_name=$(yq e ".library.name" "./config/config-template.yml")
+_library_nested=$(yq e ".library.tree.nest" "./config/config-template.yml")
+_library_nested_nested=$(yq e ".library.tree.leaf" "./config/config-template.yml")
+_library_second_import=$(yq e ".library.rufflesortaki" "./config/config-template.yml")
 count=0
 _count=$(echo "$_valid" | grep -o "nested reference found:" || echo "not found")
 if [ "$_count" != "not found" ]; then
@@ -89,6 +93,26 @@ if [ "$_ralph" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}key from k8s script: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\tkey from k8s script: stubbed. passed\n"
+fi
+if [ "$_library_name" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}first level import: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tfirst level import: stubbed. passed\n"
+fi
+if [ "$_library_nested" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}nested import: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tnested import: stubbed. passed\n"
+fi
+if [ "$_library_nested_nested" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}nested twice import: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tnested twice import: stubbed. passed\n"
+fi
+if [ "$_library_second_import" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}second import: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\tsecond import: stubbed. passed\n"
 fi
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

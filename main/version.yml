@@ -4,4 +4,4 @@ shrendd:
   git:
     user: gtque
     repo: shrendd
-  required: "* mikefarah/yq v4\\\\n* curl or wget\\\\n* unzip"
+  required: "* mikefarah/yq v4 (>=4.19.1)\\\\n* curl or wget\\\\n* unzip"

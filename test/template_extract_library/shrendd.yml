@@ -1,0 +1,20 @@
+shrendd:
+  test:
+    local: ../../main
+  targets:
+    - name: render
+    - name: k8s
+  config:
+    src: $SHRENDD_WORKING_DIR/src_config
+  render:
+    template:
+      dir: ./resources/templates
+    render:
+      dir: ./target/render/rendered
+  library:
+    template_extract:
+      get:
+        src: $_MODULE_DIR/lib
+        method: devD
+      version: latest
+      type: yaml

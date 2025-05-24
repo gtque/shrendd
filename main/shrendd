@@ -124,12 +124,12 @@ shrendd:
     default:
       type: auto
       get:
-        method: "${_GETTER}Lib"
+        method: "${_GETTER}"
         parameters: ""
 EndOfYml
 }
 
-function devD {
+function devDS {
   echo "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
   if [ -d ./.shrendd/$1 ]; then
     rm -rf ./.shrendd/$1
@@ -147,11 +147,29 @@ function devD {
 }
 
 function curlD {
-  curl --output ./.shrendd/$1$2 -L "$3"
+  if [ $# -gt 2 ]; then
+    curl --output "$1" -L "$2" $3
+  else
+    curl --output "$1" -L "$2"
+  fi
+}
+
+function curlDS {
+  #curl --output ./.shrendd/$1$2 -L "$3"
+  curlD "./.shrendd/$1$2" "$3"
 }
 
 function wgetD {
-  wget --output-document=./.shrendd/$1$2 "$3"
+  if [ $# -gt 2 ]; then
+    wget --output-document="$1" "$2" $3
+  else
+    wget --output-document="$1" "$2" $3
+  fi
+}
+
+function wgetDS {
+  #wget --output-document=./.shrendd/$1$2 "$3"
+  wgetD "./.shrendd/$1$2" "$3"
 }
 
 function trueName {
@@ -347,8 +365,8 @@ function cloneShrendd {
     fi
     rm -f ./.shrendd/$2.zip
     echo "downloading with $1...$2"
-    eval "$1 \"$2\" \".zip\" \"$_SHRENDD_ARTIFACT_URL/$2.zip\""
-    if [ "$1" == "devD" ]; then
+    eval "${1}S \"$2\" \".zip\" \"$_SHRENDD_ARTIFACT_URL/$2.zip\""
+    if [[ "$1" == "devD"* ]]; then
       echo "cloned locally, nothing to unzip."
     else
       echo "unzipping cloned file: $2.zip"

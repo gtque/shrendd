@@ -1,3 +1,5 @@
+$(importShrendd "template_extract:text/helloworld.yml.srd")
+$(importShrendd "template_extract:text/chipsisters.yml.srd")
 hello:
   greeting1: ${TEST_HELLO}
   greeting2: ${test.hello}

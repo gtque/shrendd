@@ -9,14 +9,6 @@ function devDLib {
   cd $_cdir
 }
 
-function curlDLib {
-  curl --output "$1" -L "$2" $3
-}
-
-function wgetDLib {
-  wget --output-document="$1" "$2" $3
-}
-
 function cloneLibrary {
   _library="$1"
   _version="$2"
@@ -31,6 +23,15 @@ function cloneLibrary {
   fi
   if [ -z "$_xerox_settings" ] || [ "$_xerox_settings" == "null" ]; then
     _xerox_settings=$(shrenddOrDefault "shrendd.library.default.get.parameters")
+  fi
+  if [ "$_xerox" == "devD" ]; then
+    _xerox="devDLib"
+  fi
+  if [ "$_xerox" == "curl" ]; then
+    _xerox="curlD"
+  fi
+  if [ "$_xerox" == "wget" ]; then
+    _xerox="wgetD"
   fi
 
   #should probably support a forced update of libraries
@@ -118,5 +119,9 @@ function importShrendd {
   fi
   _bank="$(shrenddOrDefault "shrendd.library.cache.dir")/$_library/$_version"
   cloneLibrary "$_library" "$_version" "$_bank"
-  eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\""
+  if [ $# -lt 2 ]; then
+    eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\""
+  else
+    echo "$_bank/$_template"
+  fi
 }

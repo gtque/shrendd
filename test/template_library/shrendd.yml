@@ -10,6 +10,6 @@ shrendd:
     template_library:
       get:
         src: $_MODULE_DIR/lib
-      method: devD
+        method: devD
       version: latest
       type: yaml
