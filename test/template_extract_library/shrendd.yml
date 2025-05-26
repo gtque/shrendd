@@ -18,3 +18,9 @@ shrendd:
         method: devD
       version: latest
       type: yaml
+    k8s_simple_deploy:
+      get:
+        src: $_MODULE_DIR/../k8s_simple_deploy/deploy
+        method: devD
+      version: latest
+      type: yaml

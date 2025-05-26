@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "\"${RALPH_WIGGUM}\""
+echo "\"${CHIEF_WIGGUM}\""

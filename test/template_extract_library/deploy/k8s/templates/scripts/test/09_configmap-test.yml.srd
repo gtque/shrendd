@@ -1,12 +1,1 @@
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: "${APP_TEST_NAME}-test"
-  namespace: "${APP_TEST_NAMESPACE}"
-  labels:
-    app.kubernetes.io/name: "${APP_TEST_NAME}"
-    app.kubernetes.io/managed-by: "${APP_TEST_MANAGER}"
-    app.kubernetes.io/version: "$(getConfig "app.test.version")"
-    app.kubernetes.io/component: "${APP_TEST_NAME}"
-    app.kubernetes.io/part-of: "${APP_TEST_NAME}"
-data:
+$(importShrendd "k8s_simple_deploy:k8s/templates/scripts/test/09_configmap-test.yml.srd")

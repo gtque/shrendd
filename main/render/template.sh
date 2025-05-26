@@ -1,6 +1,7 @@
 #!/bin/bash
 
 function templateFileScanner {
+  _already_found="not found"
   while IFS= read -r fname; do
     fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
     if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
@@ -13,7 +14,7 @@ function templateFileScanner {
         # Your action here, using the $match variable
         if [ "$match" != "not found" ]; then
           count=$(echo "$match" | grep -o "getConfig" | wc -l)
-          match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+          match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
           echo "  Found: $match"
           if [ "$count" -gt 1 ]; then
             echo "    nested reference found";
@@ -35,7 +36,7 @@ function templateFileScanner {
         # Your action here, using the $match variable
         if [ "$match" != "not found" ]; then
           count=$(echo "$match" | grep -o "getConfig" | wc -l)
-          match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+          match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
           echo "  Found: $match"
           if [ "$count" -gt 1 ]; then
             echo "    nested reference found";
@@ -141,7 +142,7 @@ function extractTemplate {
             # Your action here, using the $match variable
             if [ "$match" != "not found" ]; then
               count=$(echo "$match" | grep -o "getConfig" | wc -l)
-              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty //g" | sed -e "s/\\\$(getConfig //g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty //g" | sed -e "s/\\\$(getConfig //g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
               echo "  Found it: $match"
               if [ "$count" -gt 1 ]; then
                 echo "    nested reference found";
@@ -163,7 +164,7 @@ function extractTemplate {
             # Your action here, using the $match variable
             if [ "$match" != "not found" ]; then
               count=$(echo "$match" | grep -o "getConfig" | wc -l)
-              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty //g" | sed -e "s/\\\$(getConfig //g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty //g" | sed -e "s/\\\$(getConfig //g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
               echo "  Found: $match"
               if [ "$count" -gt 1 ]; then
                 echo "    nested reference found";
@@ -204,7 +205,7 @@ function extractTemplate {
   echo -e "${_TEXT_INFO}templating the template${_CLEAR_TEXT_COLOR}"
   echo -e "$_checker" | while read match; do
     _o_match="$match"
-    match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+    match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
     match=$(echo "$match" | sed -e 's/\([a-zA-Z0-9 _-]\+ \+[a-zA-Z0-9 _-]\+\)/[\"\1\"]/g')
     if [[ "$match" == *"-"* ]]; then
       :
@@ -277,7 +278,7 @@ function extractCleanUp {
     fi
     _template_keys_temp=""
     if [ -f $_actual_template_path_temp ]; then
-      echo -e "${_TEXT_WARN}temp template is present${_CLEAR_TEXT_COLOR}"
+      echo -e "${_TEXT_WARN}temp template is present $_actual_template_path_temp${_CLEAR_TEXT_COLOR}"
       _template_keys_temp=$(keysFor "$(cat $_actual_template_path_temp)")
 #      echo "current temp keys: \"$_template_keys_temp\""
     fi

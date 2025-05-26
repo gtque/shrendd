@@ -9,5 +9,5 @@ metadata:
     app.kubernetes.io/version: "$(getConfig "app.test.version")"
     app.kubernetes.io/component: "${APP_TEST_NAME}"
     app.kubernetes.io/part-of: "${APP_TEST_NAME}"
-$(importShrendd "this:src/scripts/helloworld.sh:K8sScript")
-$(importShrendd "this:src/scripts/catniss.sh:K8sScript:kitty.sh")
+$(importShrendd "k8s_simple_deploy:k8s/templates/src/scripts/helloworld.sh:K8sScript")
+$(importShrendd "k8s_simple_deploy:k8s/templates/src/scripts/catniss.sh:K8sScript:kitty.sh")

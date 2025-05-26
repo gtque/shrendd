@@ -19,3 +19,5 @@ release:
   stage: dev
 ralph:
   wiggum: I'm a brick
+chief:
+  wiggum: Bake him away, toys.

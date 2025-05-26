@@ -5,6 +5,10 @@ source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
 rm -rf ./config
 echo "attempting extract"
+if [ $# -gt 0 ]; then
+  ./shrendd -extract
+  exit 0
+fi
 _valid=$(./shrendd -extract)
 echo -e "$_valid"
 export test_results="template_extract_library:\n"
@@ -24,6 +28,7 @@ _library_name=$(yq e ".library.name" "./config/config-template.yml")
 _library_nested=$(yq e ".library.tree.nest" "./config/config-template.yml")
 _library_nested_nested=$(yq e ".library.tree.leaf" "./config/config-template.yml")
 _library_second_import=$(yq e ".library.rufflesortaki" "./config/config-template.yml")
+_library_imported_script=$(yq e ".chief.wiggum" "./config/config-template.yml")
 count=0
 _count=$(echo "$_valid" | grep -o "nested reference found:" || echo "not found")
 if [ "$_count" != "not found" ]; then
@@ -113,6 +118,11 @@ if [ "$_library_second_import" == "null" ]; then
   export test_results="$test_results\t${_TEST_ERROR}second import: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\tsecond import: stubbed. passed\n"
+fi
+if [ "$_library_imported_script" == "null" ]; then
+  export test_results="$test_results\t${_TEST_ERROR}imported k8s script: not stubbed. failed${_CLEAR_TEXT_COLOR}\n"
+else
+  export test_results="$test_results\timported k8s script: stubbed. passed\n"
 fi
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

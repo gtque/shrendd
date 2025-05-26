@@ -5,7 +5,7 @@ export _latest_libs=" "
 function devDLib {
   _cdir=$(pwd)
   cd $2
-  zip -rq "$1" "./"
+  zip -rq "$1" "./" -x '*config/*' -x '*target*'
   cd $_cdir
 }
 
@@ -14,7 +14,9 @@ function cloneLibrary {
   _version="$2"
   _bank="$3"
   _template="$4"
-
+  if [[ "$_MODULE_DIR" == *"$_library" ]]; then
+    _library="this"
+  fi
   _xerox=$(shrenddOrDefault "shrendd.library.$_library.get.method")
   _xerox_settings=$(shrenddOrDefault "shrendd.library.$_library.get.parameters")
   _xerox_default="false"
@@ -35,7 +37,7 @@ function cloneLibrary {
     _xerox="wgetD"
   fi
 
-  if [ "$_library" == "this" ] || [ "$_library" == "$_module" ]; then
+  if [[ "$_library" == "this" ]] || [[ "$_MODULE_DIR" == *"$_library" ]]; then
     _xerox="getThis"
   fi
 
@@ -132,8 +134,8 @@ function importShrendd {
   fi
   _cache_dir="$(shrenddOrDefault "shrendd.library.cache.dir")"
   _bank="$_cache_dir/$_library/$_version"
-  if [ "$_library" == "this" ] || [ "$_library" == "$_module" ]; then
-    _bank="$TEMPLATE_DIR"
+  if [[ "$_library" == "this" ]] || [[ "$_MODULE_DIR" == *"$_library" ]]; then
+    _bank="$_SHRENDD_DEPLOY_DIRECTORY"
   fi
   cloneLibrary "$_library" "$_version" "$_bank" "$_template"
   if [ $# -lt 2 ]; then

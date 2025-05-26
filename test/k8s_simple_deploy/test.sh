@@ -59,7 +59,7 @@ if [[ "$_testscript_noname" == *"echo \"hello, world!\""* ]]; then
 else
   export test_results="$test_results\t${_TEST_ERROR}k8s script import no name: failed${_CLEAR_TEXT_COLOR}\n"
 fi
-if [[ "$_testscript_givenname" == *"echo \"I'm a brick\""* ]]; then
+if [[ "$_testscript_givenname" == *"echo \"Bake him away, toys.\""* ]]; then
   export test_results="$test_results\tk8s script import given name: passed\n"
 else
   export test_results="$test_results\t${_TEST_ERROR}k8s script import given name: failed${_CLEAR_TEXT_COLOR}\n"
