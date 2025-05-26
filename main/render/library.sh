@@ -13,6 +13,7 @@ function cloneLibrary {
   _library="$1"
   _version="$2"
   _bank="$3"
+  _template="$4"
 
   _xerox=$(shrenddOrDefault "shrendd.library.$_library.get.method")
   _xerox_settings=$(shrenddOrDefault "shrendd.library.$_library.get.parameters")
@@ -34,21 +35,32 @@ function cloneLibrary {
     _xerox="wgetD"
   fi
 
+  if [ "$_library" == "this" ] || [ "$_library" == "$_module" ]; then
+    _xerox="getThis"
+  fi
+
   #should probably support a forced update of libraries
-  if [ "$_version" == "latest" ]; then
+  if [ "$_version" == "latest" ] && [ "$_xerox" != "getThis" ]; then
     if [ "$_latest_libs" != *" $_library "* ]; then
       #really need to add a cache timeout for latest...
       rm -rf "$_bank"
       export _latest_libs="${_latest_libs}${_library} "
     fi
   fi
-  if [ -d $_bank ]; then
-    :
-  else
-    mkdir -p "$_bank"
-    #should support an offline mode here
-    eval "$_xerox \"$_bank/$_library.zip\" \"$(shrenddOrDefault "shrendd.library.$_library.get.src")\" \"$_xerox_settings\""
-    unzip -aoq "$_bank/$_library.zip" -d "$_bank"
+  _destination="$_bank/$_library.zip"
+#  if [ "$_xerox" == "getThis" ]
+#    _xerox_settings="$_template"
+#    _destination="$RENDER_DIR/temp/"
+#  fi
+  if [ "$_xerox" != "getThis" ]; then
+    if [ -d $_bank ]; then
+      :
+    else
+      mkdir -p "$_bank"
+      #should support an offline mode here
+      eval "$_xerox \"$_destination\" \"$(shrenddOrDefault "shrendd.library.$_library.get.src")\" \"$_xerox_settings\""
+      unzip -aoq "$_bank/$_library.zip" -d "$_bank"
+    fi
   fi
 }
 
@@ -96,6 +108,7 @@ function importShrendd {
   _template=$(echo "$_import" | cut -d':' -f2)
   _version=""
   _type=$(echo "$_import" | cut -d':' -f3)
+  _map_name=$(echo "$_import" | cut -d':' -f4)
 
   if [ -z "$_library" ] || [ "$_library" == "null" ]; then
     echo -e "${_TEXT_ERROR}looks like you didn't even specify the library.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
@@ -117,10 +130,14 @@ function importShrendd {
   if [ -z "$_type" ] || [ "$_type" == "null" ]; then
     _type="text"
   fi
-  _bank="$(shrenddOrDefault "shrendd.library.cache.dir")/$_library/$_version"
-  cloneLibrary "$_library" "$_version" "$_bank"
+  _cache_dir="$(shrenddOrDefault "shrendd.library.cache.dir")"
+  _bank="$_cache_dir/$_library/$_version"
+  if [ "$_library" == "this" ] || [ "$_library" == "$_module" ]; then
+    _bank="$TEMPLATE_DIR"
+  fi
+  cloneLibrary "$_library" "$_version" "$_bank" "$_template"
   if [ $# -lt 2 ]; then
-    eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\""
+    eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\" \"$_map_name\""
   else
     echo "$_bank/$_template"
   fi

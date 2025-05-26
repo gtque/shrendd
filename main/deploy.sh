@@ -288,6 +288,10 @@ function getConfig {
   fi
 }
 
+function configify {
+  cat $1 | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g"
+}
+
 function getAsIs {
   _name=$(trueName "$1")
   if [ -z "${!_name+x}" ]; then
@@ -454,7 +458,7 @@ function moduleRender {
     targetDirs "$target"
     echo "initializing rendering directory"
     checkRenderDirectory "$target"
-    echo "rendering"
+    echo "rendering to: $RENDER_DIR"
     render "$target"
     rm -rf "$RENDER_DIR/temp"
     echo -e "${_TEXT_INFO}render complete${_CLEAR_TEXT_COLOR}"

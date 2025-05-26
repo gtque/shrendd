@@ -126,7 +126,16 @@ shrendd:
       get:
         method: "${_GETTER}"
         parameters: ""
+    this:
+      get:
+        method: "getThis"
+        src: "$(shrenddOrDefault shrendd.deploy.dir)"
+
 EndOfYml
+}
+
+function getThis {
+  :
 }
 
 function devDS {
@@ -180,7 +189,7 @@ function trueName {
 #            else
 #              match=$(echo "$match" | sed -e "s/_/\./g")
 #            fi
-  echo "$(echo "$1" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g" | sed -e "s/ /_/g" | sed -e "s/-/_/g" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]" | sed "s/\[\"//g" | sed "s/\"\]//g" | cut -d'[' -f1)"
+  echo "$(echo "$1" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g" | sed -e "s/ /_/g" | sed -e "s/-/_/g" | sed -e "s/\./_/g" | sed -e "s/\\\"//g" | tr "[:lower:]" "[:upper:]" | sed "s/\[\"//g" | sed "s/\"\]//g" | cut -d'[' -f1)"
 }
 
 function yqName {

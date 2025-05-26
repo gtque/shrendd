@@ -7,23 +7,27 @@ function doEval {
   eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
 }
 
-function configify {
-  cat $1 | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g"
-}
-
 function mergeYaml {
+#  yq ea '. as $item ireduce ({}; . * $item )' $_temp_file $1 > $1.tmp
+
+#  "$(echo "$")"
   while IFS= read -r _temp_file; do
-#    echo "merging: $_temp_file -> $1"
-#    echo ">>>>>>>>>>>>>>>>>>>>>>>$_temp_file"
-#    cat "$_temp_file"
-#    echo -e "<<<<<<<<<<<<<<<<<<<<<<<$1"
-#    cat "$1"
-#    yq ". *= load(\"$_temp_file\")" $1
-    yq ea '. as $item ireduce ({}; . * $item )' $_temp_file $1 > $1.tmp
+    echo "merging: $_temp_file -> $1"
+    _merge_value="${_temp_file}:::"
+    _target=$(echo "$_merge_value" | cut -d':' -f1)
+    _place_holder_key=$(echo "$_merge_value" | cut -d':' -f2)
+    _place_holder_value=$(yq e ".$_place_holder_key" $1)
+    if [ "$_place_holder_value" == "null" ]; then
+      echo -e "${_TEXT_WARN}no place holder found ($_place_holder_key), adding one.${_CLEAR_TEXT_COLOR}"
+      yq -i ".${_place_holder_key} = \"doh!\"" $1
+    fi
+    yq ea '. as $item ireduce ({}; . * $item )' $1 $_target $1 > $1.tmp
     rm -rf $1
     cp $1.tmp $1
-#    _merged=$(yq e '. as $item ireduce ({}; . * $item)' $_temp_file $1)
-#    echo -e "$_merged" > $1
+#    rm -rf $_target
+    if [ -n "$_place_holder_key" ]; then
+      yq -i "del(.${_place_holder_key})" $1
+    fi
   done <<< "$_merge_yaml"
   rm -rf $1.tmp
 #  yq -i -P 'sort_keys(..)' $1
@@ -31,7 +35,11 @@ function mergeYaml {
 
 function actualRender {
 #  export _merge_yaml="false"
-  rm -rf "$RENDER_DIR/temp/merge_yaml"
+  if [ -d "$RENDER_DIR/temp" ]; then
+    rm -rf "$RENDER_DIR/temp/merge_yaml"
+  else
+    mkdir -p "$RENDER_DIR/temp"
+  fi
   fname="$1"
   _template=$(configify "$fname")
   _rname=$(echo "$1" | sed -e "s/\.srd//g")
