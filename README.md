@@ -94,7 +94,15 @@ template rendering and deployment
    17. ~~sensitive values~~
        1. ~~mark as sensitive in config-template~~
        2. ~~mask when logging~~
-   18. ~~template library~~
+   18. template library
+       1. ~~import shrendd~~
+       2. ~~import k8s script~~
+       3. ~~extract~~
+       4. ~~local lib support~~
+       5. ~~this/self module support~~
+       6. curl/wget
+          1. how to check for version?
+       7. custom lib get support.
    19. offline mode (no downloading)
 9. how to contribute documentation
    1. submitting bugs
