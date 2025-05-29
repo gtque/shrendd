@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: "${APP_TEST_NAME}-teardown"
     app.kubernetes.io/managed-by: "${APP_TEST_MANAGER}"
-    app.kubernetes.io/version: "$(getConfig "app.test.version")"
+    app.kubernetes.io/version: "$(getConfig \"app.test.version\")"
     app.kubernetes.io/component: "${APP_TEST_NAME}"
     app.kubernetes.io/part-of: "${APP_TEST_NAME}"
 data:

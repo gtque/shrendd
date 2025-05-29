@@ -9,6 +9,8 @@ if [ "$SHRENDD_EXTRACT" == "true" ] || [ -n "$SHRENDD_SPAWN" ]; then
   source  $SHRENDD_WORKING_DIR/.shrendd/render/template.sh
 fi
 
+source  $SHRENDD_WORKING_DIR/.shrendd/render/library.sh
+
 export _SOURCED_CONFIG_SRC=" "
 
 function stageLeft {
@@ -111,7 +113,7 @@ function initConfig {
     echo "no provided config"
     _provided_keys=""
   else
-    _provided_keys="$(keysFor "$_PROVIDED_CONFIG") "
+    _provided_keys=" $(keysFor "$_PROVIDED_CONFIG") "
   fi
   echo -e "${_TEXT_INFO}configuring:${_CLEAR_TEXT_COLOR}"
   _initialized="true"
@@ -119,7 +121,7 @@ function initConfig {
     _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
     _name=$(trueName $_config_key)
     _yq_name=$(yqName "$_config_key")
-    _provided_keys=$(echo "$_provided_keys" | sed -e "s/$_config_key //g")
+    _provided_keys=$(echo "$_provided_keys" | sed -e "s/ $_config_key / /g")
     _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_yq_name" -)
     _template_value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" -)
     _is_sensitive="false"
@@ -284,6 +286,10 @@ function getConfig {
         echo -e "$_value"
       fi
   fi
+}
+
+function configify {
+  cat $1 | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g"
 }
 
 function getAsIs {
@@ -452,7 +458,7 @@ function moduleRender {
     targetDirs "$target"
     echo "initializing rendering directory"
     checkRenderDirectory "$target"
-    echo "rendering"
+    echo "rendering to: $RENDER_DIR"
     render "$target"
     rm -rf "$RENDER_DIR/temp"
     echo -e "${_TEXT_INFO}render complete${_CLEAR_TEXT_COLOR}"

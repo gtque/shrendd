@@ -7,7 +7,7 @@ rm -rf ./config
 echo "attempting extract"
 _valid=$(./shrendd -extract)
 echo -e "$_valid"
-export test_results="template extract:\n"
+export test_results="template_extract:\n"
 _test_hello=$(yq e ".test.hello" "./config/config-template.yml")
 _test_world=$(yq e ".test.world" "./config/config-template.yml")
 _ralph=$(yq e ".ralph.wiggum" "./config/config-template.yml")
@@ -25,7 +25,7 @@ _count=$(echo "$_valid" | grep -o "nested reference found:" || echo "not found")
 if [ "$_count" != "not found" ]; then
   count=$(echo -e "$_count" | wc -l)
 fi
-if [ "$count" -gt 2 ] || [ "$count" -lt 2 ]; then
+if [ "$count" -gt 3 ] || [ "$count" -lt 3 ]; then
   export test_results="$test_results\t${_TEST_ERROR}warnings: nested reference. failed${_CLEAR_TEXT_COLOR}\n"
 else
   export test_results="$test_results\twarinings: nested reference. passed\n"

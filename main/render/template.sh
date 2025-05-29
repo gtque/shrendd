@@ -1,64 +1,92 @@
 #!/bin/bash
 
 function templateFileScanner {
+  _already_found="not found"
+  _check_config_path="$(shrenddOrDefault "shrendd.config.path" | sed -e "s/\.\//\//g")"
+  _check_config_path_src="$(shrenddOrDefault "shrendd.config.src" | sed -e "s/\.\//\//g")"
   while IFS= read -r fname; do
     fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
-    if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
-      _files_extracted="$(echo "$_files_extracted $(pwd)$fname" | sed "s/\.\//\//g")"
-      echo -e "extracting $fname>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      _template=$(cat $fname | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")
-      echo "getConfig"
-      _scanner="$(echo "$_template" | grep -o "\$(getConfig [^)]*)" || echo "not found")"
-      while IFS= read -r match; do
-        # Your action here, using the $match variable
-        if [ "$match" != "not found" ]; then
-          count=$(echo "$match" | grep -o "getConfig" | wc -l)
-          match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
-          echo "  Found: $match"
-          if [ "$count" -gt 1 ]; then
-            echo "    nested reference found";
-            echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
-          fi
-          _already_found=$(echo "$_checker" | grep "$match" || echo "not found")
-          if [ "$_already_found" != "not found" ]; then
-            echo "   already found.."
-          else
-            _checker="$(echo "$_checker\n$match")"
-            echo "   not found, adding to list"
-          fi
+    if [[ "$fname" != *"$_check_config_path"* ]] || [[ "$fname" == *"$_check_config_path_src"* ]]; then
+      if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
+        _files_extracted="$(echo "$_files_extracted $(pwd)$fname" | sed "s/\.\//\//g")"
+        echo -e "extracting $fname>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        if [[ "$fname" == *".sh" ]] || [[ "$fname" == *".sh.srd" ]]; then
+          _template=$(cat $fname)
+        else
+          _template=$(configify $fname)
         fi
-      done <<< "$_scanner"
-      echo "getConfigOrEmpty:"
-      _scanner="$(echo "$_template" | grep -o "\$(getConfigOrEmpty [^)]*)" || echo "not found")"
-  #         echo "$_scanner" | while read match; do
-      while IFS= read -r match; do
-        # Your action here, using the $match variable
-        if [ "$match" != "not found" ]; then
-          count=$(echo "$match" | grep -o "getConfig" | wc -l)
-          match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
-          echo "  Found: $match"
-          if [ "$count" -gt 1 ]; then
-            echo "    nested reference found";
-            echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
+        echo "getConfig"
+        _scanner="$(echo "$_template" | grep -o "\$(getConfig [^)]*)" || echo "not found")"
+        while IFS= read -r match; do
+          # Your action here, using the $match variable
+          if [ "$match" != "not found" ]; then
+            count=$(echo "$match" | grep -o "getConfig" | wc -l)
+            match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+            echo "  Found: $match"
+            if [ "$count" -gt 1 ]; then
+              echo "    nested reference found";
+              echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
+            fi
+            _already_found=$(echo " $_checker " | grep " $match " || echo "not found")
+            if [ "$_already_found" != "not found" ]; then
+              echo "   already found..:$match"
+            else
+              export _checker="$(echo "$_checker\n $match ")"
+              echo "   not found, adding to list"
+            fi
           fi
-          _already_found=$(echo "$_checker" | grep "$match" || echo "not found")
-          if [ "$_already_found" != "not found" ]; then
-            echo "   already found.."
-          else
-            _checker="$(echo "$_checker\n$match")"
-            echo "   not found, adding to list"
+        done <<< "$_scanner"
+        echo "getConfigOrEmpty:"
+        _scanner="$(echo "$_template" | grep -o "\$(getConfigOrEmpty [^)]*)" || echo "not found")"
+    #         echo "$_scanner" | while read match; do
+        while IFS= read -r match; do
+          # Your action here, using the $match variable
+          if [ "$match" != "not found" ]; then
+            count=$(echo "$match" | grep -o "getConfig" | wc -l)
+            match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+            echo "  Found: $match"
+            if [ "$count" -gt 1 ]; then
+              echo "    nested reference found";
+              echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
+            fi
+            _already_found=$(echo "$_checker" | grep "$match" || echo "not found")
+            if [ "$_already_found" != "not found" ]; then
+              echo "   already found.."
+            else
+              export _checker="$(echo "$_checker\n$match")"
+              echo "   not found, adding to list"
+            fi
           fi
-        fi
-      done <<< "$_scanner"
-      echo -e "end $fname<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+        done <<< "$_scanner"
+        _scanner_imports="$(echo "$_template" | grep -o "\$(importShrendd [^)]*)" || echo "not found")"
+        while IFS= read -r match; do
+          # Your action here, using the $match variable
+          if [ "$match" != "not found" ]; then
+            _import=$(echo "$match" | sed -e "s/\\\$(importShrendd //g" | sed -e "s/)//g" | sed -e "s/\"//g" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+            echo "  found import: $_import"
+            if [ "$_already_found" != "not found" ]; then
+              echo "   already extracted..:$match"
+            else
+              export _files_extracted="$(echo "$_files_extracted $match")"
+              echo "   not extracted, adding to list"
+            fi
+            templateFileScanner "$(importShrendd $_import "extract")"
+            echo "  import processed..."
+  #          _template=$(cat $fname | sed -e "s/\\\${\([^}]*\)}/\\\$(getConfig \"\1\")/g")
+          fi
+        done <<< "$_scanner_imports"
+        echo -e "end $fname<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+      fi
     fi
   done <<< "$1"
 }
+
 #need to figure out how/what other files beyond the template files need to be scanned
 #for the extract
 function extractTemplate {
-  echo "$_TEXT_WARN{{{{temp extraction started}}}}${_CLEAR_TEXT_COLOR}"
+  echo -e "$_TEXT_WARN{{{{temp extraction started}}}}${_CLEAR_TEXT_COLOR}"
   _template_path="${_SHRENDD_CONFIG_TEMPLATE_PATH}.temp"
+  echo "config template path: $_SHRENDD_CONFIG_TEMPLATE_PATH"
   if [ -f $_template_path ]; then
     :
   else
@@ -76,28 +104,32 @@ function extractTemplate {
   fi
   _actual_template_path=$(pwd)
   if [[ "$_template_path" == "$_actual_template_path"* ]]; then
+    echo "just using template path"
     _actual_template_path="$_template_path"
   else
-    _actual_template_path=$(echo "$_actual_template_path/$_template_path")
+    echo "adding template path"
+    _actual_template_path=$(echo "$_actual_template_path/$_template_path" | sed -e "s/\/\.\//\//g")
   fi
+  echo "path: $_actual_template_path"
   export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
   _current_template=""
-  _checker=""
+  export _checker=""
   _curdir=$(pwd)
   _files_extracted=""
   if [ -d $_SHRENDD_DEPLOY_DIRECTORY ]; then
-    echo "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
+    echo -e "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
     cd "$_SHRENDD_DEPLOY_DIRECTORY"
-    _deploy_files=$(find . -type f -print)
+    _deploy_files=$(find "$(pwd -P)" -type f -print)
     templateFileScanner "$_deploy_files"
     cd $_curdir
   fi
   if [ -d $(shrenddOrDefault "shrendd.config.src") ]; then
-    echo "${_TEXT_INFO}found config src directory, extracting from: $(shrenddOrDefault "shrendd.config.src")${_CLEAR_TEXT_COLOR}"
+    echo -e "${_TEXT_INFO}found config src directory, extracting from: $(shrenddOrDefault "shrendd.config.src")${_CLEAR_TEXT_COLOR}"
     _deploy_files=$(find $(shrenddOrDefault "shrendd.config.src") -type f -print)
     templateFileScanner "$_deploy_files"
     cd $_curdir
   fi
+  echo -e "$_TEXT_WARN{{{{temp extraction checking targets}}}}${_CLEAR_TEXT_COLOR}"
   for _target in $targets; do
     export target="$_target"
     echo "extracting: $target"
@@ -122,8 +154,8 @@ function extractTemplate {
             # Your action here, using the $match variable
             if [ "$match" != "not found" ]; then
               count=$(echo "$match" | grep -o "getConfig" | wc -l)
-              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
-              echo "  Found: $match"
+              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty //g" | sed -e "s/\\\$(getConfig //g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+              echo "  Found it: $match"
               if [ "$count" -gt 1 ]; then
                 echo "    nested reference found";
                 echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
@@ -132,7 +164,7 @@ function extractTemplate {
               if [ "$_already_found" != "not found" ]; then
                 echo "   already found.."
               else
-                _checker="$(echo "$_checker\n$match")"
+                export _checker="$(echo "$_checker\n$match")"
                 echo "   not found, adding to list"
               fi
             fi
@@ -144,7 +176,7 @@ function extractTemplate {
             # Your action here, using the $match variable
             if [ "$match" != "not found" ]; then
               count=$(echo "$match" | grep -o "getConfig" | wc -l)
-              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+              match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty //g" | sed -e "s/\\\$(getConfig //g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
               echo "  Found: $match"
               if [ "$count" -gt 1 ]; then
                 echo "    nested reference found";
@@ -154,11 +186,26 @@ function extractTemplate {
               if [ "$_already_found" != "not found" ]; then
                 echo "   already found.."
               else
-                _checker="$(echo "$_checker\n$match")"
+                export _checker="$(echo "$_checker\n$match")"
                 echo "   not found, adding to list"
               fi
             fi
           done <<< "$_scanner"
+          _scanner_imports="$(echo "$_template" | grep -o "\$(importShrendd [^)]*)" || echo "not found")"
+          while IFS= read -r match; do
+            # Your action here, using the $match variable
+            if [ "$match" != "not found" ]; then
+              _import=$(echo "$match" | sed -e "s/\\\$(importShrendd //g" | sed -e "s/)//g" | sed -e "s/\"//g" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+              echo "  found import: $_import"
+              if [ "$_already_found" != "not found" ]; then
+                echo "   already extracted..:$match"
+              else
+                export _files_extracted="$(echo "$_files_extracted $match")"
+                echo "   not extracted, adding to list"
+              fi
+              templateFileScanner "$(importShrendd $_import "extract")"
+            fi
+          done <<< "$_scanner_imports"
           echo -e "end $fname<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
         else
           echo "already extracted: $fname_q"
@@ -167,22 +214,27 @@ function extractTemplate {
       cd $_curdir
     fi
   done
-  echo "${_TEXT_INFO}templating the template${_CLEAR_TEXT_COLOR}"
+  echo -e "${_TEXT_INFO}templating the template${_CLEAR_TEXT_COLOR}"
   echo -e "$_checker" | while read match; do
     _o_match="$match"
-    match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+    match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
     match=$(echo "$match" | sed -e 's/\([a-zA-Z0-9 _-]\+ \+[a-zA-Z0-9 _-]\+\)/[\"\1\"]/g')
     if [[ "$match" == *"-"* ]]; then
       :
     else
       match=$(echo "$match" | sed -e "s/_/\./g")
+      if [[ "$match" == "."* ]]; then
+        echo " starts with a ."
+        match=$(echo "$match" | sed -e "s/\./_/")
+      fi
+#      :
     fi
     if [ -n "$match" ]; then
       echo "  extracted: $_o_match => $match"  # Example: Print the match
       _found="empty"
       _current_template_yaml=$(cat $_actual_template_path)
       if [ -z "$_current_template_yaml" ]; then
-        echo "    template is empty"
+        echo "    template is empty: $_actual_template_path"
       else
         echo "    template is not empty"
         _found=$(cat "$_actual_template_path" | yq e ".$match" -)
@@ -193,6 +245,7 @@ function extractTemplate {
       else
         if [ "$_found" == "empty" ]; then
           echo "    creating new template yaml:$match"
+          echo "    yq -n \".$match = strenv(_template_stub)\" > $_actual_template_path"
           yq -n ".$match = strenv(_template_stub)" > $_actual_template_path
         else
           echo "    already in template."
@@ -200,11 +253,11 @@ function extractTemplate {
       fi
     fi
   done
-  echo "${_TEXT_INFO}temp template complete${_CLEAR_TEXT_COLOR}"
+  echo -e "${_TEXT_INFO}temp template complete${_CLEAR_TEXT_COLOR}"
 }
 
 function extractCleanUp {
-  echo "$_TEXT_WARN{{{{extraction started}}}}${_CLEAR_TEXT_COLOR}"
+  echo -e "$_TEXT_WARN{{{{extraction started}}}}${_CLEAR_TEXT_COLOR}"
   _template_path="${_SHRENDD_CONFIG_TEMPLATE_PATH}"
   _template_path_temp="${_SHRENDD_CONFIG_TEMPLATE_PATH}.temp"
   if [ -f $_template_path_temp ]; then
@@ -237,16 +290,19 @@ function extractCleanUp {
     export _template_stub=$(cat $_STARTING_DIR/.shrendd/render/config/template.yml)
     _template_keys=""
     if [ -f $_actual_template_path ]; then
-      echo "${_TEXT_WARN}template is present${_CLEAR_TEXT_COLOR}"
+      echo -e "${_TEXT_WARN}template is present${_CLEAR_TEXT_COLOR}"
       _template_keys=$(keysFor "$(cat $_actual_template_path)")
+      _template_keys=" $_template_keys "
+      echo -e "found keys: $_template_keys"
 #      echo "current keys: \"$_template_keys\""
     fi
     _template_keys_temp=""
     if [ -f $_actual_template_path_temp ]; then
-      echo "${_TEXT_WARN}temp template is present${_CLEAR_TEXT_COLOR}"
+      echo -e "${_TEXT_WARN}temp template is present $_actual_template_path_temp${_CLEAR_TEXT_COLOR}"
       _template_keys_temp=$(keysFor "$(cat $_actual_template_path_temp)")
 #      echo "current temp keys: \"$_template_keys_temp\""
     fi
+    echo -e "temp keys found:\n$_template_keys_temp"
     for _config_key in $_template_keys_temp; do
       _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
       _yq_name=$(yqName "$_config_key")
@@ -254,7 +310,9 @@ function extractCleanUp {
       echo -e "${_TEXT_DEBUG}templating:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
       _has_array="false"
       _drop_key=$(echo "$_config_key" | sed "s/ /$_SPACE_PLACE_HOLDER/g")
-      _template_keys=$(echo "$_template_keys"| sed "s/$_drop_key[^ ]*//g" | sed "s/^ //g" | sed "s/  */ /g")
+      echo "dropping key: \"$_drop_key\""
+      _template_keys=$(echo "$_template_keys"| sed "s/ $_drop_key / /g")
+#      echo "update keys: $_template_keys"
       if [ -f $_actual_template_path ]; then
         _found=$(cat $_actual_template_path | yq e ".$_yq_name" -)
       else
@@ -286,8 +344,10 @@ function extractCleanUp {
     done
     if [ -f $_template_path ]; then
       _template_yaml=$(cat $_template_path)
-      echo "${_TEXT_INFO}reducing keys${_CLEAR_TEXT_COLOR}"
+      _template_keys=$(echo "$_template_keys" | sed "s/  */ /g")
+      echo -e "${_TEXT_INFO}reducing keys:$_template_keys${_CLEAR_TEXT_COLOR}"
       for _config_key in $_template_keys; do
+        echo "  config key: $_config_key"
         _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
         _yq_name=$(yqName "$_config_key")
 #        echo "$_template_yaml" | yq e ".$_yq_name" -
@@ -295,15 +355,32 @@ function extractCleanUp {
         if [ "$_indirect" != "null" ] && [ "$_indirect" == "true" ]; then
           echo "  indirectly referenced, not dropping: $_yq_name"
         else
-          echo "  ${_TEXT_WARN}dropping key:$_config_key${_CLEAR_TEXT_COLOR}"
-          yq -i "del(.${_yq_name})" $_actual_template_path
+          echo "  checking ${_yq_name}"
+          if [ "$_yq_name" == "_" ]; then
+            echo -e "  ${_TEXT_WARN}invalid key, if actually present, please manually delete it.${_CLEAR_TEXT_COLOR}"
+          else
+            echo -e "  ${_TEXT_WARN}dropping key:${_yq_name} -> $_config_key${_CLEAR_TEXT_COLOR}"
+            yq -i "del(.${_yq_name})" $_actual_template_path
+          fi
+          echo "  done with key: ${_yq_name}"
         fi
       done
-      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
-      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
+      echo "attempting to delete empty keys"
+      deleteEmptyKeys $_actual_template_path
+#      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
+#      yq -i 'del(.. | select(length == 0))' $_actual_template_path
+#      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
     fi
     rm -rf $_actual_template_path_temp
   fi
+  yq -i -P 'sort_keys(..)' $_actual_template_path
+}
+
+function deleteEmptyKeys {
+  while [ "$(cat "$1" | yq 'map(.. | select(tag == "!!map" and length == 0)) | any')" = "true" ]
+  do
+    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $1
+  done
 }
 
 function spawnTemplate {
@@ -322,14 +399,14 @@ function spawnTemplate {
   fi
   _spawned_keys=""
   if [ -f $_spawn_path ]; then
-    echo "${_TEXT_WARN}spawn is present${_CLEAR_TEXT_COLOR}"
+    echo -e "${_TEXT_WARN}spawn is present${_CLEAR_TEXT_COLOR}"
   #      cat "${_spawn_path}"
     _spawned_keys=$(keysFor "$(cat $_spawn_path)")
   fi
   if [ -f $_spawn_path ]; then
     echo "spawn does exist: $_spawn_path"
   else
-    echo "${_TEXT_INFO}spawn does not exist: $_spawn_path${_CLEAR_TEXT_COLOR}"
+    echo -e "${_TEXT_INFO}spawn does not exist: $_spawn_path${_CLEAR_TEXT_COLOR}"
     VAR="$_spawn_path"
     DIR="."
     if [[ "$VAR" == *"/"* ]]; then
@@ -422,11 +499,19 @@ function spawnTemplate {
     for _config_key in $_spawned_keys; do
       _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
       _yq_name=$(yqName "$_config_key")
-      echo "${_TEXT_WARN}dropping key:$_config_key${_CLEAR_TEXT_COLOR}"
-      yq -i "del(.${_yq_name})" $_spawn_path
+      echo "  checking key: ${_yq_name}"
+      if [ "$_yq_name" == "_" ]; then
+        echo -e "  ${_TEXT_WARN}invalid key, if actually present, please manually delete it.${_CLEAR_TEXT_COLOR}"
+      else
+        echo -e "${_TEXT_WARN}dropping key:${_yq_name} -> $_config_key${_CLEAR_TEXT_COLOR}"
+        yq -i "del(.${_yq_name})" $_spawn_path
+      fi
     done
-    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_spawn_path
+    deleteEmptyKeys $_spawn_path
+#    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_spawn_path
+#    yq -i 'del(.. | select(length == 0))' $_spawn_path
   fi
+  yq -i -P 'sort_keys(..)' $_spawn_path
 }
 
 function doTemplate {
@@ -445,7 +530,7 @@ function doTemplate {
         cd $_STARTING_DIR
       done
       #merge and clean up actual config template file
-      echo "${_TEXT_INFO}resolving temp template${_CLEAR_TEXT_COLOR}"
+      echo -e "${_TEXT_INFO}resolving temp template${_CLEAR_TEXT_COLOR}"
       for _specific_module in $_module; do
         loadConfig $_specific_module
         echo "switching to module: $_the_module"
@@ -457,7 +542,7 @@ function doTemplate {
         unwindConfig
         cd $_STARTING_DIR
       done
-      echo "${_TEXT_INFO}config template updated${_CLEAR_TEXT_COLOR}"
+      echo -e "${_TEXT_INFO}config template updated${_CLEAR_TEXT_COLOR}"
     fi
     export _IGNORE_REQUIRED="false"
     if [ -z "$SHRENDD_SPAWN" ]; then

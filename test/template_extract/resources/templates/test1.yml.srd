@@ -1,7 +1,7 @@
 hello:
   greeting1: ${TEST_HELLO}
   greeting2: ${test.hello}
-  greeting3: $(getConfig "test.howdy")
+  greeting3: $(getConfig "$(getConfig "test.howdy")")"
   greeting4: $(getConfig "TEST_HOWDY")
   leelodallas: |
     ${TEST_MULTIPASS}

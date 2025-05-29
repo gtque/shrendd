@@ -1,0 +1,16 @@
+hello:
+  greeting1: ${TEST_HELLO}-${test.world}
+  greeting2: ${test.hello}
+  greeting3: "$(getConfig "$(getConfig ${BARTHOLOMEW_JOJO_SIMPSON}")")"
+  greeting4: $(getConfig "$(getConfigOrEmpty "TEST_HOWDY")")"
+  greeting5: $(getConfig "TEST-HOWDY")
+  leelodallas: |
+    ${PSYCH_SPENCER_SHAWN}
+  dallas: |
+    ${PSYCH_SPENCER_HENRY}
+  fhloston: |
+    ${psych.juliet}
+  cookies:
+    $(getConfig "psych.burton guster")
+  cakes:
+    $(getConfigOrEmpty "psych.fru it.pin-a p_pl e")

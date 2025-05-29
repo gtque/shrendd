@@ -1,0 +1,42 @@
+app:
+  k8s:
+    # something to summarize or express what this value is and used for
+    objects: "0"
+  test:
+    # something to summarize or express what this value is and used for
+    manager: "1"
+    # something to summarize or express what this value is and used for
+    name: "2"
+    # something to summarize or express what this value is and used for
+    namespace: "3"
+    # something to summarize or express what this value is and used for
+    test4: "4"
+    # something to summarize or express what this value is and used for
+    version: "5"
+does:
+  not:
+    exist:
+      # something to summarize or express what this value is and used for
+      test3: "6"
+lib:
+  app:
+    test:
+      # something to summarize or express what this value is and used for
+      manager2: "7"
+      # something to summarize or express what this value is and used for
+      name2: "8"
+      # something to summarize or express what this value is and used for
+      namespace2: "9"
+      # something to summarize or express what this value is and used for
+      version2: "10"
+  butter:
+    # something to summarize or express what this value is and used for
+    alternative2: "11"
+    # something to summarize or express what this value is and used for
+    milk2: "12"
+  script:
+    # something to summarize or express what this value is and used for
+    message2: "13"
+  # something to summarize or express what this value is and used for
+  test2: "14"
+
