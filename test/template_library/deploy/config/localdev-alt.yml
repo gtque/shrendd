@@ -3,7 +3,7 @@ app:
   test:
     name: shrendd-test-single-level-localdev
     namespace: shrendd-test
-    manager: ansible
+    manager: shrendd
     version: 0.0-SNAPSHOT
     test1: "hello, world!"
     test2: |

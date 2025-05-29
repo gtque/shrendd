@@ -1,7 +1,7 @@
 #!/bin/bash
 
 module=${module:-}
-config=${config:-notset}
+config=${config:-}
 is_debug=${is_debug:-true}
 stub=${stub:-false}
 deployaction=${deployaction:-$(shrenddOrDefault "shrendd.default.action")}
@@ -19,7 +19,12 @@ _do_something=""
 while [ $# -gt 0 ]; do
   if [[ $1 == *"--"* ]]; then
     param="${1/--/}"
-    declare $param="${!param}$2 "
+    if [[ "$param" == "module" ]]; then
+      declare $param="${!param}$2 "
+    else
+      echo "=>setting $param=\"$2\""
+      declare $param="$2"
+    fi
     shift
   elif [[ $1 == "-init" ]]; then
     export _JUST_INITIALIZE="true"
@@ -74,7 +79,7 @@ if [ -z "$module" ]; then
   module="."
 fi
 export _module=$module
-if [[ $config == "notset" ]]; then
+if [[ $config == "" ]]; then
   export config=$(shrenddOrDefault shrendd.config.default)
 fi
 export _config=$config

@@ -3,7 +3,7 @@ app:
   test:
     name: k8s-localdev
     namespace: shrendd-test
-    manager: ansible
+    manager: shrendd
     version: 0.0-SNAPSHOT
     test10: "i shouldn't be here."
     test1: "hello, world!"

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "\"${CHIEF_WIGGUM}\""
+echo \"$(getConfig chief.wiggum)\"
