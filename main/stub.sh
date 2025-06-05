@@ -15,7 +15,7 @@ function targetDirs {
 function stubTarget {
   export target=$_stub
   targetDirs $_stub
-  cp -r $SHRENDD_WORKING_DIR/.shrendd/$_stub/toes/. ./$_module/$TEMPLATE_DIR/
+  cp -r $SHRENDD_DIR/$_stub/toes/. ./$_module/$TEMPLATE_DIR/
 }
 
 function stubConfig {
@@ -27,18 +27,18 @@ function stubConfig {
     echo -e "${_TEXT_INFO}templating config based on ${_GREEN}${_config}${_CLEAR_TEXT_COLOR}"
     cp ${_config} ${_template_path}
     sed -i "s/\"//g" "${_template_path}"
-    #_toe=$(cat $SHRENDD_WORKING_DIR/.shrendd/render/config/template.yml)
+    #_toe=$(cat $SHRENDD_DIR/render/config/template.yml)
     _template=$(cat $_template_path)
     _config_keys=$(keysFor "$_template")
     for _config_key in $_config_keys; do
       _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
       echo "key: $_config_key"
-      yq -i ".$_config_key |= load_str(\"$SHRENDD_WORKING_DIR/.shrendd/render/config/template.yml\")" ${_template_path}
+      yq -i ".$_config_key |= load_str(\"$SHRENDD_DIR/render/config/template.yml\")" ${_template_path}
     done
   fi
 }
 
-export _DEPLOY_ERROR_DIR="$SHRENDD_WORKING_DIR/.shrendd/errors"
+export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
 if [ -d $_DEPLOY_ERROR_DIR ]; then
   rm -rf $_DEPLOY_ERROR_DIR/*
 else

@@ -26,6 +26,7 @@ function checkFile {
 function defaultShrendd {
   cat << 'EndOfYml'
 shrendd:
+  dir: $SHRENDD_WORKING_DIR/.shrendd
   version: latest
   git:
     url: https://github.com/gtque/shrendd
@@ -35,25 +36,25 @@ EndOfYml
 function devD {
   _source=$(shrenddOrDefault "shrendd.test.local")
   echo "you must be a developer of shrendd and running a test, copying latest '$1' from $_source"
-  rm -f ./$1
+  rm -f $1
   _clone=$(echo "$2" | sed 's/.*releases.*download//g' | sed 's/v.*\///g')
   if [ -d $_source/$_clone ]; then
     echo "seems like cloning a module"
-    cp -f $_source/$_clone/* ./$1
+    cp -f $_source/$_clone/* $1
   else
     echo "seems like cloning specific file"
-    cp -f $_source/$_clone ./$1
-    _VERSION=$(yq e ".shrendd.version" ./.shrendd/version.yml)
-    sed -i "s/_UPSHRENDD_VERSION=\".*\"/_UPSHRENDD_VERSION=\"$_VERSION\"/g" "./$1"
+    cp -f $_source/$_clone $1
+    _VERSION=$(yq e ".shrendd.version" $SHRENDD_DIR/version.yml)
+    sed -i "s/_UPSHRENDD_VERSION=\".*\"/_UPSHRENDD_VERSION=\"$_VERSION\"/g" "$1"
   fi
 }
 
 function curlD {
-  curl --output ./$1 -L "$2"
+  curl --output $1 -L "$2"
 }
 
 function wgetD {
-  wget --output-document=./$1 "$2"
+  wget --output-document=$1 "$2"
 }
 
 function trueName {
@@ -90,8 +91,8 @@ function shrenddOrDefault {
 }
 
 function isUpToDate {
-  if [ -f ./.shrendd/targetversion.yml ]; then
-    export _TARGET_VERSION=$(yq e ".shrendd.version" ./.shrendd/targetversion.yml)
+  if [ -f $SHRENDD_DIR/targetversion.yml ]; then
+    export _TARGET_VERSION=$(yq e ".shrendd.version" $SHRENDD_DIR/targetversion.yml)
   else
     #default if not found
     export _TARGET_VERSION="0.0.0-sp"
@@ -106,8 +107,8 @@ function isUpToDate {
 }
 
 function isCompatible {
-  if [ -f ./.shrendd/targetversion.yml ]; then
-    export _TARGET_VERSION=$(yq e ".shrendd.upshrendd" ./.shrendd/targetversion.yml)
+  if [ -f $SHRENDD_DIR/targetversion.yml ]; then
+    export _TARGET_VERSION=$(yq e ".shrendd.upshrendd" $SHRENDD_DIR/targetversion.yml)
     if [ -z "$_TARGET_VERSION" ] || [ "$_TARGET_VERSION" = "null" ]; then
       export _TARGET_VERSION=0
     fi
@@ -126,8 +127,8 @@ function isCompatible {
 }
 
 function isUpgrade {
-  if [ -f ./.shrendd/targetversion.yml ]; then
-    export _TARGET_VERSION=$(yq e ".shrendd.upshrendd" ./.shrendd/targetversion.yml)
+  if [ -f $SHRENDD_DIR/targetversion.yml ]; then
+    export _TARGET_VERSION=$(yq e ".shrendd.upshrendd" $SHRENDD_DIR/targetversion.yml)
     if [ -z "$_TARGET_VERSION" ] || [ "$_TARGET_VERSION" = "null" ]; then
       export _TARGET_VERSION=0
     fi
@@ -135,7 +136,7 @@ function isUpgrade {
     #default if not found
     export _TARGET_VERSION="0"
   fi
-  _current_version=$(yq e ".shrendd.upshrendd" ./.shrendd/version.yml)
+  _current_version=$(yq e ".shrendd.upshrendd" $SHRENDD_DIR/version.yml)
   if [ -z "$_current_version" ] || [ "$_current_version" = "null" ]; then
     export _current_version="0"
   fi
@@ -153,19 +154,19 @@ function cloneShrendd {
   else
     export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/download/v$_SHRENDD_VERSION"
   fi
-  rm -f ./.shrendd/targetversion.yml
-  eval "$1 \"./.shrendd/targetversion.yml\" \"$_SHRENDD_ARTIFACT_URL/version.yml\""
+  rm -f $SHRENDD_DIR/targetversion.yml
+  eval "$1 \"$SHRENDD_DIR/targetversion.yml\" \"$_SHRENDD_ARTIFACT_URL/version.yml\""
   echo "retrieved target version."
   export _SHRENDD_IS_UPTODATE_NOW=$(isUpToDate)
   export _SHRENDD_IS_COMPATIBLE=$(isCompatible)
   export _SHRENDD_IS_UPGRADE=$(isUpgrade)
   _force_message="false"
-  #rm -f ./.shrendd/targetversion.yml
+  #rm -f $SHRENDD_DIR/targetversion.yml
   if [ "$_SHRENDD_IS_UPTODATE_NOW" == "true" ]; then
     echo "seems shrendd is already up to date."
   else
-    if [ -f ./.shrendd/targetversion.yml ]; then
-      export _TARGET_VERSION=$(yq e ".shrendd.version" ./.shrendd/targetversion.yml)
+    if [ -f $SHRENDD_DIR/targetversion.yml ]; then
+      export _TARGET_VERSION=$(yq e ".shrendd.version" $SHRENDD_DIR/targetversion.yml)
     else
       #default if not found
       export _TARGET_VERSION="0.0.0-sp"
@@ -175,10 +176,10 @@ function cloneShrendd {
       if [ "$_SHRENDD_IS_COMPATIBLE" == "true" ]; then
         if [ "$_SHRENDD_IS_UPGRADE" == "true" ]; then
           echo "downloading shrendd:$_SHRENDD_VERSION"
-          if [ -d ./.shrendd/$2 ]; then
-            rm -rf ./.shrendd/$2
+          if [ -d $SHRENDD_DIR/$2 ]; then
+            rm -rf $SHRENDD_DIR/$2
           fi
-          rm -f ./.shrendd/$2.zip
+          rm -f $SHRENDD_DIR/$2.zip
           echo "downloading with $1...$2"
           eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
         else
@@ -201,10 +202,10 @@ function cloneShrendd {
         echo "You are upgrading and an incompatibility was detected. The upgrade will be forced, as you wish."
       fi
       echo "downloading shrendd:$_SHRENDD_VERSION"
-      if [ -d ./.shrendd/$2 ]; then
-        rm -rf ./.shrendd/$2
+      if [ -d $SHRENDD_DIR/$2 ]; then
+        rm -rf $SHRENDD_DIR/$2
       fi
-      rm -f ./.shrendd/$2.zip
+      rm -f $SHRENDD_DIR/$2.zip
       echo "downloading with $1...$2"
       eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
     fi
@@ -226,7 +227,8 @@ else
   export _SHRENDD=""
 fi
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
-
+export SHRENDD_WORKING_DIR=$(pwd)
+export SHRENDD_DIR=$(shrenddOrDefault "shrendd.dir")
 export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
 export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
 echo "shrendd version: $_SHRENDD_VERSION"

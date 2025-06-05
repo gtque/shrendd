@@ -1,3 +1,17 @@
 shrendd:
   test:
     local: ../../main
+  plugins:
+    house:
+      src: "bbq"
+      version: "1.0.0"
+    shanty:
+      src: "sauce"
+      version: "latest"
+#  plugins:
+#    hello_world:
+#      src: "http://google.com"
+#      version: "latest"
+#    chipsisters:
+#      src: "https://takiAndRuffles"
+#      version: "1.0"

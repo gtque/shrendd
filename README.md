@@ -86,9 +86,11 @@ template rendering and deployment
        2. module properties if --module <module> specified
    14. **support "plugins"**
        1. plugin configs
-           1. may have a default
-           2. may be included in the shrendd.yml file
-           3. may be its own file
+          1. may have a default
+          2. may be included in the shrendd.yml file
+          3. may be its own file
+          4. assume defaults loaded by function with name return default yaml
+          5. stub plugin configs into shrendd.yml file
    15. ~~support multiple modules at one time~~
    16. ~~just "render" support~~
    17. ~~sensitive values~~
