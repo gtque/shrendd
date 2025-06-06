@@ -73,19 +73,19 @@ function render {
 
 function prePostAfter {
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh ]; then
-    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh"
+    echo "prePostAfter: processing $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh
   else
-    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh, nothing to do."
+    echo "prePostAfter: no $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh, nothing to do."
   fi
 }
 
 function prePostRender {
   if [ -f $SHRENDD_DIR/$1/$deploy_action/$2.sh ]; then
-    echo "processing $SHRENDD_DIR/$1/$deploy_action/$2.sh"
+    echo "prePostRender: processing $SHRENDD_DIR/$1/$deploy_action/$2.sh"
     source $SHRENDD_DIR/$1/$deploy_action/$2.sh
   else
-    echo "no $SHRENDD_DIR/$1/$deploy_action/$2.sh"
+    echo "prePostRender: no $SHRENDD_DIR/$1/$deploy_action/$2.sh"
   fi
 }
 
@@ -445,15 +445,15 @@ function moduleRender {
   echo "rendering: $_the_module"
   sourceConfigs
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh ]; then
-    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
+    echo "moduleRender: processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh
   else
-    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
+    echo "moduleRender: no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
   fi
 
   for _target in $targets; do
     export target="$_target"
-    echo "deploying: $target"
+    echo -e "${_TEXT_INFO}---------------- shrendd: $target ----------------${_CLEAR_TEXT_COLOR}"
     echo "initializing target template directory"
     targetDirs "$target"
     echo "initializing rendering directory"
@@ -471,10 +471,10 @@ function moduleRender {
   done
 
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh ]; then
-    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
+    echo "moduleRender: processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh
   else
-    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
+    echo "moduleRender: no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
   fi
 }
 

@@ -8,6 +8,8 @@ export _TESTS="$_TESTS shrendd_yaml_override"
 export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties"
 export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
 export _TESTS="$_TESTS k8s_simple_deploy"
+export _TESTS="$_TESTS plugins_get"
+
 #export _TESTS="single_level_default"
 source ./build/test/start.sh
 cd test
