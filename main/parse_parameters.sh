@@ -7,6 +7,7 @@ stub=${stub:-false}
 deployaction=${deployaction:-$(shrenddOrDefault "shrendd.default.action")}
 spawn=${spawn:-}
 
+export FORCE_SHRENDD_UPDATES="false"
 export SKIP_TEMPLATE=false
 export SKIP_STANDARD=false
 export SKIP_DEPLOY="false"
@@ -51,6 +52,8 @@ while [ $# -gt 0 ]; do
   elif [[ $1 == "-r" ]]; then
     export SKIP_DEPLOY="true"
     _do_something="true"
+  elif [[ $1 == "-U" ]]; then
+    export FORCE_SHRENDD_UPDATES="true"
   elif [[ $1 == "?" ]]; then
     export helped=true
     echo "Usage:"
@@ -68,6 +71,7 @@ while [ $# -gt 0 ]; do
     echo -e "  -t\n\t  teardown as the deployment action, short hand for --deployaction teardown\n\t    you may specify this and -s, but the last one specified wins and will determine the deployment action."
     echo -e "  -r\n\t  render only, skip deploy/teardown"
     echo -e "  -S\n\t  strict mode, fail on warnings"
+    echo -e "  -U\n\t  update libraries"
     export _requested_help="true"
   fi
   shift

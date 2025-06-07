@@ -41,6 +41,10 @@ function cloneLibrary {
     _xerox="getThis"
   fi
 
+  if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+    rm -rf "$_bank"
+  fi
+
   #should probably support a forced update of libraries
   if [ "$_version" == "latest" ] && [ "$_xerox" != "getThis" ]; then
     if [ "$_latest_libs" != *" $_library "* ]; then

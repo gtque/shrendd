@@ -3,6 +3,7 @@ set -euo pipefail
 
 trap resetLocal EXIT
 
+export FORCE_SHRENDD_UPDATES="false"
 export _RED='\033[0;31m'
 export _BLUE='\033[0;34m'
 export _MAGENTA='\033[0;35m'
@@ -76,6 +77,19 @@ function keysFor {
   echo $(echo -e "$1" | yq e "(.. | select(. == \"*\") | {(path | join(\".\")): .}) | keys " - | sed -e "s/\- //g" | sed -e "s/ /$_SPACE_PLACE_HOLDER/g")
 }
 
+function shrenddStub {
+  if [[ -f "$_SHREND_YML" ]]; then
+    :
+  else
+    _stub_shrendd=$(shrenddOrDefault "shrendd.config.stub")
+    if [[ "$_stub_shrendd" == "true" ]]; then
+      echo "stubbing $_SHREND_YML"
+      echo -e "$(defaultShrendd)" | sed 's/^/#/' > $_SHREND_YML
+    fi
+  fi
+}
+
+
 function defaultShrendd {
   cat << 'EndOfYml'
 shrendd:
@@ -101,6 +115,7 @@ shrendd:
   - name: render
     description: the default target is just render.
   config:
+    stub: true
     path: $SHRENDD_WORKING_DIR/config
     validate: true
     unwind: true
@@ -415,7 +430,10 @@ function initTargets {
       _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
       #cloneShrendd "$_GETTER" "$_target"
       if [[ "$_target_source" != "null" ]]; then
-          echo "shrendd.${_target}.source: ${_target_source}"
+        if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+          rm -rf $SHRENDD_DIR/$_target
+        fi
+        echo "shrendd.${_target}.source: ${_target_source}"
         eval "${_target_source}"
       fi
     fi
@@ -489,6 +507,9 @@ function initPlugins {
       if [[ "$_plugs" == *" $_plug "* ]]; then
         :
       else
+        if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+          rm -rf $SHRENDD_DIR/$_plug
+        fi
         _clone_parameters=$(shrenddOrDefault "shrendd.plugins.$_plug.parameters")
         echo "  $_plug parameters: $_clone_parameters"
         _plugs="$_plugs$_plug "
@@ -578,7 +599,10 @@ else
 fi
 
 cloneShrendd "$_GETTER" "render"
+
 source $SHRENDD_DIR/parse_parameters.sh
+shrenddStub
+
 #bootstrap any add ons or other stuff before shrendding.
 if [ -f ./plugin.shrendd ]; then
   echo "found a plugin.shrendd file, sourcing it now..."
