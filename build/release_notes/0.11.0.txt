@@ -1,0 +1,5 @@
+* download plugins
+* plugin properties
+* stub shrendd properties to shrendd.yml
+* force library updates
+* release note file support

@@ -33,7 +33,17 @@ function create_release {
   _branch=$2
   prerelease=$3
   make_latest=$4
-  body="## new functionality:\n$5\n\n### required applications:\n$requires"
+  _release_notes=""
+  if [ $# -gt 4 ]; then
+    _release_notes="$5"
+  fi
+  if [ -f "./build/release_notes/${name}.txt" ]; then
+    if [[ -n "$_release_notes" ]; then
+      _release_notes="${_release_notes}\n"
+    fi
+    _release_notes="${_release_notes}$(cat "./build/release_notes/${name}.txt")"
+  fi
+  body="## new functionality:\n${_release_notes}\n\n### required applications:\n$requires"
   command="curl -s -o ./build/target/$_VERSION/release.json -w '%{http_code}' \
        --request POST \
        --header 'authorization: Bearer ${token}' \
