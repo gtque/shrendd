@@ -37,11 +37,17 @@ function create_release {
   if [ $# -gt 4 ]; then
     _release_notes="$5"
   fi
+  if [[ "${_release_notes}" == "N/A" ]]; then
+    _release_notes=""
+  fi
   if [ -f "./build/release_notes/${name}.txt" ]; then
     if [[ -n "$_release_notes" ]]; then
       _release_notes="${_release_notes}\n"
     fi
     _release_notes="${_release_notes}$(cat "./build/release_notes/${name}.txt")"
+  fi
+  if [[ -z "$_release_notes" ]]; then
+    _release_notes="N/A"
   fi
   body="## new functionality:\n${_release_notes}\n\n### required applications:\n$requires"
   command="curl -s -o ./build/target/$_VERSION/release.json -w '%{http_code}' \
