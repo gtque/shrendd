@@ -11,6 +11,7 @@ export _LIGHT_BLUE='\033[1;34m'
 export _SUPER_GREEN='\033[0;32m'
 export _YELLOW='\033[0;33m'
 export _CLEAR_TEXT_COLOR='\033[0m' # No Color
+
 export _NEW_LINE_PLACE_HOLDER="_shrendd_new_line_axcvert5"
 export _SPACE_PLACE_HOLDER="_shrendd_space_joasd7rfc"
 export _TUXEDO_MASK=""
@@ -84,33 +85,53 @@ function shrenddStub {
     _stub_shrendd=$(shrenddOrDefault "shrendd.config.stub")
     if [[ "$_stub_shrendd" == "true" ]]; then
       echo "stubbing $_SHREND_YML"
-      echo -e "$(defaultShrendd)" | sed 's/^/#/' > $_SHREND_YML
+      echo -e "$(defaultShrendd)" > $_SHREND_YML
     fi
   fi
 }
 
-
-function defaultShrendd {
+function coreShrendd {
   cat << 'EndOfYml'
 shrendd:
-  version: latest
-  dir: $SHRENDD_WORKING_DIR/.shrendd
   git:
     url: https://github.com/gtque/shrendd
-  default:
-    action: render
-    template:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
-    render:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/${target}/rendered
-  deploy:
-    dir: $_MODULE_DIR/deploy
   text:
     error: $_RED
     warn: $_YELLOW
     pass: $_SUPER_GREEN
     info: $_LIGHT_BLUE
     debug: $_MAGENTA
+  provided:
+    render: true
+    test: true
+    k8s: true
+  test:
+    source: "cloneShrendd \"$_GETTER\" \"test\""
+    local: ./main
+  library:
+    this:
+      get:
+        method: "getThis"
+        src: "$(shrenddOrDefault shrendd.deploy.dir)"
+EndOfYml
+}
+
+function defaultShrendd {
+  cat << 'EndOfYml'
+shrendd:
+  version: latest
+#  git:
+#    url: https://github.com/gtque/shrendd
+  dir: $SHRENDD_WORKING_DIR/.shrendd
+  default:
+    action: render
+    template:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
+    render:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/${target}/rendered
+    source: "cloneShrendd \"$_GETTER\" \"$_target\""
+  deploy:
+    dir: $_MODULE_DIR/deploy
   targets:
   - name: render
     description: the default target is just render.
@@ -122,18 +143,15 @@ shrendd:
     default: localdev.yml
     definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
     src: $(shrenddOrDefault shrendd.config.path)/src
-  render:
-    template:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
-    render:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/rendered
+#  render:
+#    template:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
+#    render:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/rendered
   k8s:
-    source: "cloneShrendd \"$_GETTER\" \"k8s\""
+#    source: "cloneShrendd \"$_GETTER\" \"k8s\""
     yaml:
       padding: 2
-  test:
-    source: "cloneShrendd \"$_GETTER\" \"test\""
-    local: ./main
   library:
     cache:
       dir: ~/.shrendd/cache
@@ -142,10 +160,6 @@ shrendd:
       get:
         method: "${_GETTER}"
         parameters: ""
-    this:
-      get:
-        method: "getThis"
-        src: "$(shrenddOrDefault shrendd.deploy.dir)"
 EndOfYml
 }
 
@@ -264,13 +278,13 @@ function shrenddOrDefault {
     _value="$(echo ${!_parm})"
   else
     _plugin=$(echo "$1" | cut -d'.' -f1)
-#    if [[ "$_plugin" == *"crib"* ]]; then
-#      echo "crib shrendd property retrieval"
-#    fi
     if [[ "$_plugin" == "shrendd" ]]; then
       _value=$(echo "$_SHRENDD" | yq e ".$1" -)
       if [ -z "$_value" ] || [ "$_value" == "null" ]; then
         _value=$(echo "$_SHRENDD_DEFAULTS" | yq e ".$1" -)
+        if [ -z "$_value" ] || [ "$_value" == "null" ]; then
+          _value=$(echo "$_SHRENDD_CORE" | yq e ".$1" -)
+        fi
       fi
     else
       _plugin_location=$(shrenddOrDefault "shrendd.plugins.$_plugin.config.dir" || echo "./$_plugin.yml")
@@ -284,27 +298,15 @@ function shrenddOrDefault {
         _plugin_location="./$_plugin.yml"
       fi
       if [ -f $_plugin_location ]; then
-#        if [[ "$_plugin" == "crib" ]]; then
-#          echo "crib shrendd property retrieval from file"
-#        fi
         _plugin_yaml=$(echo "$_SHRENDD" | yq eval-all '. as $item ireduce ({}; . * $item )' - $_plugin_location)
       else
-#        if [[ "$_plugin" == "crib" ]]; then
-#          echo "crib shrendd property retrieval from default shrend"
-#        fi
         _plugin_yaml="$_SHRENDDO"
       fi
       _value=$(echo "$_plugin_yaml" | yq e ".$1" -)
 #      export _SHRENDD=$(echo "$_SHRENDDO" | yq eval-all '. as $item ireduce ({}; . * $item )' - $_module_shrendd_yaml)
       if [ -z "$_value" ] || [ "$_value" == "null" ]; then
         _plugin_defaults=""
-#        if [[ "$_plugin" == "crib" ]]; then
-#          echo "crib property not found..."
-#        fi
         if [[ $(type -t $_plugin) == function ]]; then
-#          if [[ "$_plugin" == "crib" ]]; then
-#            echo "crib loading plugin function..."
-#          fi
           _plugin_defaults=$(eval "$_plugin")
         fi
         if [[ -n "$_plugin_defaults" ]]; then
@@ -392,13 +394,6 @@ function isUpToDate {
     fi
   fi
   echo "$_SHRENDD_IS_UPTODATE"
-#  else
-#    if [ -d $SHRENDD_DIR/$2 ]; then
-#      echo "$_SHRENDD_IS_UPTODATE"
-#    else
-#      echo "false"
-#    fi
-#  fi
 }
 
 function initTargets {
@@ -428,8 +423,12 @@ function initTargets {
     _targets="$_targets$_target"
     if [[ $# -gt 0 && "${_target}" != "render" ]]; then
       _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
+      if [[ "${_target_source}" == "null" ]]; then
+        _target_source=$(shrenddOrDefault "shrendd.default.source" 1)
+      fi
+      _target_shrendd=$(shrenddOrDefault "shrendd.provided.${_target}" 1)
       #cloneShrendd "$_GETTER" "$_target"
-      if [[ "$_target_source" != "null" ]]; then
+      if [[ "$_target_shrendd" != "null" ]]; then
         if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
           rm -rf $SHRENDD_DIR/$_target
         fi
@@ -562,16 +561,17 @@ if [[ -n "${SHREND_YML+x}" ]]; then
   export _SHREND_YML="$SHREND_YML"
 fi
 if [ -f $_SHREND_YML ]; then
-  export _SHRENDD=$(cat ./$_SHREND_YML)
+  export _SHRENDD=$(cat $_SHREND_YML)
   echo "found shrendd.yml, will use values defined there, if no value specified, will use default values."
 else
   echo "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
   export _SHRENDD=""
 fi
 
+export _SHRENDD_CORE=$(coreShrendd)
 export _SHRENDD_DEFAULTS=$(defaultShrendd)
-export TEST_SHRENDD_VERSION="hello world"
-testIf "test.shrendd.version"
+#export TEST_SHRENDD_VERSION="hello world"
+#testIf "test.shrendd.version"
 export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
 export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
 export SHRENDD_WORKING_DIR=$(pwd)
