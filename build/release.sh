@@ -45,6 +45,7 @@ function create_release {
       _release_notes="${_release_notes}\n"
     fi
     _release_notes="${_release_notes}$(cat "./build/release_notes/${name}.txt")"
+    _release_notes="${_release_notes//$'\\n'/\\\\n}"
   fi
   if [[ -z "$_release_notes" ]]; then
     _release_notes="N/A"
