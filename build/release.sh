@@ -38,7 +38,7 @@ function create_release {
     _release_notes="$5"
   fi
   if [ -f "./build/release_notes/${name}.txt" ]; then
-    if [[ -n "$_release_notes" ]; then
+    if [[ -n "$_release_notes" ]]; then
       _release_notes="${_release_notes}\n"
     fi
     _release_notes="${_release_notes}$(cat "./build/release_notes/${name}.txt")"
