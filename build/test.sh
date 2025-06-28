@@ -4,10 +4,12 @@ echo "hold my beer - drunk cousin at the wedding"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
 export _TESTS="$_TESTS render_render render_no_template render_only_template render_with_scripts"
 export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
-export _TESTS="$_TESTS shrendd_yaml_override"
+export _TESTS="$_TESTS shrendd_yaml_override shrendd_yaml_stub shrendd_yaml_nostub"
 export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties"
 export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
 export _TESTS="$_TESTS k8s_simple_deploy"
+export _TESTS="$_TESTS plugins_get"
+
 #export _TESTS="single_level_default"
 source ./build/test/start.sh
 cd test

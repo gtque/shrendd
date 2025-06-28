@@ -12,3 +12,4 @@ test/template_spawn/config
 test/template_spawn_cleanup/config
 test/template_remote_library/shrendd.yml
 test/template_remote_library/deploy/config/config-template.yml
+test/shrendd_yaml_stub/shrendd.yml

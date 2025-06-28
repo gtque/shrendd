@@ -48,7 +48,7 @@ process_k8s_script_maps() {
       _target_render_dir=$(echo "$fname" | sed -e "s/${_replace_path}//g" )
       echo "target render dir: $_target_render_dir"
 #      doRender "$fname"
-      #ansible-playbook $SHRENDD_WORKING_DIR/.shrendd/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$fname" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
+      #ansible-playbook $SHRENDD_DIR/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$fname" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
       config_maps="*.srd"
       script_files="*.sh"
       _target_render_dir="$RENDER_DIR/temp/$_target_render_dir"

@@ -81,14 +81,16 @@ template rendering and deployment
            5. ~~scan and extract from script, aka non-template files.~~
        3. ~~generate a <config>.yml file from config-template~~
    13. support setting configuration(s) in shrendd.yml by running `shrendd -set <key>=<value>`
-       1. main shrendd properties by default
-          1. will still respect custom location for shrendd.yml
+       1. ~~main shrendd properties by default~~
+          1. ~~will still respect custom location for shrendd.yml~~
        2. module properties if --module <module> specified
-   14. **support "plugins"**
-       1. plugin configs
-           1. may have a default
-           2. may be included in the shrendd.yml file
-           3. may be its own file
+   14. ~~**support "plugins"**~~
+       1. ~~plugin configs~~
+          1. ~~may have a default~~
+          2. ~~may be included in the shrendd.yml file~~
+          3. ~~may be its own file~~
+          4. ~~assume defaults loaded by function with name return default yaml~~
+          5. ~~stub plugin configs into shrendd.yml file~~
    15. ~~support multiple modules at one time~~
    16. ~~just "render" support~~
    17. ~~sensitive values~~

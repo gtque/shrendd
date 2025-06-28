@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-if [ -f $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh ]; then
-  source $SHRENDD_WORKING_DIR/.shrendd/render/${deploy_action}.sh
+if [ -f $SHRENDD_DIR/render/${deploy_action}.sh ]; then
+  source $SHRENDD_DIR/render/${deploy_action}.sh
 fi
 
 if [ "$SHRENDD_EXTRACT" == "true" ] || [ -n "$SHRENDD_SPAWN" ]; then
-  source  $SHRENDD_WORKING_DIR/.shrendd/render/template.sh
+  source  $SHRENDD_DIR/render/template.sh
 fi
 
-source  $SHRENDD_WORKING_DIR/.shrendd/render/library.sh
+source  $SHRENDD_DIR/render/library.sh
 
 export _SOURCED_CONFIG_SRC=" "
 
@@ -73,19 +73,19 @@ function render {
 
 function prePostAfter {
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh ]; then
-    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh"
+    echo "prePostAfter: processing $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh
   else
-    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh, nothing to do."
+    echo "prePostAfter: no $_SHRENDD_DEPLOY_DIRECTORY/$1/$deploy_action/$2.sh, nothing to do."
   fi
 }
 
 function prePostRender {
-  if [ -f $SHRENDD_WORKING_DIR/.shrendd/$1/$deploy_action/$2.sh ]; then
-    echo "processing $SHRENDD_WORKING_DIR/.shrendd/$1/$deploy_action/$2.sh"
-    source $SHRENDD_WORKING_DIR/.shrendd/$1/$deploy_action/$2.sh
+  if [ -f $SHRENDD_DIR/$1/$deploy_action/$2.sh ]; then
+    echo "prePostRender: processing $SHRENDD_DIR/$1/$deploy_action/$2.sh"
+    source $SHRENDD_DIR/$1/$deploy_action/$2.sh
   else
-    echo "no $SHRENDD_WORKING_DIR/.shrendd/$1/$deploy_action/$2.sh"
+    echo "prePostRender: no $SHRENDD_DIR/$1/$deploy_action/$2.sh"
   fi
 }
 
@@ -93,8 +93,8 @@ function doDeploy {
   prePostAfter "$1" "pre"
   if [ "$SKIP_STANDARD" == "false" ]; then
     echo "running standard setup."
-    if [ -f $SHRENDD_WORKING_DIR/.shrendd/$1/${deploy_action}/deploy.sh ]; then
-      source $SHRENDD_WORKING_DIR/.shrendd/$1/${deploy_action}/deploy.sh
+    if [ -f $SHRENDD_DIR/$1/${deploy_action}/deploy.sh ]; then
+      source $SHRENDD_DIR/$1/${deploy_action}/deploy.sh
     fi
   else
     echo "skipping standard $1/$deploy_action"
@@ -445,15 +445,15 @@ function moduleRender {
   echo "rendering: $_the_module"
   sourceConfigs
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh ]; then
-    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
+    echo "moduleRender: processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh
   else
-    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
+    echo "moduleRender: no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/pre.sh"
   fi
 
   for _target in $targets; do
     export target="$_target"
-    echo "deploying: $target"
+    echo -e "${_TEXT_INFO}---------------- shrendd: $target ----------------${_CLEAR_TEXT_COLOR}"
     echo "initializing target template directory"
     targetDirs "$target"
     echo "initializing rendering directory"
@@ -471,15 +471,15 @@ function moduleRender {
   done
 
   if [ -f $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh ]; then
-    echo "processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
+    echo "moduleRender: processing $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
     source $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh
   else
-    echo "no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
+    echo "moduleRender: no $_SHRENDD_DEPLOY_DIRECTORY/$deploy_action/post.sh"
   fi
 }
 
 function shrenddDeployRun {
-  export _DEPLOY_ERROR_DIR="$SHRENDD_WORKING_DIR/.shrendd/errors"
+  export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
   if [ -d $_DEPLOY_ERROR_DIR ]; then
     rm -rf $_DEPLOY_ERROR_DIR/*
   else

@@ -19,7 +19,7 @@ _curdir=$(pwd)
 cd $TEMPLATE_DIR/teardown
 doRender "$TEMPLATE_DIR/teardown"
 cd $_curdir
-#ansible-playbook $SHRENDD_WORKING_DIR/.shrendd/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$TEMPLATE_DIR/teardown" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
+#ansible-playbook $SHRENDD_DIR/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$TEMPLATE_DIR/teardown" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
 
 export TEARDOWN_NAMESPACE=$(yq e '.metadata.namespace' $RENDER_DIR/01_configmap-teardown.yml)
 export TEARDOWN_NAME=$(yq e '.metadata.name' $RENDER_DIR/01_configmap-teardown.yml)
