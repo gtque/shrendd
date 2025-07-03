@@ -1,0 +1,1 @@
+tests offline mode: clone shrendd does nothing

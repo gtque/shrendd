@@ -10,6 +10,7 @@ function devDLib {
 }
 
 function cloneLibrary {
+
   _library="$1"
   _version="$2"
   _bank="$3"
@@ -141,7 +142,9 @@ function importShrendd {
   if [[ "$_library" == "this" ]] || [[ "$_MODULE_DIR" == *"$_library" ]]; then
     _bank="$_SHRENDD_DEPLOY_DIRECTORY"
   fi
-  cloneLibrary "$_library" "$_version" "$_bank" "$_template"
+  if [[ "${is_offline}" == "false" ]]; then
+    cloneLibrary "$_library" "$_version" "$_bank" "$_template"
+  fi
   if [ $# -lt 2 ]; then
     eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\" \"$_map_name\""
   else

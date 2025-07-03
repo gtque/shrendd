@@ -3,6 +3,7 @@
 module=${module:-}
 config=${config:-}
 is_debug=${is_debug:-true}
+_offline=${_offline:-false}
 stub=${stub:-false}
 deployaction=${deployaction:-$(shrenddOrDefault "shrendd.default.action")}
 spawn=${spawn:-}
@@ -29,6 +30,9 @@ while [ $# -gt 0 ]; do
     shift
   elif [[ $1 == "-init" ]]; then
     export _JUST_INITIALIZE="true"
+  elif [[ $1 == "-offline" ]]; then
+    param="_offline"
+    declare $param="true"
   elif [[ $1 == "-debug" ]]; then
     param="is_debug"
     declare $param="true"
@@ -62,6 +66,7 @@ while [ $# -gt 0 ]; do
     echo -e "  -live\n\t  run as live deployment/teardown, including auto clean up of rendered templates."
     echo -e "  -share\n\t  preserve config between modules, even with custom config, ie no unwinding.\n\t You can also set 'shrendd.config.unwind: false' in the shrendd.yml file."
     echo -e "  -extract\n\t  produce a config-template.yml file from template files. This only considers those referenced in \${} or \$(getConfig) declarations"
+    echo -e "  -offline\n\t  Run in offline mode. Will not attempt to download shrendd, modules, libraries, or plugins. This always sets force update to false."
     echo -e "  --spawn [config yaml file name]\n\t generate a config yaml file based existing config-template.yml file."
     echo -e "  --stub [deployment type to stub]\n\t  stub some default template definitions, if defined, for the specified deployment type.\n\t  if stub is specified, render will be skipped, regardless of the order of parameters specified when running shrendd.\nt\t  example: --stub k8s"
     echo -e "  --module [relative\\path\\\to\\module]\n\t  the path to the module to be deployed, defaults to current directory.\n\t example: --module infrastructure\n\t example: --module simpleApiServer"
@@ -100,5 +105,9 @@ if [ "$deployaction" == "render" ]; then
   deployaction="deploy"
   export SKIP_DEPLOY="true"
 fi
+if [[ "${_offline}" == "true" ]]; then
+  export FORCE_SHRENDD_UPDATES="false"
+fi
+export is_offline="${_offline}"
 export deploy_action=${deployaction}
 export SHRENDD_SPAWN="$spawn"
