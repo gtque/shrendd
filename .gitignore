@@ -15,3 +15,5 @@ test/template_remote_library/deploy/config/config-template.yml
 test/shrendd_yaml_stub/shrendd.yml
 test/version_latest_default/shrendd
 test/version_latest_specified/shrendd
+test/offline_library/shrendd.yml
+test/offline_library/shrendd

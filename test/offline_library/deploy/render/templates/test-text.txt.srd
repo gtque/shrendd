@@ -1,0 +1,5 @@
+some text before the block
+$(importShrendd "offline_library_lib:text/helloworld.txt.srd:text")
+
+more text after the block
+${RALPH_WIGGUM}

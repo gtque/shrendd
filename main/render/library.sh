@@ -28,6 +28,7 @@ function cloneLibrary {
   if [ -z "$_xerox_settings" ] || [ "$_xerox_settings" == "null" ]; then
     _xerox_settings=$(shrenddOrDefault "shrendd.library.default.get.parameters")
   fi
+#  echo -e "settings:\n$_xerox\n$_xerox_settings\n$_library"
   if [ "$_xerox" == "devD" ]; then
     _xerox="devDLib"
   fi
@@ -41,11 +42,11 @@ function cloneLibrary {
   if [[ "$_library" == "this" ]] || [[ "$_MODULE_DIR" == *"$_library" ]]; then
     _xerox="getThis"
   fi
-
+  _destination="$_bank/$_library.zip"
   if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
     rm -rf "$_bank"
   fi
-
+#  echo -e "xeroxing:\n$_bank\n$_destination"
   #should probably support a forced update of libraries
   if [ "$_version" == "latest" ] && [ "$_xerox" != "getThis" ]; then
     if [ "$_latest_libs" != *" $_library "* ]; then
@@ -54,7 +55,7 @@ function cloneLibrary {
       export _latest_libs="${_latest_libs}${_library} "
     fi
   fi
-  _destination="$_bank/$_library.zip"
+
 #  if [ "$_xerox" == "getThis" ]
 #    _xerox_settings="$_template"
 #    _destination="$RENDER_DIR/temp/"
@@ -116,7 +117,6 @@ function importShrendd {
   _version=""
   _type=$(echo "$_import" | cut -d':' -f3)
   _map_name=$(echo "$_import" | cut -d':' -f4)
-
   if [ -z "$_library" ] || [ "$_library" == "null" ]; then
     echo -e "${_TEXT_ERROR}looks like you didn't even specify the library.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
     exit 1
