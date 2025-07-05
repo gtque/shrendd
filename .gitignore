@@ -17,3 +17,5 @@ test/version_latest_default/shrendd
 test/version_latest_specified/shrendd
 test/offline_library/shrendd.yml
 test/offline_library/shrendd
+test/offline_plugin/shrendd.yml
+test/offline_plugin/shrendd

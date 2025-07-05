@@ -31,4 +31,4 @@ else
   failed "app.text.name after library updated, offline=false"
 fi
 ../../build/test/cleanup_shrendd.sh
-#source ../../build/test/end.sh
+source ../../build/test/end.sh
