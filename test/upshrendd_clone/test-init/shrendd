@@ -75,7 +75,7 @@ shrendd:
     template:
       dir: $_MODULE_DIR/deploy/${target}/templates
     render:
-      dir: $_MODULE_DIR/deploy/${target}/rendered
+      dir: $_MODULE_DIR/deploy/render/${target}
   text:
     error: $_RED
     warn: $_YELLOW

@@ -9,6 +9,7 @@ export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup 
 export _TESTS="$_TESTS k8s_simple_deploy"
 export _TESTS="$_TESTS plugins_get"
 export _TESTS="$_TESTS offline_init offline_library offline_plugin"
+export _TESTS="$_TESTS build_with_import"
 
 #export _TESTS="single_level_default"
 source ./build/test/start.sh

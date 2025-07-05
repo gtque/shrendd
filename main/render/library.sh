@@ -84,7 +84,7 @@ function importShrendd_text {
 #  echo "texting: $1"
   _text=$(configify "$1")
 #  echo -e "the text:$_text"
-  eval "echo -e \"$_text\""
+  doEval "$_text"
 }
 
 function importShrendd_yml {
@@ -102,11 +102,28 @@ function importShrendd_yaml {
 #  echo "#must merge: $_temp_yaml"
 #  export _merge_yaml="${_merge_yaml}\n$_temp_yaml"
   if [ "$_merge_yaml" == "false" ]; then
-    rm -rf "$RENDER_DIR/temp/merge_yaml"
+    rm -rf "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
   fi
   export _merge_yaml="true"
-  echo "$_temp_yaml" >> "$RENDER_DIR/temp/merge_yaml"
+  echo "$_temp_yaml" >> "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
+  _eval_merge_yaml="$_current_merge_yaml"
+  export _current_merge_yaml="${_temp_yaml}.merge.yml"
   doEval "$_text" "$_temp_yaml"
+  if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp/merge_yaml
+    _merge_results="yaml imports found, attempting to merge yaml"
+#    cat "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
+    export _merge_yaml=$(cat "$_current_merge_yaml") #$RENDER_DIR/temp/merge_yaml")
+    _merge_results="$_merge_results\n$(mergeYaml "${_temp_yaml}" || echo "yaml merge failed")"
+    if [[ "$_merge_results" == *"yaml merge failed"* ]]; then
+      echo "error merging yaml ${_temp_yaml}:" >> $_DEPLOY_ERROR_DIR/config_error.log
+      cat "$_current_merge_yaml" >> $_DEPLOY_ERROR_DIR/config_error.log
+    else
+      echo -e "${_temp_yaml}:\n$_merge_results" >> $_DEPLOY_ERROR_DIR/config_debug.log
+    fi
+    export _merge_yaml=""
+  fi
+  rm -rf ${_current_merge_yaml}
+  export _current_merge_yaml="$_eval_merge_yaml"
 #  eval "shrecho \"$_text\""
 }
 

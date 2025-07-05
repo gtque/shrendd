@@ -11,6 +11,7 @@ test/template_extract_library/config
 test/template_spawn/config
 test/template_spawn_cleanup/config
 test/template_remote_library/shrendd.yml
+test/template_remote_library/shrendd
 test/template_remote_library/deploy/config/config-template.yml
 test/shrendd_yaml_stub/shrendd.yml
 test/version_latest_default/shrendd
@@ -19,3 +20,4 @@ test/offline_library/shrendd.yml
 test/offline_library/shrendd
 test/offline_plugin/shrendd.yml
 test/offline_plugin/shrendd
+test/build_with_import/shrendd
