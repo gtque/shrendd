@@ -6,7 +6,7 @@ shrendd:
   targets:
     - name: render
   library:
-    offline_library:
+    offline_library_lib:
       get:
         src: $_MODULE_DIR/test-init/part2/lib
         method: devD
