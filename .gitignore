@@ -21,3 +21,5 @@ test/offline_library/shrendd
 test/offline_plugin/shrendd.yml
 test/offline_plugin/shrendd
 test/build_with_import/shrendd
+test/bootstrap_init/shrendd
+test/bootstrap_init/boot.shrendd

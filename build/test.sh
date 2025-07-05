@@ -9,13 +9,16 @@ export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup 
 export _TESTS="$_TESTS k8s_simple_deploy"
 export _TESTS="$_TESTS plugins_get"
 export _TESTS="$_TESTS offline_init offline_library offline_plugin"
-export _TESTS="$_TESTS build_with_import"
+export _TESTS="$_TESTS build_with_import bootstrap_init"
 
 #export _TESTS="single_level_default"
 source ./build/test/start.sh
 cd test
 export _FULL_TEST_RESULTS=""
 export test_results=""
+
+start_time=$SECONDS
+
 for test in $_TESTS; do
   echo -e "\n*********************running: $test*********************\n"
   cd $test
@@ -38,6 +41,9 @@ for test in $_TESTS; do
   cd ..
   echo -e "\n*********************finished: $test*********************\n"
 done
+end_time=$SECONDS
+duration=$((end_time - start_time))
+durationM=$((duration / 60))
 echo -e "processing results:$_FULL_TEST_RESULTS"
 passed=$(echo -e "$_FULL_TEST_RESULTS" | grep -v "failed" | grep -c "passed")
 #echo "string to search in" | grep "pattern" > /dev/null 2>&1 || echo "string if not found"
@@ -46,7 +52,7 @@ if [ -z "$failed" ]; then
   failed=$(echo -e "$_FULL_TEST_RESULTS" | grep -c "failed")
 fi
 total=$((passed + failed))
-echo -e "test summary:\n  total: $total passed: $passed failed: $failed"
+echo -e "test summary:\n  total: $total passed: $passed failed: $failed\n  execution time: ${duration} seconds (${durationM} minutes) "
 if [ "$failed" -gt 0 ]; then
   exit $failed
 fi
