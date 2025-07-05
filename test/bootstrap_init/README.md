@@ -1,0 +1,1 @@
+tests bootstrap: validates that `boot.shrendd` is sourced if present

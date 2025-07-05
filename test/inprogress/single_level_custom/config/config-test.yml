@@ -1,9 +1,0 @@
-app:
-  id: shrendd-test
-  test:
-    name: shrendd-test-single-level
-    namespace: shrendd-test
-    manager: shrendd
-    version: 0.0-SNAPSHOT
-release:
-  stage: dev

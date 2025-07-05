@@ -1,1 +1,1 @@
-tests offline mode: clone shrendd does nothing
+tests offline mode: plugins not updated when offline
