@@ -36,9 +36,13 @@ function targetDirs {
     export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.default.template.dir")
   fi
   echo "template directory: $TEMPLATE_DIR"
-  export RENDER_DIR=$(shrenddOrDefault "shrendd.$1.render.dir")
+  _build_or_render="render"
+  if [[ "${SKIP_RENDER}" == "true" ]]; then
+    _build_or_render="build"
+  fi
+  export RENDER_DIR=$(shrenddOrDefault "shrendd.$1.${_build_or_render}.dir")
   if [ -z "$RENDER_DIR" ] || [ "$RENDER_DIR" == "null" ]; then
-    export RENDER_DIR=$(shrenddOrDefault "shrendd.default.render.dir")
+    export RENDER_DIR=$(shrenddOrDefault "shrendd.default.${_build_or_render}.dir")
   fi
 }
 
@@ -295,7 +299,7 @@ function configify {
 function getAsIs {
   _name=$(trueName "$1")
   if [ -z "${!_name+x}" ]; then
-    echo "error getting config for $1" >> $_DEPLOY_ERROR_DIR/config_error.log
+    echo "error getting as is config for $1" >> $_DEPLOY_ERROR_DIR/config_error.log
     echo -e "\${${1}}"
     return 1
   else
@@ -460,7 +464,7 @@ function moduleRender {
     checkRenderDirectory "$target"
     echo "rendering to: $RENDER_DIR"
     render "$target"
-#    rm -rf "$RENDER_DIR/temp"
+    rm -rf "$RENDER_DIR/temp"
     echo -e "${_TEXT_INFO}render complete${_CLEAR_TEXT_COLOR}"
     if [ "$SKIP_DEPLOY" == "false" ]; then
       echo "deploying $target"

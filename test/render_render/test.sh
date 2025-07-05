@@ -7,13 +7,13 @@ rm -rf ./deploy/target
 _valid=$(./shrendd)
 echo -e "$_valid"
 export test_results="render with just render (by default):\n"
-_greeting1=$(yq e ".hello.greeting1" "./deploy/target/render/rendered/test1.yml")
-_greeting2=$(yq e ".hello.greeting2" "./deploy/target/render/rendered/test1.yml")
-_greeting3=$(yq e ".hello.greeting3" "./deploy/target/render/rendered/test1.yml")
-_greeting4=$(yq e ".hello.greeting4" "./deploy/target/render/rendered/test1.yml")
-_leelo=$(yq e ".hello.leelodallas" "./deploy/target/render/rendered/test1.yml")
-_dallas=$(yq e ".hello.dallas" "./deploy/target/render/rendered/test1.yml")
-_fhloston=$(yq e ".hello.fhloston" "./deploy/target/render/rendered/test1.yml")
+_greeting1=$(yq e ".hello.greeting1" "./deploy/target/render/render/test1.yml")
+_greeting2=$(yq e ".hello.greeting2" "./deploy/target/render/render/test1.yml")
+_greeting3=$(yq e ".hello.greeting3" "./deploy/target/render/render/test1.yml")
+_greeting4=$(yq e ".hello.greeting4" "./deploy/target/render/render/test1.yml")
+_leelo=$(yq e ".hello.leelodallas" "./deploy/target/render/render/test1.yml")
+_dallas=$(yq e ".hello.dallas" "./deploy/target/render/render/test1.yml")
+_fhloston=$(yq e ".hello.fhloston" "./deploy/target/render/render/test1.yml")
 echo "leelo: $_leelo"
 echo "corbin: $_dallas"
 echo "fhloston: $_fhloston"

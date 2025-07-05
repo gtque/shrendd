@@ -5,29 +5,31 @@ export _merge_yaml=""
 export _current_merge_yaml=""
 
 function doEval {
-
-  if [[ "$SKIP_RENDER" == false ]]; then
-    eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+  if [[ $# -gt 1 ]]; then
+    shrenddLog "doEval($2):\n$1"
   else
-    _do_import=$(echo -e "$1" | grep "\$(importShrendd " || echo "no")
-    if [[ "$_do_import" == "no" ]]; then
-      echo -e "$1" > $2
-    else
+    shrenddLog "doEval(in-line):\n$1"
+  fi
+  if [[ "$SKIP_RENDER" == false ]]; then
+    if [ $# -gt 1 ]; then
       eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+    else
+      eval "echo -e \"$1\"" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+    fi
+  else
+    _text=$(echo -e "$1" | sed -e "s/\${/_dollar_curly_/g" | sed -e "s/}/_close_curly_/g" | sed -e "s/\$(/_dollar_parenthesis_/g" | sed -e "s/)/_close_parenthesis_/g" | sed -e "s/\\$/_dollar_sign_/g")
+    _text=$(echo -e "${_text}" | sed -e "s/_dollar_parenthesis_importShrendd \(\".*\"\)_close_parenthesis_/\$(importShrendd \1)/g")
+    if [[ $# -gt 1 ]]; then
+      shrenddLog "build only: doEval(${2}):\n${_text}"
+    else
+      shrenddLog "build only: doEval(in-line):\n${_text}"
+    fi
+    if [[ $# -gt 1 ]]; then
+      eval "echo -e \"${_text}\" | sed -e \"s/_dollar_curly_/\\\${/g\" | sed -e \"s/_close_curly_/}/g\" | sed -e \"s/_dollar_parenthesis_/\\\$(/g\" | sed -e \"s/_close_parenthesis_/)/g\" | sed -e \"s/_dollar_sign_/\\$/g\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+    else
+      eval "echo -e \"${_text}\" | sed -e \"s/_dollar_curly_/\\\${/g\" | sed -e \"s/_close_curly_/}/g\" | sed -e \"s/_dollar_parenthesis_/\\\$(/g\" | sed -e \"s/_close_parenthesis_/)/g\" | sed -e \"s/_dollar_sign_/\\$/g\"" 2>> $_DEPLOY_ERROR_DIR/config_error.log
     fi
   fi
-#  if [[ -n "$_eval_merge_yaml" ]]; then
-#    if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp/merge_yaml
-##      echo "yaml imports found, attempting to merge yaml"
-##      cat "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
-#      export _merge_yaml=$(cat "$_current_merge_yaml") #$RENDER_DIR/temp/merge_yaml")
-#      _merge_results=$(mergeYaml "${2}" || echo "yaml merge failed")
-#      if [[ "$_merge_results" == "yaml merge failed" ]]; then
-#        echo "error merging yaml ${2}:" >> $_DEPLOY_ERROR_DIR/config_error.log
-#        cat "$_current_merge_yaml" >> $_DEPLOY_ERROR_DIR/config_error.log
-#      fi
-#    fi
-#  fi
 }
 
 function mergeYaml {
@@ -96,7 +98,6 @@ function actualRender {
 #    echo "error rendering $1: $_eval_result" >> $_DEPLOY_ERROR_DIR/config_error.log
 #  fi
   echo "eval finished"
-  echoSensitive "$(cat $_rname)"
   if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp/merge_yaml
     echo "yaml imports found, attempting to merge yaml"
     cat "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
@@ -105,6 +106,8 @@ function actualRender {
   else
     echo "no yaml imports..."
   fi
+  echoSensitive "$(cat $_rname)"
+  rm -rf ${_current_merge_yaml}
   export _current_merge_yaml="$_eval_merge_yaml"
   echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
   echoSensitive "$(cat $_rname)"

@@ -84,7 +84,7 @@ function importShrendd_text {
 #  echo "texting: $1"
   _text=$(configify "$1")
 #  echo -e "the text:$_text"
-  eval "echo -e \"$_text\""
+  doEval "$_text"
 }
 
 function importShrendd_yml {
@@ -122,6 +122,7 @@ function importShrendd_yaml {
     fi
     export _merge_yaml=""
   fi
+  rm -rf ${_current_merge_yaml}
   export _current_merge_yaml="$_eval_merge_yaml"
 #  eval "shrecho \"$_text\""
 }

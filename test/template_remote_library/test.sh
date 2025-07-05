@@ -9,7 +9,7 @@ rm -rf ~/.shrendd/cache/shrendd-lib-test
 rm -f ./shrendd.yml
 cp ./test-init/shrendd_1.yml ./shrendd.yml
 if [ $# -gt 0 ]; then
-  ./shrendd --build
+  ./shrendd --build -verbose
   echo "debug test end!!!"
   exit 0
 fi

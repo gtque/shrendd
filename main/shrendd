@@ -4,6 +4,7 @@ set -euo pipefail
 trap resetLocal EXIT
 
 export FORCE_SHRENDD_UPDATES="false"
+export LOG_VERBOSE="false"
 export _RED='\033[0;31m'
 export _BLUE='\033[0;34m'
 export _MAGENTA='\033[0;35m'
@@ -15,6 +16,83 @@ export _CLEAR_TEXT_COLOR='\033[0m' # No Color
 export _NEW_LINE_PLACE_HOLDER="_shrendd_new_line_axcvert5"
 export _SPACE_PLACE_HOLDER="_shrendd_space_joasd7rfc"
 export _TUXEDO_MASK=""
+
+function coreShrendd {
+  cat << 'EndOfYml'
+shrendd:
+  git:
+    url: https://github.com/gtque/shrendd
+  text:
+    error: $_RED
+    warn: $_YELLOW
+    pass: $_SUPER_GREEN
+    info: $_LIGHT_BLUE
+    debug: $_MAGENTA
+  provided:
+    render: true
+    test: true
+    k8s: true
+  test:
+    source: "cloneShrendd \"$_GETTER\" \"test\""
+    local: ./main
+  library:
+    this:
+      get:
+        method: "getThis"
+        src: "$(shrenddOrDefault shrendd.deploy.dir)"
+EndOfYml
+}
+
+function defaultShrendd {
+  cat << 'EndOfYml'
+shrendd:
+  version: latest
+#  git:
+#    url: https://github.com/gtque/shrendd
+  dir: $SHRENDD_WORKING_DIR/.shrendd
+  default:
+    action: render
+    template:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
+    build:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/build/${target}
+    render:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/${target}
+    source: "cloneShrendd \"$_GETTER\" \"$_target\""
+  deploy:
+    dir: $_MODULE_DIR/deploy
+  targets:
+  - name: render
+    description: the default target is just render.
+  config:
+    stub: true
+    path: $SHRENDD_WORKING_DIR/config
+    validate: true
+    unwind: true
+    default: localdev.yml
+    definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
+    src: $(shrenddOrDefault shrendd.config.path)/src
+#  render:
+#    template:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
+#    build:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/build/render
+#    render:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/render
+  k8s:
+#    source: "cloneShrendd \"$_GETTER\" \"k8s\""
+    yaml:
+      padding: 2
+  library:
+    cache:
+      dir: ~/.shrendd/cache
+    default:
+      type: auto
+      get:
+        method: "${_GETTER}"
+        parameters: ""
+EndOfYml
+}
 
 function resetLocal {
   if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
@@ -40,6 +118,12 @@ function resetLocal {
     stageLeft
   fi
   echo -e "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
+}
+
+function shrenddLog {
+  if [[ "${LOG_VERBOSE}" == "true" ]]; then
+      echo -e "$1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+  fi
 }
 
 function checkShrenddVersion {
@@ -90,79 +174,6 @@ function shrenddStub {
   fi
 }
 
-function coreShrendd {
-  cat << 'EndOfYml'
-shrendd:
-  git:
-    url: https://github.com/gtque/shrendd
-  text:
-    error: $_RED
-    warn: $_YELLOW
-    pass: $_SUPER_GREEN
-    info: $_LIGHT_BLUE
-    debug: $_MAGENTA
-  provided:
-    render: true
-    test: true
-    k8s: true
-  test:
-    source: "cloneShrendd \"$_GETTER\" \"test\""
-    local: ./main
-  library:
-    this:
-      get:
-        method: "getThis"
-        src: "$(shrenddOrDefault shrendd.deploy.dir)"
-EndOfYml
-}
-
-function defaultShrendd {
-  cat << 'EndOfYml'
-shrendd:
-  version: latest
-#  git:
-#    url: https://github.com/gtque/shrendd
-  dir: $SHRENDD_WORKING_DIR/.shrendd
-  default:
-    action: render
-    template:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
-    render:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/${target}/rendered
-    source: "cloneShrendd \"$_GETTER\" \"$_target\""
-  deploy:
-    dir: $_MODULE_DIR/deploy
-  targets:
-  - name: render
-    description: the default target is just render.
-  config:
-    stub: true
-    path: $SHRENDD_WORKING_DIR/config
-    validate: true
-    unwind: true
-    default: localdev.yml
-    definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
-    src: $(shrenddOrDefault shrendd.config.path)/src
-#  render:
-#    template:
-#      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
-#    render:
-#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/rendered
-  k8s:
-#    source: "cloneShrendd \"$_GETTER\" \"k8s\""
-    yaml:
-      padding: 2
-  library:
-    cache:
-      dir: ~/.shrendd/cache
-    default:
-      type: auto
-      get:
-        method: "${_GETTER}"
-        parameters: ""
-EndOfYml
-}
-
 function getThis {
   :
 }
@@ -189,9 +200,9 @@ function curlD {
     :
   else
     if [ $# -gt 2 ]; then
-      curl --output "$1" -L "$2" $3
+      curl -s --output "$1" -L "$2" $3
     else
-      curl --output "$1" -L "$2"
+      curl -s --output "$1" -L "$2"
     fi
   fi
 }
@@ -212,10 +223,10 @@ function wgetD {
   #  echo "wgetting..."
     if [ $# -gt 2 ]; then
   #    echo "  with parameters: $3"
-      wget --output-document="$1" "$2" $3
+      wget -q --output-document="$1" "$2" $3
     else
   #    echo "  without parameters"
-      wget --output-document="$1" "$2"
+      wget -q --output-document="$1" "$2"
     fi
   #  echo "wgotten..."
   fi
