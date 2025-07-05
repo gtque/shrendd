@@ -57,7 +57,7 @@ function actualRender {
     export _merge_yaml=$(cat "$RENDER_DIR/temp/merge_yaml")
     mergeYaml "$_rname"
   else
-    echo "no imports..."
+    echo "no yaml imports..."
   fi
   echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
   echoSensitive "$(cat $_rname)"

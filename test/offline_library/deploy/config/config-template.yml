@@ -1,0 +1,17 @@
+app:
+  id: |-
+    required: true
+    description: "something to summarize or express what this value is and used for"
+    #default: "the default value to use"
+  text:
+    name: |-
+      required: true
+ralph:
+  wiggum: |-
+    required: false
+    default: "My knob tastes funny"
+release:
+  stage: |-
+    required: true
+    description: "something to summarize or express what this value is and used for"
+    #default: "the default value to use"

@@ -1,6 +1,5 @@
 #!/bin/bash
 echo "hold my beer - drunk cousin at the wedding"
-#export _TESTS="upshrendd_downgrade"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
 export _TESTS="$_TESTS render_render render_no_template render_only_template render_with_scripts"
 export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
@@ -9,6 +8,7 @@ export _TESTS="$_TESTS module_share module_custom_render module_unwind module_ov
 export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
 export _TESTS="$_TESTS k8s_simple_deploy"
 export _TESTS="$_TESTS plugins_get"
+export _TESTS="$_TESTS offline_init offline_library offline_plugin"
 
 #export _TESTS="single_level_default"
 source ./build/test/start.sh
@@ -20,13 +20,25 @@ for test in $_TESTS; do
   cd $test
   test_results=$(./test.sh 2>&1 || echo "end of shrendd tests\n------------------------------------------\n${_TEST_ERROR}$test failed${_CLEAR_TEXT_COLOR}\n------------------------------------------")
   echo -e "$test_results"
-  test_results=$(echo "$test_results" | sed -z "s/start of shrendd tests.*end of shrendd tests//g" )
+  _check=$(echo -e "$test_results" | grep "end of shrendd tests" || echo "not found")
+  if [[ "$_check" == "not found" ]]; then
+    test_results=$(echo "\n------------------------------------------\n${_TEST_ERROR}$test failed, not successfully ended, make sure 'source ../../build/test/end.sh' is at the end of the test and is reachable.${_CLEAR_TEXT_COLOR}\n------------------------------------------")
+  else
+    test_results=$(echo "$test_results" | sed -z "s/start of shrendd tests.*end of shrendd tests//g" )
+    _check=$(echo -e "$test_results" | grep "passed" || echo "not found")
+    if [[ "$_check" == "not found" ]]; then
+      _check=$(echo -e "$test_results" | grep "failed" || echo "not found")
+      if [[ "$_check" == "not found" ]]; then
+        test_results=$(echo "\n------------------------------------------\n${_TEST_ERROR}$test failed, there does not appear to have been any validations performed, you can use 'passed \"some message\"' and 'failed \"some message\"' to indicate validation statuses${_CLEAR_TEXT_COLOR}\n------------------------------------------")
+      fi
+    fi
+  fi
   export _FULL_TEST_RESULTS="$_FULL_TEST_RESULTS$test_results"
   cd ..
   echo -e "\n*********************finished: $test*********************\n"
 done
 echo -e "processing results:$_FULL_TEST_RESULTS"
-passed=$(echo -e "$_FULL_TEST_RESULTS" | grep -c "passed")
+passed=$(echo -e "$_FULL_TEST_RESULTS" | grep -v "failed" | grep -c "passed")
 #echo "string to search in" | grep "pattern" > /dev/null 2>&1 || echo "string if not found"
 failed=$(echo -e "$_FULL_TEST_RESULTS" | grep -c "failed" > /dev/null 2>&1 || echo "0" )
 if [ -z "$failed" ]; then

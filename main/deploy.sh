@@ -179,20 +179,20 @@ function initConfig {
   for _config_key in $_provided_keys; do
     _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
     _yq_name=$(yqName "$_config_key")
-    echo "  \"$_config_key\" was provided but not defined in the template."
+    echo "  \"$_config_key\" was provided but not defined in the config template."
     if [ "${_strict}" == "true" ]; then
-      echo "\"$_config_key\" was provided but not defined in the template." >> $_DEPLOY_ERROR_DIR/render_error.log
+      echo "\"$_config_key\" was provided but not defined in the config template." >> $_DEPLOY_ERROR_DIR/render_error.log
       _initialized="false"
     else
       _name=$(trueName $_config_key)
       _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_yq_name" -)
       echo -e "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}$_value\n  ${_TEXT_WARN}if this is a sensitive value, you should add it to the config-template.yml file and mark it as sensitive.${_CLEAR_TEXT_COLOR}"
       export $_name="$_value"
-      echo "\"$_config_key\" was provide but not defined in the template." >> $_DEPLOY_ERROR_DIR/render_warning.log
+      echo "\"$_config_key\" was provided but not defined in the config template." >> $_DEPLOY_ERROR_DIR/render_warning.log
     fi
   done
   if [ "$_initialized" == "false" ]; then
-    echo -e "${_TEXT_ERROR}something was missing in the template, please update the template and try again.${_CLEAR_TEXT_COLOR}"
+    echo -e "${_TEXT_ERROR}something was missing in the config template, please update the config template and try again.${_CLEAR_TEXT_COLOR}"
     exit 1
   fi
 }

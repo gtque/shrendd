@@ -185,10 +185,14 @@ function devDS {
 }
 
 function curlD {
-  if [ $# -gt 2 ]; then
-    curl --output "$1" -L "$2" $3
+  if [[ "${is_offline}" == "true" ]]; then
+    :
   else
-    curl --output "$1" -L "$2"
+    if [ $# -gt 2 ]; then
+      curl --output "$1" -L "$2" $3
+    else
+      curl --output "$1" -L "$2"
+    fi
   fi
 }
 
@@ -202,15 +206,19 @@ function curlDS {
 }
 
 function wgetD {
-#  echo "wgetting..."
-  if [ $# -gt 2 ]; then
-#    echo "  with parameters: $3"
-    wget --output-document="$1" "$2" $3
+  if [[ "${is_offline}" == "true" ]]; then
+    :
   else
-#    echo "  without parameters"
-    wget --output-document="$1" "$2"
+  #  echo "wgetting..."
+    if [ $# -gt 2 ]; then
+  #    echo "  with parameters: $3"
+      wget --output-document="$1" "$2" $3
+    else
+  #    echo "  without parameters"
+      wget --output-document="$1" "$2"
+    fi
+  #  echo "wgotten..."
   fi
-#  echo "wgotten..."
 }
 
 function wgetDS {
@@ -522,8 +530,10 @@ function initPlugins {
         else
           _plug_getter="$_plug_getter_"
         fi
-        clonePlugin "$_plug_getter" "$_plug" "$_plug_version" "$_plug_src" "plugin"
-        echo "plugin cloned......"
+        if [[ "${is_offline}" == "false" ]]; then
+          clonePlugin "$_plug_getter" "$_plug" "$_plug_version" "$_plug_src" "plugin"
+          echo "plugin cloned......"
+        fi
         if [[ -f "$SHRENDD_DIR/$_plug/$_plug" ]]; then
           echo "sourcing plugin: $_plug"
           source "$SHRENDD_DIR/$_plug/$_plug"
@@ -597,13 +607,35 @@ else
     fi
   fi
 fi
+#have to initialize _is_debug
+export _is_debug="true"
+#have to do a precheck of parameters for -offline
+export is_offline="false"
+found=false
+for arg in "$@"; do
+  if [[ "$arg" == *"-offline"* ]]; then
+    found=true
+    break  # Exit the loop once the string is found
+  fi
+done
+if $found; then
+  export is_offline="true"
+fi
 
-cloneShrendd "$_GETTER" "render"
+if [[ "${is_offline}" == "false" ]]; then
+  cloneShrendd "$_GETTER" "render"
+fi
 
+if [[ -d "${SHRENDD_DIR}" ]]; then
+  :
+else
+  echo "there is no shrendd, did you run in offline mode with no shrendd downloaded?"
+  exit 42
+fi
 source $SHRENDD_DIR/parse_parameters.sh
 shrenddStub
 
-#bootstrap any add ons or other stuff before shrendding.
+#bootstrap any add plugin definitions or other stuff before shrendding.
 if [ -f ./plugin.shrendd ]; then
   echo "found a plugin.shrendd file, sourcing it now..."
   source ./plugin.shrendd
@@ -630,8 +662,8 @@ if [[ -n "${_JUST_INITIALIZE+x}" ]]; then
 else
   export _JUST_INITIALIZE="true"
 fi
+checkShrenddVersion
 if [ "$_JUST_INITIALIZE" == "true" ]; then
-  checkShrenddVersion
   echo -e "${_TEXT_INFO}just initializing, nothing to see here.${_CLEAR_TEXT_COLOR}"
   exit 0
 fi

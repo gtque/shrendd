@@ -1,0 +1,10 @@
+shrendd:
+  test:
+    local: ../../main
+  targets:
+    - name: crib
+  plugins:
+    crib:
+      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      version: "latest"
+      getter: curlD
