@@ -1,0 +1,3 @@
+* `build` action: -b, --build
+* moved default target render director from `target/[module]/rendered` to `target/render/[module]`
+* add support for specifying build.dir, defaults to `target/build/[module]`
