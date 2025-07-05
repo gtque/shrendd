@@ -60,12 +60,12 @@ function importShrendd_K8sScript {
   #  echo "#temp path: $_temp_yaml_dirs"
 #    mkdir -p "$_temp_yaml_dirs"
     if [ -n "${_merge_yaml+x}" ] && [ "$_merge_yaml" == "false" ]; then
-      rm -rf "$RENDER_DIR/temp/merge_yaml"
+      rm -rf "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
     fi
     export _merge_yaml="true"
 #    echo -e "$_yq" >> "$RENDER_DIR/temp/$_template"
 #    echo "#should have written to: $RENDER_DIR/temp/$_template.yml"
-    echo "$_temp_yaml.yml:data.shrend_place_holder" >> "$RENDER_DIR/temp/merge_yaml"
+    echo "$_temp_yaml.yml:data.shrend_place_holder" >> "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
 #    echo "$RENDER_DIR/temp/$_template.yml" >> "$RENDER_DIR/temp/merge_yaml"
     doEval  "$(echo -e "$_yq")" "$_temp_yaml.yml"
   fi

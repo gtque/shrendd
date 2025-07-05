@@ -2,9 +2,32 @@
 set -euo pipefail
 
 export _merge_yaml=""
+export _current_merge_yaml=""
 
 function doEval {
-  eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+
+  if [[ "$SKIP_RENDER" == false ]]; then
+    eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+  else
+    _do_import=$(echo -e "$1" | grep "\$(importShrendd " || echo "no")
+    if [[ "$_do_import" == "no" ]]; then
+      echo -e "$1" > $2
+    else
+      eval "echo -e \"$1\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+    fi
+  fi
+#  if [[ -n "$_eval_merge_yaml" ]]; then
+#    if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp/merge_yaml
+##      echo "yaml imports found, attempting to merge yaml"
+##      cat "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
+#      export _merge_yaml=$(cat "$_current_merge_yaml") #$RENDER_DIR/temp/merge_yaml")
+#      _merge_results=$(mergeYaml "${2}" || echo "yaml merge failed")
+#      if [[ "$_merge_results" == "yaml merge failed" ]]; then
+#        echo "error merging yaml ${2}:" >> $_DEPLOY_ERROR_DIR/config_error.log
+#        cat "$_current_merge_yaml" >> $_DEPLOY_ERROR_DIR/config_error.log
+#      fi
+#    fi
+#  fi
 }
 
 function mergeYaml {
@@ -17,48 +40,72 @@ function mergeYaml {
     _target=$(echo "$_merge_value" | cut -d':' -f1)
     _place_holder_key=$(echo "$_merge_value" | cut -d':' -f2)
     _place_holder_value=$(yq e ".$_place_holder_key" $1)
+#    echo "  target:$_target"
+#    echo "  _place_holder_key:$_place_holder_key"
+#    echo "  _place_holder_value:$_place_holder_value"
     if [ "$_place_holder_value" == "null" ]; then
       echo -e "${_TEXT_WARN}no place holder found ($_place_holder_key), adding one.${_CLEAR_TEXT_COLOR}"
       yq -i ".${_place_holder_key} = \"doh!\"" $1
     fi
-    yq ea '. as $item ireduce ({}; . * $item )' $1 $_target $1 > $1.tmp
-    rm -rf $1
-    cp $1.tmp $1
+    _og="$1"
+    sed -i -e "s/\"/_double_mcquote_/g" $_og
+    sed -i -e "s/\"/_double_mcquote_/g" $_target
+#    yq ea '. as $item ireduce ({}; . * $item )' $_og $_target $_og
+    yq ea '. as $item ireduce ({}; . * $item )' $_og $_target $_og > "$_og.tmp"
+#    echo "source:"
+#    cat "$_og"
+#    echo "end source"
+#    echo "target:"
+#    cat "$_target"
+#    echo "end target"
+#    echo "current progress:"
+#    cat "$_og.tmp"
+#    echo "end current progress"
+    rm -rf $_og
+    cp $_og.tmp $_og
 #    rm -rf $_target
     if [ -n "$_place_holder_key" ]; then
-      yq -i "del(.${_place_holder_key})" $1
+      yq -i "del(.${_place_holder_key})" $_og
     fi
   done <<< "$_merge_yaml"
-  rm -rf $1.tmp
+  rm -rf "$1.tmp"
+  sed -i -e "s/_double_mcquote_/\"/g" $1
 #  yq -i -P 'sort_keys(..)' $1
 }
 
 function actualRender {
 #  export _merge_yaml="false"
-  if [ -d "$RENDER_DIR/temp" ]; then
-    rm -rf "$RENDER_DIR/temp/merge_yaml"
+  if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp" ]; then
+    rm -rf "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
   else
-    mkdir -p "$RENDER_DIR/temp"
+    if [ -d "$RENDER_DIR/temp" ]; then
+      :
+    else
+      mkdir -p "$RENDER_DIR/temp"
+    fi
   fi
   fname="$1"
   _template=$(configify "$fname")
   _rname=$(echo "$1" | sed -e "s/\.srd//g")
   _rname="$RENDER_DIR/$_rname"
   echo -e "doing the rendering:\n${_TEXT_INFO}$_template${_CLEAR_TEXT_COLOR} -> $_rname"
+  _eval_merge_yaml="$_current_merge_yaml"
+  export _current_merge_yaml="${_rname}.merge.yml"
   doEval "$_template" "$_rname"
 #  if [ -z "$_eval_result" ] || [ "$_eval_result" == "" ]; then
 #    echo "error rendering $1: $_eval_result" >> $_DEPLOY_ERROR_DIR/config_error.log
 #  fi
   echo "eval finished"
   echoSensitive "$(cat $_rname)"
-  if [ -f "$RENDER_DIR/temp/merge_yaml" ]; then
+  if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp/merge_yaml
     echo "yaml imports found, attempting to merge yaml"
-    cat "$RENDER_DIR/temp/merge_yaml"
-    export _merge_yaml=$(cat "$RENDER_DIR/temp/merge_yaml")
+    cat "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
+    export _merge_yaml=$(cat "$_current_merge_yaml") #$RENDER_DIR/temp/merge_yaml")
     mergeYaml "$_rname"
   else
     echo "no yaml imports..."
   fi
+  export _current_merge_yaml="$_eval_merge_yaml"
   echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
   echoSensitive "$(cat $_rname)"
   echo -e "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
