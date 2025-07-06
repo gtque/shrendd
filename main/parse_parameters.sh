@@ -80,7 +80,7 @@ while [ $# -gt 0 ]; do
     echo -e "  -share\n\t  preserve config between modules, even with custom config, ie no unwinding.\n\t You can also set 'shrendd.config.unwind: false' in the shrendd.yml file."
     echo -e "  -extract\n\t  produce a config-template.yml file from template files. This only considers those referenced in \${} or \$(getConfig) declarations"
     echo -e "  -offline\n\t  Run in offline mode. Will not attempt to download shrendd, modules, libraries, or plugins. This always sets force update to false."
-    echo -e "  -verbose\n\t  Enables verbose logging. Because of the way evaluated expresssions are returned, verbose logging will be logged to  $_DEPLOY_ERROR_DIR/shrendd.log."
+    echo -e "  -verbose\n\t  Enables verbose logging. Because of the way evaluated expressions are returned, verbose logging will be logged to  $_DEPLOY_ERROR_DIR/shrendd.log."
     echo -e "  --spawn [config yaml file name]\n\t generate a config yaml file based existing config-template.yml file."
     echo -e "  --stub [deployment type to stub]\n\t  stub some default template definitions, if defined, for the specified deployment type.\n\t  if stub is specified, render will be skipped, regardless of the order of parameters specified when running shrendd.\nt\t  example: --stub k8s"
     echo -e "  --module [relative\\path\\\to\\module]\n\t  the path to the module to be deployed, defaults to current directory.\n\t example: --module infrastructure\n\t example: --module simpleApiServer"
