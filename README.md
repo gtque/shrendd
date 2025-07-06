@@ -16,11 +16,20 @@ This uses bash shell and is all shell based, which means anything you can script
 * Why `curl` or `wget`?
   * needed a way to actually retrieve files from an online source, and almost all modern bash shells come with one or the other.
   * it does not really matter which you use, both have been tested on windows git bash and ubuntu terminals.
+* Yeah, but why bash?
+  * Because it is ubiquitous, well documented, incredibly flexible, and probably already part of your build and deployment infrastructure.
+  * it doesn't require any special set up for compiling or running other than having the required apps/tools installed.
+  * it is fairly quick for a scripted language.
+  * it is lightweight, at last check, the total artifact size for currently supported modules (including test) is ~48 kB. and the total source code is ~220 kB.
 * Right now, only windows git bash and Ubuntu are tested and verified. But any modern `bash` terminal with the expected versions of the required tools should work.
 
 If you are curious about planned work, please take a look at our [roadmap.](https://github.com/users/gtque/projects/1/views/3)
 
 ## Getting Started
+see also:
+* [wiki](https://github.com/gtque/shrendd/wiki)
+* [documents](https://github.com/gtque/shrendd/tree/main/documents/README.md)
+Below is basic information for getting started. A more detailed [quickstart](https://github.com/gtque/shrendd/tree/main/documents/tutorials/quickstart/README.md) is available in documentation/tutorials.
 * download the appropriate version of `shrendd` from releases. it is recommended just grab the latest version.
 * this should go in the root of your project.
 * open a command line and navigate to the root of your project
@@ -28,6 +37,7 @@ If you are curious about planned work, please take a look at our [roadmap.](http
   * this will run shrendd with default config
   * it will download shrendd source for render only
   * it will stub the `./shrendd.yml`
+* shrendd is, by default, put into the `./.shrendd` directory. It is recommended that this directory be added to your source controls ignore list.
 * you can now open the `./shrendd.yml` file and...
   * set a specific version if your project (or business) requires using a locked/specified version for some reason.
   * add a new target to the list of targets, currently the only other target/module supports is `k8s`
@@ -37,12 +47,12 @@ If you are curious about planned work, please take a look at our [roadmap.](http
 * once it has been run once, and if you set a specific shrendd version, you can now run `.shrendd/upshrendd` to update or change the shrendd version
   * to use a specific version of shrendd, you can specify the shrendd.version in the shrendd.yml file.
   * if version is not specified, it assumes "latest"
-* define your templates (see also [Hello, World](https://github.com/gtque/shrendd/tree/main/examples/helloWorld))
+* define your templates (see also [Hello, World](https://github.com/gtque/shrendd/tree/main/documents/examples/helloWorld))
   * basic templating is handle with shell string substitution and the files are treated as plain text.
     * note: importing templates is not considered basic, and provides some more advanced support for specific protocols like yaml.
   * templated values are wrapped in `${}`.
     * it is encouraged that basic value templating be done using the `getConfig` command.
-    * example: `hello, ${getConfig hello.world}!`
+    * example: `hello, $(getConfig hello.world)!`
     * then in the config input file, you would add
 ```yaml
 hello:
@@ -67,7 +77,7 @@ hello:
   * run `./shrendd`
     * the `shrendd.default.action` is `-r`, aka `render only`, unless you have overridden this in your shrendd.yml file
   * check the render directory for the rendered template(s)
-* Please see the [Examples](https://github.com/gtque/shrendd/tree/main/examples) (coming soon, nothing is there yet) and the [Wiki]() (coming soon)
+* Please see [Documentation](https://github.com/gtque/shrendd/tree/main/documentation) for more information.
 
 ## Contributing
 ### The first place to visit is our [discussions](https://github.com/gtque/shrendd/discussions)
@@ -85,14 +95,18 @@ hello:
 * Describe in as much detail what it is you are wanting to accomplish.
 * Please avoid providing suggestions on implementation, unless specifically asked.
 ### Code Changes
-1. Fork the repository: Create your own copy of the original repository under your GitHub account. 
-2. Clone your fork locally: Bring the forked repository to your local machine. 
-3. Create a new branch: Work on your changes in a separate branch within your local fork. 
-4. Make and commit your changes: Implement your desired changes and commit them to the new branch. 
-5. Push the branch to your fork: Upload your updated branch with the changes to your forked repository on GitHub. 
-6. Create a pull request: On GitHub, navigate to the original repository and propose your changes by creating a pull request from your fork's branch to the original repository's desired branch (often the main or master branch). 
-7. Please be respectful of time.
-8. Please be courteous in any discussions on the pull request.
-9. All tests must be passing before the pull request will be accepted.
-   1. Any changes to existing tests will be heavily scrutinized, as that is usually an indication of subverting the test process to achieve falsely passing tests or more critically, a breaking change to existing shrendd functionality.
-   2. Any new code changes need to be covered by any existing or net new test as appropriate.
+1. Fork the repository: Create your own copy of the original repository under your GitHub account.
+2. Clone your fork locally: Bring the forked repository to your local machine.
+3. Create a new branch: Work on your changes in a separate branch within your local fork.
+4. Make and commit your changes: Implement your desired changes and commit them to the new branch.
+5. Add a "release_note" file with bullet point list of changes.
+   1. The file name should follow the pattern: `<targeted.version>-alpha+<branch-name>.txt`
+   2. the file should be added to `build/release_notes` dir
+6. Push the branch to your fork: Upload your updated branch with the changes to your forked repository on GitHub.
+7. Create a pull request: On GitHub, navigate to the original repository and propose your changes by creating a pull request from your fork's branch to the original repository's desired branch (often the main or master branch).
+   1. Manually squash all the commits or set the pull request to squash.
+8. Please be respectful of time.
+9. Please be courteous in any discussions on the pull request.
+10. All tests must be passing before the pull request will be accepted.
+    1. Any changes to existing tests will be heavily scrutinized, as that is usually an indication of subverting the test process to achieve falsely passing tests or more critically, a breaking change to existing shrendd functionality.
+    2. Any new code changes need to be covered by any existing or net new test as appropriate.
