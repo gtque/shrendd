@@ -38,7 +38,7 @@ Below is basic information for getting started. A more detailed [quickstart](htt
   * this will run shrendd with default config
   * it will download shrendd source for render only
   * it will stub the `./shrendd.yml`
-* shrendd is, by default, put into the `./.shrendd` directory. It is recommended that this directory be added to your source controls ignore list.
+* shrendd is, by default, put into the `./.shrendd` directory. It is recommended that this directory be added to your source control's ignore list.
 * you can now open the `./shrendd.yml` file and...
   * set a specific version if your project (or business) requires using a locked/specified version for some reason.
   * add a new target to the list of targets, currently the only other target/module supports is `k8s`

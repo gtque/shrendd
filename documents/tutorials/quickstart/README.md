@@ -16,7 +16,7 @@ Follow the steps below to see how easy it is to get started with shrendd.
    5. Make sure to have `curl` or `wget` installed
    6. Make sure to have [mikefarrah's yq](https://github.com/mikefarah/yq) v4 (>=4.19.1) installed.
    7. Make sure to have `unzip` installed
-6. shrendd is, by default, put into the `./.shrendd` directory. It is recommended that this directory be added to your source controls ignore list.
+6. shrendd is, by default, put into the `./.shrendd` directory. It is recommended that this directory be added to your source control's ignore list.
 7. you can now open the `./shrendd.yml` file and...
    1. set a specific version if your project (or business) requires using a locked/specified version for some reason.
       1. while shrendd will strive to maintain backwards compatibility, sometimes that just is not possible. For that purpose, it is strongly encouraged to set a specific version, especially for production purposes.
