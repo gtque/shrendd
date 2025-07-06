@@ -29,6 +29,7 @@ If you are curious about planned work, please take a look at our [roadmap.](http
 see also:
 * [wiki](https://github.com/gtque/shrendd/wiki)
 * [documents](https://github.com/gtque/shrendd/tree/main/documents/README.md)
+
 Below is basic information for getting started. A more detailed [quickstart](https://github.com/gtque/shrendd/tree/main/documents/tutorials/quickstart/README.md) is available in documentation/tutorials.
 * download the appropriate version of `shrendd` from releases. it is recommended just grab the latest version.
 * this should go in the root of your project.
