@@ -1,0 +1,5 @@
+shrendd:
+  test:
+    local: ../../main
+  targets:
+    - name: render
