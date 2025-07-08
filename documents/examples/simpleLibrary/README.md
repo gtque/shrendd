@@ -7,4 +7,6 @@ with examples of publishing different ways to a nexus repository.
 
 *The path is relative to wherever you have cloned the `shrendd` project to.* 
 
-curl -v -u 'deployment:password' --upload-file fileArchive.tar.gz 'https://nexus.company.com:8443/repository/reponame/config/test/fileArchive.tar.gz
+curl -v -u 'splinter:tmnt' --upload-file simpleLibrary.zip 'http://localhost:8081/repository/shrendd-zip/v1.0.0/simpleLibrary.zip
+
+docker build --build-arg POM_VERSION=1.0.0-SNAPSHOT --target=publish $_EXTRA_ARGS -f ./build/Dockerfile-mvn . --progress=plain
