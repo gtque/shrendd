@@ -1,2 +1,0 @@
-hello, $(getConfig simple.library.name)!
-$(getConfig "simple.library.second-line")

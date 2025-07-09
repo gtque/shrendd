@@ -16,7 +16,7 @@ shrendd:
     dir: $_MODULE_DIR/deploy
   targets:
   - name: render
-#  - name: k8s
+  - name: k8s
   config:
     stub: true
     path: $SHRENDD_WORKING_DIR/config
@@ -36,17 +36,3 @@ shrendd:
       get:
         method: "${_GETTER}"
         parameters: ""
-#    simpleLibrary:
-#      get:
-#        src: "http://localhost:8081/repository/shrendd-public/v$(shrenddOrDefault shrendd.library.simpleLibrary.version)/simpleLibrary.zip"
-#        method: curlD
-#        parameters: "-u '$(getCustomCredentials)'"
-#      version: 1.0.0
-#      type: yaml
-    simpleLibrary:
-      get:
-        src: "http://localhost:8081/repository/maven-public"
-        method: shrenddMvnClone
-        parameters: "com.shrendd.examples:simpleLibrary:$(shrenddOrDefault shrendd.library.simpleLibrary.version)"
-      version: 1.0.0-SNAPSHOT
-      type: yaml

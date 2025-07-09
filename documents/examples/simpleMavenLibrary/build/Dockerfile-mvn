@@ -5,13 +5,13 @@ ARG MVN_PASSWORD='tmnt'
 ENV MVN_USERNAME=${MVN_USERNAME}
 ENV MVN_PASSWORD=${MVN_PASSWORD}
 ARG TARGET_VERSION="0.0.0-SNAPSHOT"
-ARG REPO='maven-snapshots'
-ARG NEXUS_BASE_REPO_URL='http://192.168.170.170:8081/repository'
+ARG REPO='maven-releases'
+ARG NEXUS_BASE_REPO_URL='http://localhost:8081/repository'
 WORKDIR /project
 COPY ./build/maven-settings.xml ./build/
 COPY ./pom.xml .
 COPY ./target ./target
-RUN mvn -e -s ./build/maven-settings.xml \
-    deploy:deploy-file -Dfile=./target/${TARGET_VERSION}/simpleLibrary.zip -Dmaven.main.skip -DrepositoryId=nexus-snapshots\
+RUN mvn -s ./build/maven-settings.xml \
+    deploy:deploy-file -Dfile=./target/${TARGET_VERSION}/simpleLibrary.zip -Dmaven.main.skip -DrepositoryId=${REPO}\
     -DskipTests=true -Dversion=${TARGET_VERSION} -DpomFile=pom.xml -Dpackaging=zip\
     -Durl=${NEXUS_BASE_REPO_URL}/${REPO}/

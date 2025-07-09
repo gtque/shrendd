@@ -1,0 +1,2 @@
+hello, $(getConfig simple.raw.library.name)!
+$(getConfig "simple.raw.library.second-line")
