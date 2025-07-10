@@ -1,0 +1,34 @@
+#!/bin/bash
+
+function getCustomCredentials {
+#you could pull them from a secret manager
+#you could read them from a file
+#you could do what ever you want from shell
+    echo "splinter:tmnt"
+}
+
+function myMvnClone {
+    #shrenddLog is the mechanism for "verbose" logging.
+    #most things should not be printing or echoing out trace/debug/info style messages
+    #this is because `echo` is used as the return for functions.
+    #so if you want to capture some information for debugging purposes, please use `shrenddLog`
+    shrenddLog "maven clone!"
+    #get artifact id, the 3rd parameter comes from the libraries "settings" specified in the `shrendd.yml`
+    #in the libraries `get.parameters` entry
+    #in this case, the `package:artifactid:version`
+    _artifact="$(echo "${3}" | cut -d':' -f2)"
+    shrenddLog "mvn: artifact: ${_artifact}"
+    #get just the destination directory is part of the first parameter which is the full path to download the artifact to
+    #to get just the directory, the artifact must be stripped from that value.
+    _destination="$(echo "${1}" | sed -e "s/\/${_artifact}\.zip//g")"
+    shrenddLog "mvn: destination: ${_destination}"
+    #the maven command to get/copy the artifact from the remote repository
+    #the output is captured for verbose logging and so as to not mess up the return, and any errors are redirected to the error log
+    _mvn=$(mvn -s $_STARTING_DIR/mvn/maven-settings.xml dependency:get dependency:copy -DremoteRepositories=${2} -Dartifact=${3}:zip -DrepositoryId=nexus -DoutputDirectory=${_destination} -Dmdep.stripClassifier=true -Dmdep.stripVersion=true 2>> $_DEPLOY_ERROR_DIR/config_error.log)
+    shrenddLog "mvn: \n${_mvn}"
+}
+
+#below is for testing purposes and you shouldn't need to do this as you should be using proper maven config file.
+#this is a simple hack to make the tutorial a bit easier to use and require less manual setup on your part.
+export MVN_USERNAME="splinter"
+export MVN_PASSWORD="tmnt"
