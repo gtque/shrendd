@@ -63,6 +63,7 @@ function mergeYaml {
 #    echo "current progress:"
 #    cat "$_og.tmp"
 #    echo "end current progress"
+    shrenddLog "mergeYaml: rm ${_og}"
     rm -rf $_og
     cp $_og.tmp $_og
 #    rm -rf $_target
@@ -70,6 +71,7 @@ function mergeYaml {
       yq -i "del(.${_place_holder_key})" $_og
     fi
   done <<< "$_merge_yaml"
+  shrenddLog "mergeYaml: cleanup: rm ${_og}"
   rm -rf "$1.tmp"
   sed -i -e "s/_double_mcquote_/\"/g" $1
 #  yq -i -P 'sort_keys(..)' $1
@@ -78,6 +80,7 @@ function mergeYaml {
 function actualRender {
 #  export _merge_yaml="false"
   if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp" ]; then
+    shrenddLog "actualRender: rm ${_current_merge_yaml}"
     rm -rf "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
   else
     if [ -d "$RENDER_DIR/temp" ]; then
@@ -107,6 +110,7 @@ function actualRender {
     echo "no yaml imports..."
   fi
   echoSensitive "$(cat $_rname)"
+  shrenddLog "mergeYaml: clean up current merge list: rm ${_current_merge_yaml}"
   rm -rf ${_current_merge_yaml}
   export _current_merge_yaml="$_eval_merge_yaml"
   echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
@@ -116,6 +120,7 @@ function actualRender {
     _render_errors=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
     if [ "$_render_errors" == "" ]; then
       echo "no errors detected."
+      shrenddLog "actualRender: cleanup config error logs: rm ${_DEPLOY_ERROR_DIR}/config_error.log"
       rm $_DEPLOY_ERROR_DIR/config_error.log
     else
       echo "errors rendering:"
@@ -137,6 +142,7 @@ function doRender {
     for fname in $config_files
     do
       if [ "$fname" != "*.srd" ]; then
+        shrenddLog "doRender: reset config error logs: rm ${_DEPLOY_ERROR_DIR}/config_error.log"
         rm -rf $_DEPLOY_ERROR_DIR/config_error.log
         echo -e "------------------------------------------------------\nrendering $fname"
         actualRender "$fname"

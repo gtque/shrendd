@@ -16,6 +16,7 @@ export _CLEAR_TEXT_COLOR='\033[0m' # No Color
 export _NEW_LINE_PLACE_HOLDER="_shrendd_new_line_axcvert5"
 export _SPACE_PLACE_HOLDER="_shrendd_space_joasd7rfc"
 export _TUXEDO_MASK=""
+start_time=$SECONDS
 
 function coreShrendd {
   cat << 'EndOfYml'
@@ -122,12 +123,12 @@ function resetLocal {
 
 function shrenddLog {
   if [[ "${LOG_VERBOSE}" == "true" ]]; then
-      echo -e "$1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+      echoSensitive "$1" >> $_DEPLOY_ERROR_DIR/shrendd.log
   fi
 }
 
 function checkShrenddVersion {
-  _UPSHRENDD_VERSION="0.13.0-beta"
+  _UPSHRENDD_VERSION="0.0.0-dev"
   _SHRENDD_CURRENT_VERSION="$_UPSHRENDD_VERSION"
   if [ -f $SHRENDD_DIR/version.yml ]; then
     _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" $SHRENDD_DIR/version.yml)
@@ -181,6 +182,7 @@ function getThis {
 function devDS {
   echo "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
   if [ -d $SHRENDD_DIR/$1 ]; then
+    shrenddLog "devDS: rm $SHRENDD_DIR/$1"
     rm -rf $SHRENDD_DIR/$1
   fi
   _source=$(shrenddOrDefault "shrendd.test.local")
@@ -384,6 +386,7 @@ function isUpToDate {
       fi
       if [ "$4" == "latest" ]; then
         if [ -d $_the_dir/.latest ]; then
+          shrenddLog "isUpToDate: rm ${_the_dir}/.latest"
           rm -rf $_the_dir/.latest
         fi
         mkdir $_the_dir/.latest
@@ -449,6 +452,7 @@ function initTargets {
       #cloneShrendd "$_GETTER" "$_target"
       if [[ "$_target_shrendd" != "null" ]]; then
         if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+          shrenddLog "initTargets: rm ${SHRENDD_DIR}/${_target}"
           rm -rf $SHRENDD_DIR/$_target
         fi
         echo "shrendd.${_target}.source: ${_target_source}"
@@ -488,8 +492,10 @@ function clonePlugin {
     fi
     echo "downloading $5:$3"
     if [ -d $SHRENDD_DIR/$2 ]; then
+      shrenddLog "clonePlugin: rm ${SHRENDD_DIR}/${2}"
       rm -rf $SHRENDD_DIR/$2
     fi
+    shrenddLog "clonePlugin: before downloading: rm ${SHRENDD_DIR}/${2}.zip"
     rm -f $SHRENDD_DIR/$2.zip
     echo "downloading with $1...$2"
     #curlD or wgetD...
@@ -504,6 +510,7 @@ function clonePlugin {
     else
       echo "unzipping cloned file: $2.zip"
       unzip -ao $SHRENDD_DIR/$2.zip -d $SHRENDD_DIR
+      shrenddLog "clonePlugin: after unzipping: rm ${SHRENDD_DIR}/${2}.zip"
       rm $SHRENDD_DIR/$2.zip
     fi
   fi
@@ -526,6 +533,7 @@ function initPlugins {
         :
       else
         if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+          shrenddLog "initPlugins: force updates: rm ${SHRENDD_DIR}/${_plug}"
           rm -rf $SHRENDD_DIR/$_plug
         fi
         _clone_parameters=$(shrenddOrDefault "shrendd.plugins.$_plug.parameters")
@@ -690,4 +698,8 @@ else
   echo "stubbing: $_stub/toes"
   source $SHRENDD_DIR/stub.sh
 fi
+end_time=$SECONDS
+duration=$((end_time - start_time))
+durationM=$((duration / 60))
+echo -e "${_TEXT_PASS}execution time: ${duration} seconds (${durationM} minutes)${_CLEAR_TEXT_COLOR}"
 #checkShrenddVersion

@@ -12,6 +12,6 @@ COPY ./build/maven-settings.xml ./build/
 COPY ./pom.xml .
 COPY ./target ./target
 RUN mvn -s ./build/maven-settings.xml \
-    deploy:deploy-file -Dfile=./target/${TARGET_VERSION}/simpleLibrary.zip -Dmaven.main.skip -DrepositoryId=${REPO}\
+    deploy:deploy-file -Dfile=./target/${TARGET_VERSION}/simpleMavenLibrary.zip -Dmaven.main.skip -DrepositoryId=${REPO}\
     -DskipTests=true -Dversion=${TARGET_VERSION} -DpomFile=pom.xml -Dpackaging=zip\
     -Durl=${NEXUS_BASE_REPO_URL}/${REPO}/

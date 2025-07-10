@@ -9,12 +9,12 @@
             <password>${env.MVN_PASSWORD}</password>
         </server>
         <server>
-            <id>nexus-releases</id>
+            <id>maven-releases</id>
             <username>${env.MVN_USERNAME}</username>
             <password>${env.MVN_PASSWORD}</password>
         </server>
         <server>
-            <id>nexus-snapshots</id>
+            <id>maven-snapshots</id>
             <username>${env.MVN_USERNAME}</username>
             <password>${env.MVN_PASSWORD}</password>
         </server>

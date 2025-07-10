@@ -142,6 +142,7 @@ function extractTemplate {
       config_files="*.srd"
       echo "files should be in: $config_files"
       for fname in $config_files; do
+        shrenddLog "extractTemplate: reset error log:rm ${_DEPLOY_ERROR_DIR}/config_error.log"
         rm -rf $_DEPLOY_ERROR_DIR/config_error.log
         fname_q="$(echo "$(pwd)$fname" | sed "s/\.\//\//g")"
         if [ "$_files_extracted" != *"$fname_q "* ] && [ "$fname" != "*.srd" ]; then
@@ -371,6 +372,7 @@ function extractCleanUp {
 #      yq -i 'del(.. | select(length == 0))' $_actual_template_path
 #      yq -i 'del(.. | select(tag == "!!map" and length == 0))' $_actual_template_path
     fi
+    shrenddLog "extractCleanUp:rm ${_DEPLOY_ERROR_DIR}/config_error.log"
     rm -rf $_actual_template_path_temp
   fi
   yq -i -P 'sort_keys(..)' $_actual_template_path

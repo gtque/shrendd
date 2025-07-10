@@ -12,15 +12,15 @@ with example of publishing raw files to a nexus repository.
 2. local instance of nexus3 running in docker
     1. cd to `shrendd/build/test/init/nexus`
     2. run `./init.sh`
-    3. open a browser and navigate to `http://localhost:8081`
+    3. open a browser and navigate to [http://localhost:8081](http://localhost:8081)
     4. wait for nexus to load, you may have to refresh a few times. it can take a few minutes for it to come up completely.
 
 ## Publishing to local nexus
 1. cd to `shrendd/documents/examples/simpleRawLibrary`
 2. run `./build/build.sh`
 3. open a browser
-4. navigate to `http://localhost:8081`
-5. you can login using username: admin and password: shrendd123!
+4. navigate to [http://localhost:8081](http://localhost:8081)
+5. you can log in using username: admin and password: shrendd123!
 6. check in shrendd-zip (or shrendd-public) for the artifact that was just published.
 
 ## Teardown

@@ -44,13 +44,19 @@ function cloneLibrary {
   fi
   _destination="$_bank/$_library.zip"
   if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
-    rm -rf "$_bank"
+    if [[ "$_xerox" != "getThis" ]]; then
+      shrenddLog "cloneLibrary: force updates: rm ${_bank}"
+      rm -rf "$_bank"
+    else
+      shrenddLog "cloneLibrary: force updates: tried to rm ${_bank}, but this is local so I better leave it alone."
+    fi
   fi
 #  echo -e "xeroxing:\n$_bank\n$_destination"
   #should probably support a forced update of libraries
   if [ "$_version" == "latest" ] && [ "$_xerox" != "getThis" ]; then
     if [ "$_latest_libs" != *" $_library "* ]; then
       #really need to add a cache timeout for latest...
+      shrenddLog "cloneLibrary: using latest, forcing update: rm ${_bank}"
       rm -rf "$_bank"
       export _latest_libs="${_latest_libs}${_library} "
     fi
@@ -102,6 +108,7 @@ function importShrendd_yaml {
 #  echo "#must merge: $_temp_yaml"
 #  export _merge_yaml="${_merge_yaml}\n$_temp_yaml"
   if [ "$_merge_yaml" == "false" ]; then
+    shrenddLog "importShrendd_yaml: start with clean merge yaml: rm ${_current_merge_yaml}"
     rm -rf "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
   fi
   export _merge_yaml="true"
@@ -122,6 +129,7 @@ function importShrendd_yaml {
     fi
     export _merge_yaml=""
   fi
+  shrenddLog "importShrendd_yaml: end with clean merge yaml: rm ${_current_merge_yaml}"
   rm -rf ${_current_merge_yaml}
   export _current_merge_yaml="$_eval_merge_yaml"
 #  eval "shrecho \"$_text\""

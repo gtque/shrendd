@@ -7,7 +7,7 @@ function getCustomCredentials {
     echo "splinter:tmnt"
 }
 
-function shrenddMvnClone {
+function myMvnClone {
     #shrenddLog is the mechanism for "verbose" logging.
     #most things should not be printing or echoing out trace/debug/info style messages
     #this is because `echo` is used as the return for functions.
@@ -24,7 +24,7 @@ function shrenddMvnClone {
     shrenddLog "mvn: destination: ${_destination}"
     #the maven command to get/copy the artifact from the remote repository
     #the output is captured for verbose logging and so as to not mess up the return, and any errors are redirected to the error log
-    _mvn=$(mvn -s $_STARTING_DIR/mvn/maven-settings.xml dependency:get dependency:copy -DremoteRepositories=${2} -Dartifact=${3}:zip -DrepositoryId=nexus-snapshots -DoutputDirectory=${_destination} -Dmdep.stripClassifier=true -Dmdep.stripVersion=true 2>> $_DEPLOY_ERROR_DIR/config_error.log)
+    _mvn=$(mvn -s $_STARTING_DIR/mvn/maven-settings.xml dependency:get dependency:copy -DremoteRepositories=${2} -Dartifact=${3}:zip -DrepositoryId=nexus -DoutputDirectory=${_destination} -Dmdep.stripClassifier=true -Dmdep.stripVersion=true 2>> $_DEPLOY_ERROR_DIR/config_error.log)
     shrenddLog "mvn: \n${_mvn}"
 }
 

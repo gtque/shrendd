@@ -24,6 +24,7 @@ function stageLeft {
       targetDirs $_target
       if [ -d "$RENDER_DIR" ]; then
         echo "deleting $RENDER_DIR"
+        shrenddLog "stageLeft: rm ${RENDER_DIR}"
         rm -rf $RENDER_DIR
       fi
     done
@@ -55,6 +56,7 @@ function checkRenderDirectory {
   else
     if [ -d $RENDER_DIR ]; then
       echo "rendered folder already exists, clearing directory."
+      shrenddLog "checkRenderDirectory: rm ${RENDER_DIR}"
       rm -rf $RENDER_DIR
     fi
     mkdir -p $RENDER_DIR
@@ -464,6 +466,7 @@ function moduleRender {
     checkRenderDirectory "$target"
     echo "rendering to: $RENDER_DIR"
     render "$target"
+    shrenddLog "moduleRender: rm ${RENDER_DIR}/temp"
     rm -rf "$RENDER_DIR/temp"
     echo -e "${_TEXT_INFO}render complete${_CLEAR_TEXT_COLOR}"
     if [ "$SKIP_DEPLOY" == "false" ]; then
@@ -486,6 +489,7 @@ function shrenddDeployRun {
   export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
   if [ -d $_DEPLOY_ERROR_DIR ]; then
     rm -rf $_DEPLOY_ERROR_DIR/*
+    shrenddLog "shrenddDeployRun: rm ${_DEPLOY_ERROR_DIR}/*"
   else
     mkdir $_DEPLOY_ERROR_DIR
   fi
