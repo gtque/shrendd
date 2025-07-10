@@ -1,0 +1,1 @@
+* bug fix: deleting local deploy directory when importing a local template file and forcing update.

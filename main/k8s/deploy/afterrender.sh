@@ -97,6 +97,7 @@ process_k8s_script_maps() {
       echo -e "finished processing scripts for $fname\n======================================================"
       cd $_curdir
     done
+    shrenddLog "k8s/afterrender: process_k8s_script_maps: rm ${RENDER_DIR}/temp/scripts"
     rm -rf "$RENDER_DIR/temp/scripts"
     sleep 1
   fi

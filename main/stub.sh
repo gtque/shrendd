@@ -41,6 +41,7 @@ function stubConfig {
 export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
 if [ -d $_DEPLOY_ERROR_DIR ]; then
   rm -rf $_DEPLOY_ERROR_DIR/*
+  shrenddLog "stub: reset error log directory: rm ${_DEPLOY_ERROR_DIR}/*"
 else
   mkdir $_DEPLOY_ERROR_DIR
 fi

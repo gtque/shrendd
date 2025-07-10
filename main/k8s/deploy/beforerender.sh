@@ -60,6 +60,7 @@ function importShrendd_K8sScript {
   #  echo "#temp path: $_temp_yaml_dirs"
 #    mkdir -p "$_temp_yaml_dirs"
     if [ -n "${_merge_yaml+x}" ] && [ "$_merge_yaml" == "false" ]; then
+      shrenddLog "k8s/beforerender: importShrendd_K8sScript: rm ${_current_merge_yaml}"
       rm -rf "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
     fi
     export _merge_yaml="true"

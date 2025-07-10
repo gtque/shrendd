@@ -1,0 +1,61 @@
+lib:
+  butter:
+    alternative2: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    milk2: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      default: "something cool"
+simple:
+  maven:
+    library:
+      name: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "Taffles"
+      second-line: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "where is sally?"
+  raw:
+    library:
+      manager: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "taki"
+      name: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "roger"
+      namespace: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "shrendd"
+      second-line: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "hey diddle, diddle, the cat and fiddle."
+      version: |-
+        required: false
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        default: "0.0.1"

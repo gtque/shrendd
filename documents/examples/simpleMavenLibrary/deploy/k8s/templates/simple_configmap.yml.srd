@@ -1,0 +1,11 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "${SIMPLE_MAVEN_LIBRARY_NAME}"
+  namespace: "${SIMPLE_MAVEN_LIBRARY_NAMESPACE}"
+  labels:
+    app.kubernetes.io/name: "${SIMPLE_MAVEN_LIBRARY_NAME}"
+    app.kubernetes.io/managed-by: "${SIMPLE_MAVEN_LIBRARY_MANAGER}"
+    app.kubernetes.io/version: "$(getConfig "simple.maven.library.version")"
+    app.kubernetes.io/component: "${SIMPLE_MAVEN_LIBRARY_NAME}"
+    app.kubernetes.io/part-of: "${SIMPLE_MAVEN_LIBRARY_NAME}"

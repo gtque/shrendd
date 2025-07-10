@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.shrendd.examples</groupId>
+    <artifactId>simpleMavenLibrary</artifactId>
+    <version>1.0.0</version>
+    <name>simpleMavenLibrary</name>
+
+    <properties>
+        <!-- Default values. Can be changed during run time by passing value as a parameter -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <profiles>
+        <profile>
+            <!--
+            The test profile should be added for any internal dependencies scoped
+            to test. pass in -Dtest.publish=true to deactivate this profile.
+            -->
+            <id>test</id>
+            <activation>
+                <property>
+                    <name>!test.publish</name>
+                </property>
+            </activation>
+            <dependencies>
+            </dependencies>
+        </profile>
+    </profiles>
+
+    <dependencies>
+    </dependencies>
+
+    <build>
+    </build>
+
+</project>

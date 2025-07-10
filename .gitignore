@@ -23,3 +23,8 @@ test/offline_plugin/shrendd
 test/build_with_import/shrendd
 test/bootstrap_init/shrendd
 test/bootstrap_init/boot.shrendd
+documents/tutorials/libraryImport/config
+documents/tutorials/libraryImport/deploy
+documents/tutorials/libraryImport/boot.shrendd
+documents/tutorials/libraryImport/shrendd.yml
+documents/tutorials/quickstart
