@@ -18,7 +18,15 @@ function doEval {
     fi
   else
     _text=$(echo -e "$1" | sed -e "s/\${/_dollar_curly_/g" | sed -e "s/}/_close_curly_/g" | sed -e "s/\$(/_dollar_parenthesis_/g" | sed -e "s/)/_close_parenthesis_/g" | sed -e "s/\\$/_dollar_sign_/g")
-    _text=$(echo -e "${_text}" | sed -e "s/_dollar_parenthesis_importShrendd \(\".*\"\)_close_parenthesis_/\$(importShrendd \1)/g")
+    _has_import="$(echo -e "${_text}" | grep "_dollar_parenthesis_importShrendd" || echo "false")"
+    while [[ "${_has_import}" != "false" ]]; do
+      _text=$(echo -e "${_text}" | sed -e "s/_dollar_parenthesis_importShrendd \(.*\)_close_parenthesis_/\$(importShrendd \1)/g" | sed -e "s/_close_parenthesis_\(.*\)_dollar_parenthesis_importShrendd/)\1\$(importShrendd/g")
+      _has_import="$(echo -e "${_text}" | grep "_dollar_parenthesis_importShrendd" || echo "false")"
+#      if [[ "${_has_import}" != "false" ]]; then
+#        echo -e "still has import:\n$_text"
+##        exit 1
+#      fi
+    done
     if [[ $# -gt 1 ]]; then
       shrenddLog "build only: doEval(${2}):\n${_text}"
     else

@@ -7,12 +7,12 @@ rm -rf ./deploy/target
 rm -f ./deploy/config/config-template.yml
 rm -rf ~/.shrendd/cache/shrendd-lib-test
 if [ $# -gt 0 ]; then
-  ./shrendd --build -verbose
+  ./shrendd -b -verbose
   echo "debug test end!!!"
   exit 0
 fi
 echo "**************** build ********************"
-_shrendd1=$(./shrendd --build || echo "build failed...")
+_shrendd1=$(./shrendd -b -verbose || echo "build failed...")
 echo -e "$_shrendd1"
 export test_results="build_with_import:\n"
 _r1=$(echo "$_shrendd1" | grep "build failed..." || echo "passed")
@@ -39,7 +39,7 @@ if [ "${_txt_import2}" == "failed" ]; then
 else
   passed "second text import"
 fi
-if [ "${_hole}" == "${_rabbit}" ]; then
+if [ "${_hole}" == "${_rabbit} ${_rabbit}${_rabbit}" ]; then
   passed "nested imports"
 else
   failed "nested imports"
@@ -64,5 +64,5 @@ if [ "${_configmap_script}" != "failed" ]; then
 else
   failed "yaml import 3"
 fi
-../../build/test/cleanup_shrendd.sh
+#../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

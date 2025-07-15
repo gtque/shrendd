@@ -90,6 +90,7 @@ function importShrendd_text {
 #  echo "texting: $1"
   _text=$(configify "$1")
 #  echo -e "the text:$_text"
+  shrenddLog "the text: \n${_text}"
   doEval "$_text"
 }
 

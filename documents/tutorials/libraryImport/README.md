@@ -293,6 +293,15 @@ This also means the import order relative to the yaml defined in the local templ
 You can check your work against the files in the `solution` directory. Don't fret if it is not an exact match. A lot of the structure is up to your decisions, especially the config-template.yml file.
 While not an exact match, the solution files should give you a pretty good idea of whether you were correct or not.
 
+## Halfway there...
+Importing templates is great and all, but there isn't any ide support. Single imports are easy enough to grok, but multiple imports or multiple files with imports or both, 
+can be difficult to keep track of and form a mental picture of the full template. Shrendd provides the **"build"** action that will build the full template without rendering so that you can review the full template file. 
+To run shrendd with the build action you can specify the `-b` or `--build` parameters. The built files will be put in the `target` directory just like the rendered files.
+
+1. Run `./shrendd -b` or `./shrendd --build`
+2. Check the `deploy/target/render` directory
+
+
 ## Teardown
 local instance of nexus3 running in docker
 1. cd to `shrendd/build/test/teardown/nexus`

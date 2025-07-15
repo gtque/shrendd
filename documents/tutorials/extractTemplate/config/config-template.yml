@@ -1,0 +1,16 @@
+my:
+  first:
+    shrendd: |-
+      required: false
+      description: "the name used in the first line for hello, world."
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      default: "Bob"
+simple:
+  question: |-
+    required: true
+    description: "the second templated line in basic.txt.srd"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+
+

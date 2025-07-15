@@ -1,7 +1,7 @@
 shrendd:
   version: latest
-#  git:
-#    url: https://github.com/gtque/shrendd
+  #  git:
+  #    url: https://github.com/gtque/shrendd
   dir: $SHRENDD_WORKING_DIR/.shrendd
   default:
     action: render
@@ -15,7 +15,7 @@ shrendd:
   deploy:
     dir: $_MODULE_DIR/deploy
   targets:
-  - name: render
+    - name: render
   config:
     stub: true
     path: $SHRENDD_WORKING_DIR/config
@@ -35,3 +35,22 @@ shrendd:
       get:
         method: "${_GETTER}"
         parameters: ""
+    shrendd-lib-test:
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/download/v$(shrenddOrDefault \"shrendd.library.shrendd-lib-test.version\")/shrendd-lib-test.zip"
+      version: 2.0.0
+      type: text
+    simpleRawLibrary:
+      get:
+        src: "http://localhost:8081/repository/shrendd-public/simpleRawLibrary/v$(shrenddOrDefault shrendd.library.simpleRawLibrary.version)/simpleRawLibrary.zip"
+        method: curlD
+        parameters: "-u '$(getCustomCredentials)'"
+      version: 1.0.0
+      type: text
+    simpleMavenLibrary:
+      get:
+        src: "http://localhost:8081/repository/maven-public"
+        method: myMvnClone
+        parameters: "com.shrendd.examples:simpleMavenLibrary:$(shrenddOrDefault shrendd.library.simpleMavenLibrary.version)"
+      version: 1.0.0
+      type: text
