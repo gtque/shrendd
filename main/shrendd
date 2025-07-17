@@ -121,6 +121,19 @@ function resetLocal {
   echo -e "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
 }
 
+function shrenddEcho {
+  echo -e "$1"
+  if [[ $# -gt 1 ]]; then
+    echo -e "$1" "$2"
+  else
+    shrenddLog "$1"
+  fi
+}
+
+function dateTimeStamp {
+  date +"%Y-%m-%d_%H-%M-%S-%N"
+}
+
 function shrenddLog {
   if [ -d $_DEPLOY_ERROR_DIR ]; then
     :
@@ -128,7 +141,11 @@ function shrenddLog {
     mkdir $_DEPLOY_ERROR_DIR
   fi
   if [[ "${LOG_VERBOSE}" == "true" ]]; then
-      echoSensitive "$1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+    if [[ $# -gt 1 ]]; then
+      echo -e "$(dateTimeStamp): $1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+    else
+      echoSensitive "$(dateTimeStamp): $1" "true" >> $_DEPLOY_ERROR_DIR/shrendd.log
+    fi
   fi
 }
 
@@ -571,7 +588,11 @@ function initPlugins {
 
 function echoSensitive {
   if [ -z "${_TUXEDO_MASK+x}" ]; then
-    echo -e "$1"
+    if [[ $# -gt 1 ]]; then
+      echo -e "$1"
+    else
+      shrenddEcho "$1" "true"
+    fi
   else
     replacement=$'\n' # Define replacement as a newline character
     _new_string=$(echo "$1")
@@ -584,7 +605,11 @@ function echoSensitive {
     #echo "replacing new lines: $_new_string"
     _new_string="${_new_string//$_NEW_LINE_PLACE_HOLDER/$replacement}"
     #echo "processed"
-    echo -e "$_new_string"
+    if [[ $# -gt 1 ]]; then
+      echo -e "$_new_string"
+    else
+      shrenddEcho "$_new_string" "true"
+    fi
   fi
 }
 

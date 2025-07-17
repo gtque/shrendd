@@ -116,23 +116,72 @@ function importShrendd_yaml {
   echo "$_temp_yaml" >> "$_current_merge_yaml" #"$RENDER_DIR/temp/merge_yaml"
   _eval_merge_yaml="$_current_merge_yaml"
   export _current_merge_yaml="${_temp_yaml}.merge.yml"
+  shrenddLog "--------doEval start--------"
+  shrenddLog "doEval $_text $_temp_yaml"
+  shrenddLog "--------doEval end--------"
   doEval "$_text" "$_temp_yaml"
+  if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+    _error=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
+    if [[ -z "$_error" ]]; then
+      shrenddLog "importShrendd_yaml: no errors shrendd yaml import, so far"
+    else
+      shrenddLog "importShrendd_yaml: error shrendd yaml import before merging (${_temp_yaml}):\n $(cat ${_temp_yaml})\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+    fi
+  fi
   if [ -f "$_current_merge_yaml" ]; then #$RENDER_DIR/temp/merge_yaml
     _merge_results="yaml imports found, attempting to merge yaml"
+    shrenddLog "yaml imports found, merging yaml..."
 #    cat "$_current_merge_yaml" #$RENDER_DIR/temp/merge_yaml"
     export _merge_yaml=$(cat "$_current_merge_yaml") #$RENDER_DIR/temp/merge_yaml")
     _merge_results="$_merge_results\n$(mergeYaml "${_temp_yaml}" || echo "yaml merge failed")"
+    if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+      _error=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
+      if [[ -z "$_error" ]]; then
+        shrenddLog "importShrendd_yaml: no errors shrendd yaml import after merging"
+      else
+        shrenddLog "importShrendd_yaml: error shrendd yaml import after merging (${_temp_yaml}):\n $(cat ${_temp_yaml})\nerror: \n${_error}\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      fi
+    fi
     if [[ "$_merge_results" == *"yaml merge failed"* ]]; then
+      shrenddLog "error merging yaml detected"
       echo "error merging yaml ${_temp_yaml}:" >> $_DEPLOY_ERROR_DIR/config_error.log
       cat "$_current_merge_yaml" >> $_DEPLOY_ERROR_DIR/config_error.log
     else
-      echo -e "${_temp_yaml}:\n$_merge_results" >> $_DEPLOY_ERROR_DIR/config_debug.log
+      shrenddLog "yaml merge successful"
+      shrenddLog "${_temp_yaml}:\n$_merge_results"
     fi
     export _merge_yaml=""
   fi
   shrenddLog "importShrendd_yaml: end with clean merge yaml: rm ${_current_merge_yaml}"
-  rm -rf ${_current_merge_yaml}
+  if [[ -f ${_current_merge_yaml} ]]; then
+    shrenddLog "$(cat ${_current_merge_yaml})\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+#    rm -rf ${_current_merge_yaml}
+  else
+    shrenddLog "no merge yaml, nothing to do."
+  fi
   export _current_merge_yaml="$_eval_merge_yaml"
+  shrenddLog "new _current_merge_yaml: ${_current_merge_yaml}"
+  if [[ -f ${_current_merge_yaml} ]]; then
+    shrenddLog "new current: \n $(cat ${_current_merge_yaml})\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    _foundit="$(cat ${_current_merge_yaml} | grep "/home/angeli217/code/dev/shrendd/test/build_with_import/deploy/target/build/k8s/temp/shrendd-lib-test/k8s/configmaps/script_configmap.yml.srd" || echo "not found")"
+    if [[ "${_foundit}" != "not found" ]]; then
+      shrenddLog "$(cat "/home/angeli217/code/dev/shrendd/test/build_with_import/deploy/target/build/k8s/temp/shrendd-lib-test/k8s/configmaps/script_configmap.yml.srd")\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
+    else
+      shrenddLog "not it..."
+    fi
+  else
+    shrenddLog "no merge yaml for the new current"
+  fi
+  if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+    _error=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
+    if [[ -z "$_error" ]]; then
+      shrenddLog "no errors building before returning from importShrendd_yaml"
+    else
+      shrenddLog "echo -e \"${_text}\" | sed -e \"s/_double_shrendd_quotes/\\\"/g\" | sed -e \"s/_dollar_curly_/\\\${/g\" | sed -e \"s/_close_curly_/}/g\" | sed -e \"s/_dollar_parenthesis_/\\\$(/g\" | sed -e \"s/_close_parenthesis_/)/g\" | sed -e \"s/_dollar_sign_/\\$/g\" > $2"
+      shrenddLog "error building importShrendd_yaml (${2}):\n $(cat $_DEPLOY_ERROR_DIR/config_error.log)\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+    fi
+  fi
+  shrenddLog "->returning from importShrendd_yaml"
 #  eval "shrecho \"$_text\""
 }
 
@@ -144,11 +193,11 @@ function importShrendd {
   _type=$(echo "$_import" | cut -d':' -f3)
   _map_name=$(echo "$_import" | cut -d':' -f4)
   if [ -z "$_library" ] || [ "$_library" == "null" ]; then
-    echo -e "${_TEXT_ERROR}looks like you didn't even specify the library.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
+    shrenddEcho "${_TEXT_ERROR}looks like you didn't even specify the library.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
     exit 1
   fi
   if [ -z "$_template" ] || [ "$_template" == "null" ]; then
-    echo -e "${_TEXT_ERROR}looks like you didn't specify the template file.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
+    shrenddEcho "${_TEXT_ERROR}looks like you didn't specify the template file.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
     exit 1
   fi
   if [ -z "$_version" ] || [ "$_version" == "null" ]; then
@@ -172,8 +221,11 @@ function importShrendd {
     cloneLibrary "$_library" "$_version" "$_bank" "$_template"
   fi
   if [ $# -lt 2 ]; then
+    _current=$SECONDS
+    shrenddLog "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n           importing shrendd ($_current): $_type"
     eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\" \"$_map_name\""
+    shrenddLog "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n           finished imported ($_current): $_type"
   else
-    echo "$_bank/$_template"
+    shrenddEcho "$_bank/$_template"
   fi
 }
