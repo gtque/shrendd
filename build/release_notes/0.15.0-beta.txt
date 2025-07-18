@@ -1,0 +1,7 @@
+* bump version to 0.15.0
+* support multiple importShrendd statements on the same line
+* add shrenddEcho, which should be used for any echos expected to be printed to the console
+* add date/time stamp to logs in shrendd.log
+* also echo shrenddEcho to shrenddLog so that shrenddLog is a complete record.
+* update buld_with_import test to account for rendering changes with escaped double quotes
+* extract tutorial
