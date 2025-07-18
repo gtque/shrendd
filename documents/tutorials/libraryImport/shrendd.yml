@@ -1,7 +1,7 @@
 shrendd:
   version: latest
-#  git:
-#    url: https://github.com/gtque/shrendd
+  #  git:
+  #    url: https://github.com/gtque/shrendd
   dir: $SHRENDD_WORKING_DIR/.shrendd
   default:
     action: render
@@ -15,7 +15,7 @@ shrendd:
   deploy:
     dir: $_MODULE_DIR/deploy
   targets:
-  - name: render
+    - name: render
   config:
     stub: true
     path: $SHRENDD_WORKING_DIR/config

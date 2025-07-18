@@ -1,0 +1,7 @@
+$(importShrendd "simpleRawLibrary:k8s/templates/simple_configmap.yml.srd:yaml")
+metadata:
+  name: "$(getConfig my.name)"
+  labels:
+    app.kubernetes.io/name: "$(getConfig my.name)"
+    app.kubernetes.io/component: "$(getConfig my.name)"
+    app.kubernetes.io/part-of: "$(getConfig my.name)"

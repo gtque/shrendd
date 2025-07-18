@@ -3,5 +3,5 @@ kind: Namespace
 metadata:
   name: ${APP_TEST_NAMESPACE}
   labels:
-    kubernetes.io/metadata.name: "$(someScript \"${APP_TEST_NAMESPACE}\")"
+    kubernetes.io/metadata.name: "$(someScript "${APP_TEST_NAMESPACE}")"
     shared-gateway-access: \"true\"

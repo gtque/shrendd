@@ -1,0 +1,4 @@
+biscuits:
+$(importShrendd shrendd-lib-test:bob/text/biscuits.txt)
+cake:
+$(importShrendd shrendd-lib-test:bob/text/cake.txt.srd)
