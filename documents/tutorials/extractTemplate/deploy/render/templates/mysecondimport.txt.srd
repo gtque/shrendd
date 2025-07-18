@@ -1,0 +1,2 @@
+from the first:
+$(importShrendd extractTemplate:render/templates/myfirstimport.txt.srd)

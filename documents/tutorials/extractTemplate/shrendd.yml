@@ -16,7 +16,6 @@ shrendd:
     dir: $_MODULE_DIR/deploy
   targets:
   - name: render
-    description: the default target is just render.
   config:
     stub: true
     path: $SHRENDD_WORKING_DIR/config
@@ -25,15 +24,7 @@ shrendd:
     default: localdev.yml
     definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
     src: $(shrenddOrDefault shrendd.config.path)/src
-#  render:
-#    template:
-#      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
-#    build:
-#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/build/render
-#    render:
-#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/render
   k8s:
-#    source: "cloneShrendd \"$_GETTER\" \"k8s\""
     yaml:
       padding: 2
   library:
@@ -44,3 +35,22 @@ shrendd:
       get:
         method: "${_GETTER}"
         parameters: ""
+    shrendd-lib-test:
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/download/v$(shrenddOrDefault \"shrendd.library.shrendd-lib-test.version\")/shrendd-lib-test.zip"
+      version: 2.0.0
+      type: text
+    simpleRawLibrary:
+      get:
+        src: "http://localhost:8081/repository/shrendd-public/simpleRawLibrary/v$(shrenddOrDefault shrendd.library.simpleRawLibrary.version)/simpleRawLibrary.zip"
+        method: curlD
+        parameters: "-u '$(getCustomCredentials)'"
+      version: 1.0.0
+      type: text
+    simpleMavenLibrary:
+      get:
+        src: "http://localhost:8081/repository/maven-public"
+        method: myMvnClone
+        parameters: "com.shrendd.examples:simpleMavenLibrary:$(shrenddOrDefault shrendd.library.simpleMavenLibrary.version)"
+      version: 1.0.0
+      type: text

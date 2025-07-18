@@ -1,0 +1,2 @@
+$(importShrendd simpleRawLibrary:render/templates/simple.txt.srd)
+$(importShrendd simpleMavenLibrary:render/templates/simple.txt.srd)
