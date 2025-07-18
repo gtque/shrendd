@@ -62,16 +62,47 @@ Now to actually use the input schema.
    4. open `config/localdev.yml` in a text editor
    5. for all the schema entries that are still required, add a corresponding entry with some value in the `config/localdev.yml` file
    6. save both files
+   7. also take the opportunity to change the descriptions as you see fit.
 3. run `./shrendd`
    1. this time it should pass
    2. if there are still errors because of missing values, update `config/config-template.yml` and set them to not be required, or add them to `config/localdev.yml`
 
+### Time to slim down
+Extracting the schema will also do a reduce. Let's try it out.
+
+1. Open the `config/config-template.yml` file
+2. Add a new key
+   1. copy the schema definition from an existing key
+3. run `./shrendd -extract`
+4. check the `config/config-template.yml` file
+   1. the key you added should no longer be present
+5. Add another new key
+   1. copy the schema definition from an existing key
+   2. this time set `indirect: true`
+6. run `./shrendd -extract`
+7. check the `config/config-template.yml` file
+   1. this time they key should still be present
+
+### Not just for presents
+With an input schema file, not only can it validate the input file has the necessary keys, but it will also warn you when it has keys not in the schema.
+These will be reported as a warning, but with the `-S` parameter (uppercase `S`), which enables strict mode, it will cause the rendering to fail.
+
+1. Open `config/localdev.yml`
+2. add a new key with some value.
+3. run `./shrendd`
+   1. notice the warning messages after rendering is complete
+4. run `./shrendd -S`
+   1. this time rendering should fail.
+
+This is useful for identifying input files that need to be updated/cleaned up.
 
 
 ## Halfway there...
-Importing templates is great and all, but there isn't any ide support. Single imports are easy enough to grok, but multiple imports or multiple files with imports or both,
+Extracting is a great start to defining the input schema. And defining an input schema is a great way to provide validation for the input files for rendering, especially when importing templates.
+Importing templates is great and all, but there isn't any ide support and keeping a mental map of all the templates is unreasonable. Single imports are easy enough to grok, but multiple imports or multiple files with imports or both,
 can be difficult to keep track of and form a mental picture of the full template. Shrendd provides the **"build"** action that will build the full template without rendering so that you can review the full template file.
-To run shrendd with the build action you can specify the `-b` or `--build` parameters. The built files will be put in the `target` directory just like the rendered files.
+To run shrendd with the build action you can specify the `-b` or `--build` parameters. The built files will be put in the `target` directory just like the rendered files. Between extrating
+the input schema and "building" the full templates, you now have a full picture of both the required (and optional) input variables and the full templates.
 
 1. Run `./shrendd -b` or `./shrendd --build`
 2. Check the `deploy/target/render` directory
