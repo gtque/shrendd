@@ -96,6 +96,25 @@ These will be reported as a warning, but with the `-S` parameter (uppercase `S`)
 
 This is useful for identifying input files that need to be updated/cleaned up.
 
+## Al Simmons
+Having a schema for the input parameters is good. Using it to validate the input parameters is even better.
+But being able to use it to spawn or update an input file is great.
+
+Similar to extract, the `--spawn [input_file_name.yml]` command will generate or update the specified input file.
+This includes reducing the file just like extract does. If the key has a default value specified in the input schema, that will be set as the value in the put file if the key is not already present.
+If there is no default value, then key in the input file will be set to `""`. If the key is already present in the input file, its value will not be changed.
+
+There are 2 main time to use spawn: when you need to create a new input file, when there are errors or warnings during rendering because the input file is not uptodate with the input schema.
+
+1. run `./shrendd --spawn malebolgia.yml`
+2. open up `config/malebolgia.yml`
+3. add a new key `not_there` and set some value for it
+4. change `lib.butter.milk2` to a different value
+5. save the file
+6. run `./shrendd --spawn malebolgia.yml`
+7. check `config/malebolgia.yml`
+   1. the key `not_there` should no longer be present in the file.
+
 
 ## Halfway there...
 Extracting is a great start to defining the input schema. And defining an input schema is a great way to provide validation for the input files for rendering, especially when importing templates.

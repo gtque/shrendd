@@ -12,6 +12,11 @@ Some folders are specifically examples. Fully defined and functional and ready t
 Others are written in a tutorial style with a step-by-step howto guide to develop the templates, either from the ground up
 or from an initial starting point. These will be under the "documents/tutorials" directory.
 
+### Recommended Tutorial Order
+1. quickstart
+2. libraryImport
+3. extractTemplate
+
 ## Help
 [wiki](https://github.com/gtque/shrendd/wiki) will be the home for the help files as they are written.
 The help will cover the different shrendd parameters, modes/actions, and properties in detail. The help information will link to an example or tutorial as appropriate and available.
