@@ -1,0 +1,55 @@
+{
+  "name": "shrendd-template-editor",
+  "displayName": "Shrendd Template Editor",
+  "description": "A VS Code extension providing a custom editor for shrendd template files with importShrendd processing.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gtque/shrendd.git"
+  },
+  "version": "0.0.1",
+  "publisher": "your-publisher",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCustomEditor:shrendd.templateEditor"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "shrendd.templateEditor",
+        "displayName": "Shrendd Template Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.shrendd"
+          },
+          {
+            "filenamePattern": "*.srd"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "shrendd.openTemplateEditor",
+        "title": "Open with Shrendd Template Editor"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.0.0",
+    "vscode": "*"
+  },
+  "dependencies": {
+  }
+}

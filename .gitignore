@@ -5,6 +5,8 @@
 **/pudding
 **/custom-rendered
 **/target
+**/node_modules
+**/out
 test/template_extract/config
 test/template_extract_cleanup/config
 test/template_extract_library/config
