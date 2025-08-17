@@ -18,6 +18,7 @@ export SHRENDD_EXTRACT="false"
 export _requested_help="false"
 export _strict="false"
 export _JUST_INITIALIZE="false"
+export GET_PROPERTY=""
 _do_something=""
 
 while [ $# -gt 0 ]; do
@@ -30,6 +31,12 @@ while [ $# -gt 0 ]; do
       export SKIP_DEPLOY="true"
       export SKIP_RENDER="true"
       _do_something="true"
+    elif [[ "$param" == "get-property" ]]; then
+      export SKIP_DEPLOY="true"
+      export SKIP_RENDER="true"
+      _do_something="true"
+      export GET_PROPERTY="$2"
+      shift
     else
       echo "=>setting $param=\"$2\""
       declare $param="$2"
@@ -115,7 +122,7 @@ else
     deployaction="skip"
   fi
 fi
-echo "action: $deployaction"
+shrenddEchoIfNotSilent "action: $deployaction"
 if [ "$deployaction" == "render" ]; then
   deployaction="deploy"
   export SKIP_DEPLOY="true"
