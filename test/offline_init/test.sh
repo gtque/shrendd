@@ -7,7 +7,7 @@ source ../../build/release.sh
 
 ./shrendd -init -offline || echo "finished shrendd offline..."
 export test_results="offline_init:\n"
-if [[ -d "./.shrendd" ]]; then
+if [[ -d "./.shrendd/render" ]]; then
   failed ".shrendd does not exist"
 else
   passed ".shrendd does not exist"

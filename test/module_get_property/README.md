@@ -1,0 +1,1 @@
+get a property and only a property

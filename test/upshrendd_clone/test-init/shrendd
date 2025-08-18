@@ -29,6 +29,10 @@ export _SUPER_GREEN='\033[0;32m'
 export _YELLOW='\033[0;33m'
 export _CLEAR_TEXT_COLOR='\033[0m' # No Color
 
+function shrenddEchoIfNotSilent {
+  echo -e "$1"
+}
+
 function checkShrenddVersion {
   _UPSHRENDD_VERSION="0.0.0-dev"
   _SHRENDD_CURRENT_VERSION="$_UPSHRENDD_VERSION"
