@@ -577,14 +577,14 @@ function shrenddDeployRun {
     initConfig
     for _specific_module in $_module; do
       loadConfig $_specific_module
-      if [[ -n "$GET_PROPERTY" ]]; then
-        echo "$(shrenddOrDefault "$GET_PROPERTY")"
-        exit 0
-      fi
       shrenddEchoIfNotSilent "switching to module: $_the_module"
       cd $_the_module
       export _MODULE_DIR=$(pwd)
       export _SHRENDD_DEPLOY_DIRECTORY=$(shrenddOrDefault "shrendd.deploy.dir")
+      if [[ -n "$GET_PROPERTY" ]]; then
+        echo "$(shrenddOrDefault "$GET_PROPERTY")"
+        exit 0
+      fi
       shrenddEchoIfNotSilent "shrendd deploy dir: $_SHRENDD_DEPLOY_DIRECTORY"
       shrenddEchoIfNotSilent "trying to load array of targets for: $_MODULE_DIR"
       initTargets

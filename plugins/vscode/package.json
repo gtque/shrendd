@@ -25,9 +25,6 @@
         "displayName": "Shrendd Template Editor",
         "selector": [
           {
-            "filenamePattern": "*.shrendd"
-          },
-          {
             "filenamePattern": "*.srd"
           }
         ]

@@ -1,0 +1,1 @@
+$(importShrendd "build_with_import:render/templates/rabbit.txt.srd:text") $ssss(getConfig "something.cool")$(importShrendd build_with_import:render/templates/rabbit.txt.srd:text)$(importShrendd build_with_import:render/templates/rabbit.txt.srd:text)$(getConfig "something.cool")
