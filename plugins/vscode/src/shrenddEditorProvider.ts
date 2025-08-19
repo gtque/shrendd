@@ -223,13 +223,6 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       ].join('\n');
     }
 
-    // vscode.window.showInformationMessage(`Shrendd executable found at: ${shrenddPath}`);
-    // const command = 'ls'; // `./shrendd --get-property shrendd.render.build.dir`; //'ls -l'; // Replace with your desired shell command
-    // const args = ['-l']; //['--get-property', 'shrendd.render.build.dir']; // Add any arguments you need for the command
-    // const options = { cwd: shrenddStart }; // Set working directory (optional)
-
-    // const child = exec.spawn(command, args, options);
-    // vscode.window.showInformationMessage(`Shrendd spawned`);
     shrenddTargetDir = 'not set';
     let output = '';
     let errorOutput = '';
@@ -243,48 +236,6 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 
     const { execFile } = require('child_process');
 
-    // const gitBashPath = 'C:\\Program Files\\Git\\bin\\bash.exe'; // Adjust path as needed
-    // const command = `echo 'hello, world!'`; // Execute 'git status' silently
-
-    // execFile(shellPath, [command], (error: Error | null, stdout: string, stderr: string) => {
-    //     // if (error) {
-    //     //     console.error(`execFile error: ${error}`);
-    //     //     return;
-    //     // }
-    //     console.log(`stdout: ${stdout}`);
-    //     // console.error(`stderr: ${stderr}`);
-    // });
-
-    // const child = cp.spawn('pwd', [], execOptions);
-    // child.stdout.on('data', (data: any) => {
-    //   output += data.toString();
-    // });
-    // child.stderr.on('data', (data: any) => {
-    //   errorOutput += data.toString();
-    // });
-    // child.on('close', (code: any) => {
-    //   console.log(`Child process exited with code ${code}`);
-    // });
-    // child.on('error', (err: any) => {
-    //   vscode.window.showErrorMessage(`Failed to start command: ${err.message}`);
-    // });
-
-    // context.subscriptions.push(disposable);
-    // child.stdout.on('data', (data: string) => {
-    //     vscode.window.showInformationMessage(`target: ${data}`);
-    // });
-
-    // child.stderr.on('data', (data: string) => {
-    //     vscode.window.showErrorMessage(`error: ${data}`);
-    // });
-
-    // child.on('close', (code: number) => {
-    //     if (code === 0) {
-    //         vscode.window.showInformationMessage(`Command executed successfully with exit code ${code}`);
-    //     } else {
-    //         vscode.window.showErrorMessage(`Command exited with error code ${code}`);
-    //     }
-    // });
     if (this.targetFile === '') {
       const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
       const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
