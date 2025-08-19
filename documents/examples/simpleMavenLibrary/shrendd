@@ -16,6 +16,11 @@ export _CLEAR_TEXT_COLOR='\033[0m' # No Color
 export _NEW_LINE_PLACE_HOLDER="_shrendd_new_line_axcvert5"
 export _SPACE_PLACE_HOLDER="_shrendd_space_joasd7rfc"
 export _TUXEDO_MASK=""
+export _TEXT_ERROR="$_RED"
+export _TEXT_DEBUG="$_MAGENTA"
+export _TEXT_INFO="$_LIGHT_BLUE"
+export _TEXT_PASS="$_SUPER_GREEN"
+export _TEXT_WARN="$_YELLOW"
 start_time=$SECONDS
 
 function coreShrendd {
@@ -96,29 +101,39 @@ EndOfYml
 }
 
 function resetLocal {
-  if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
-    echo "information during shrendd:"
-    cat $_DEPLOY_ERROR_DIR/render_info.log | sed -e "s/^/  /g"
-  fi
-  if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
-    echo -e "${_TEXT_WARN}warnings during shrendd:"
-    cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
-  fi
-  if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-    echo -e "${_TEXT_ERROR}It seems there was an error during the process. Please review the logs for more information."
-    if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-      echo "errors during shrendd:"
-      cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+  if [[ -v _DEPLOY_ERROR_DIR ]]; then  
+    if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
+      shrenddEchoIfNotSilent "information during shrendd:"
+      cat $_DEPLOY_ERROR_DIR/render_info.log | sed -e "s/^/  /g"
+    fi
+    if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
+      shrenddEchoIfNotSilent "${_TEXT_WARN}warnings during shrendd:"
+      cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
+    fi
+    if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+      shrenddEchoIfNotSilent "${_TEXT_ERROR}It seems there was an error during the process. Please review the logs for more information."
+      if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+        shrenddEchoIfNotSilent "errors during shrendd:"
+        cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+      fi
+    fi
+    shrenddEchoIfNotSilent -en "${_CLEAR_TEXT_COLOR}"
+    if [[ -v _is_debug ]]; then
+      if [ "$_is_debug" == true ]; then
+        shrenddEchoIfNotSilent "running as debug, not deleting render directories"
+      else
+        shrenddEchoIfNotSilent "was live, should be deleting render directories"
+        stageLeft
+      fi
     fi
   fi
-  echo -en "${_CLEAR_TEXT_COLOR}"
-  if [ "$_is_debug" == true ]; then
-    echo "running as debug, not deleting render directories"
-  else
-    echo "was live, should be deleting render directories"
-    stageLeft
+  shrenddEchoIfNotSilent "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
+}
+
+function shrenddEchoIfNotSilent {
+  if [[ "$_IS_SILENT" == "0" ]]; then
+    shrenddEcho "$1"
   fi
-  echo -e "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
 }
 
 function shrenddEcho {
@@ -135,16 +150,45 @@ function dateTimeStamp {
 }
 
 function shrenddLog {
-  if [ -d $_DEPLOY_ERROR_DIR ]; then
-    :
-  else
-    mkdir $_DEPLOY_ERROR_DIR
-  fi
-  if [[ "${LOG_VERBOSE}" == "true" ]]; then
-    if [[ $# -gt 1 ]]; then
-      echo -e "$(dateTimeStamp): $1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+  if [[ -v _DEPLOY_ERROR_DIR ]]; then
+    if [ -d $_DEPLOY_ERROR_DIR ]; then
+      :
     else
-      echoSensitive "$(dateTimeStamp): $1" "true" >> $_DEPLOY_ERROR_DIR/shrendd.log
+      mkdir -p $_DEPLOY_ERROR_DIR
+    fi
+    if [[ "${LOG_VERBOSE}" == "true" ]]; then
+      if [[ $# -gt 1 ]]; then
+        echo -e "$(dateTimeStamp): $1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+      else
+        echoSensitive "$(dateTimeStamp): $1" "true" >> $_DEPLOY_ERROR_DIR/shrendd.log
+      fi
+    fi
+  fi
+}
+
+function echoSensitive {
+  if [ -z "${_TUXEDO_MASK+x}" ]; then
+    if [[ $# -gt 1 ]]; then
+      echo -e "$1"
+    else
+      shrenddEcho "$1" "true"
+    fi
+  else
+    replacement=$'\n' # Define replacement as a newline character
+    _new_string=$(echo "$1")
+    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\r//g')
+    #echo "processing newlines: $_new_string"
+    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g')
+    #echo "curent string: $_new_string"
+    #echo "processing sensitive values: $_TUXEDO_MASK"
+    _new_string=$(echo "$_new_string" | sed "$_TUXEDO_MASK")
+    #echo "replacing new lines: $_new_string"
+    _new_string="${_new_string//$_NEW_LINE_PLACE_HOLDER/$replacement}"
+    #echo "processed"
+    if [[ $# -gt 1 ]]; then
+      echo -e "$_new_string"
+    else
+      shrenddEcho "$_new_string" "true"
     fi
   fi
 }
@@ -202,7 +246,7 @@ function getThis {
 }
 
 function devDS {
-  echo "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
+  shrenddEchoIfNotSilent "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
   if [ -d $SHRENDD_DIR/$1 ]; then
     shrenddLog "devDS: rm $SHRENDD_DIR/$1"
     rm -rf $SHRENDD_DIR/$1
@@ -210,7 +254,7 @@ function devDS {
   _source=$(shrenddOrDefault "shrendd.test.local")
   cp -rf $_source/$1 $SHRENDD_DIR/$1
   if [ "$1" == "render" ]; then
-    echo "copy additional render scripts..."
+    shrenddEchoIfNotSilent "copy additional render scripts..."
     cp -rf $_source/deploy.sh $SHRENDD_DIR/
     cp -rf $_source/stub.sh $SHRENDD_DIR/
     cp -rf $_source/parse_parameters.sh $SHRENDD_DIR/
@@ -367,9 +411,9 @@ function shrenddOrDefault {
 
 function getTargetsD {
   _targets="" #$(echo $_SHRENDD_CONFIG_KEYS | sed -e "s/\.targets\./gooch/g")"
-  echo "looping over: $1"
+  shrenddEchoIfNotSilent "looping over: $1"
   for _targ in $1; do
-    echo "targ: $_targ"
+    shrenddEchoIfNotSilent "targ: $_targ"
     _targets="$_targets $(echo "$_targ" | grep ".targets.[0-9]\+.name" || echo "")"
   done
   echo "$_targets"
@@ -449,7 +493,7 @@ function initTargets {
   _target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
   #echo "trying to load array of targets: $_target_keys"
   if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
-    echo "no targets... using default list"
+    shrenddEchoIfNotSilent "no targets... using default list"
     #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
     _target_keys=$(getTargets "$_SHRENDD_DEFAULT_KEYS")
   fi
@@ -458,7 +502,7 @@ function initTargets {
   for index in $_target_keys; do
     index=$(echo "$index" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
     _target=$(shrenddOrDefault "$index" 0)
-    echo -e "checking: $_target"
+    shrenddEchoIfNotSilent "checking: $_target"
     if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
       :
     else
@@ -477,12 +521,12 @@ function initTargets {
           shrenddLog "initTargets: rm ${SHRENDD_DIR}/${_target}"
           rm -rf $SHRENDD_DIR/$_target
         fi
-        echo "shrendd.${_target}.source: ${_target_source}"
+        shrenddEchoIfNotSilent "shrendd.${_target}.source: ${_target_source}"
         eval "${_target_source}"
       fi
     fi
   done
-  echo "targets initialized"
+  shrenddEchoIfNotSilent "targets initialized"
   export targets="$_targets"
 }
 
@@ -503,7 +547,7 @@ function clonePlugin {
   else
     _IS_UPTODATE_NOW=$(isUpToDate "$1" "$2" "$_ARTIFACT_URL" "$3" "$5" "$_clone_parameters")
   fi
-  echo "$2 uptodate: $_IS_UPTODATE_NOW"
+  shrenddEchoIfNotSilent "$2 uptodate: $_IS_UPTODATE_NOW"
   if [ "$_IS_UPTODATE_NOW" == "true" ]; then
     :
   else
@@ -512,25 +556,25 @@ function clonePlugin {
     else
       mkdir "$SHRENDD_DIR"
     fi
-    echo "downloading $5:$3"
+    shrenddEchoIfNotSilent "downloading $5:$3"
     if [ -d $SHRENDD_DIR/$2 ]; then
       shrenddLog "clonePlugin: rm ${SHRENDD_DIR}/${2}"
       rm -rf $SHRENDD_DIR/$2
     fi
     shrenddLog "clonePlugin: before downloading: rm ${SHRENDD_DIR}/${2}.zip"
     rm -f $SHRENDD_DIR/$2.zip
-    echo "downloading with $1...$2"
+    shrenddEchoIfNotSilent "downloading with $1...$2"
     #curlD or wgetD...
     if [[ "$_clone_parameters" == "null" ]]; then
       eval "${1}S \"$2\" \".zip\" \"$_ARTIFACT_URL/$2.zip\""
     else
       eval "${1}S \"$2\" \".zip\" \"$_ARTIFACT_URL/$2.zip\" \"$_clone_parameters\""
     fi
-    echo "download finished..."
+    shrenddEchoIfNotSilent "download finished..."
     if [[ "$1" == "devD"* ]]; then
-      echo "cloned locally, nothing to unzip."
+      shrenddEchoIfNotSilent "cloned locally, nothing to unzip."
     else
-      echo "unzipping cloned file: $2.zip"
+      shrenddEchoIfNotSilent "unzipping cloned file: $2.zip"
       unzip -ao $SHRENDD_DIR/$2.zip -d $SHRENDD_DIR
       shrenddLog "clonePlugin: after unzipping: rm ${SHRENDD_DIR}/${2}.zip"
       rm $SHRENDD_DIR/$2.zip
@@ -539,16 +583,16 @@ function clonePlugin {
 }
 
 function initPlugins {
-  echo "initializing plugins"
+  shrenddEchoIfNotSilent "initializing plugins"
   _plugins="$(shrenddOrDefault "shrendd.plugins" 1)"
 #  _plugins="null"
   if [[ "$_plugins" == "null" ]]; then
-    echo "no plugins"
+    shrenddEchoIfNotSilent "no plugins"
   else
-    echo -e "plugs:\n$_plugins"
+    shrenddEchoIfNotSilent "plugs:\n$_plugins"
     _plugin_list=$(keysFor "$_plugins")
     _plugs=" "
-    echo "loading plugins"
+    shrenddEchoIfNotSilent "loading plugins"
     for _plug in $_plugin_list; do
       _plug=$(echo "$_plug" | cut -d'.' -f1)
       if [[ "$_plugs" == *" $_plug "* ]]; then
@@ -559,7 +603,7 @@ function initPlugins {
           rm -rf $SHRENDD_DIR/$_plug
         fi
         _clone_parameters=$(shrenddOrDefault "shrendd.plugins.$_plug.parameters")
-        echo "  $_plug parameters: $_clone_parameters"
+        shrenddEchoIfNotSilent "  $_plug parameters: $_clone_parameters"
         _plugs="$_plugs$_plug "
 #        \"$_GETTER\" \"test\"
         _plug_version=$(echo "$_plugins" | yq e ".$_plug.version" -)
@@ -573,57 +617,53 @@ function initPlugins {
         fi
         if [[ "${is_offline}" == "false" ]]; then
           clonePlugin "$_plug_getter" "$_plug" "$_plug_version" "$_plug_src" "plugin"
-          echo "plugin cloned......"
+          shrenddEchoIfNotSilent "plugin cloned......"
         fi
         if [[ -f "$SHRENDD_DIR/$_plug/$_plug" ]]; then
-          echo "sourcing plugin: $_plug"
+          shrenddEchoIfNotSilent "sourcing plugin: $_plug"
           source "$SHRENDD_DIR/$_plug/$_plug"
         fi
       fi
 #      _targets="$_targets $(echo "$_targ" | grep ".targets.[0-9]\+.name" || echo "")"
     done
-    echo -e "plugins: $_plugs"
+    shrenddEchoIfNotSilent "plugins: $_plugs"
   fi
 }
 
-function echoSensitive {
-  if [ -z "${_TUXEDO_MASK+x}" ]; then
-    if [[ $# -gt 1 ]]; then
-      echo -e "$1"
-    else
-      shrenddEcho "$1" "true"
-    fi
-  else
-    replacement=$'\n' # Define replacement as a newline character
-    _new_string=$(echo "$1")
-    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\r//g')
-    #echo "processing newlines: $_new_string"
-    _new_string=$(echo "$_new_string" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g')
-    #echo "curent string: $_new_string"
-    #echo "processing sensitive values: $_TUXEDO_MASK"
-    _new_string=$(echo "$_new_string" | sed "$_TUXEDO_MASK")
-    #echo "replacing new lines: $_new_string"
-    _new_string="${_new_string//$_NEW_LINE_PLACE_HOLDER/$replacement}"
-    #echo "processed"
-    if [[ $# -gt 1 ]]; then
-      echo -e "$_new_string"
-    else
-      shrenddEcho "$_new_string" "true"
-    fi
+
+_getting=0
+export _IS_SILENT=0
+if [[ "$*" == *"--get-property "* ]]; then
+  _getting=1
+  export _IS_SILENT=1
+fi
+
+#have to initialize _is_debug
+export _is_debug="true"
+#have to do a precheck of parameters for -offline
+export is_offline="false"
+found=false
+for arg in "$@"; do
+  if [[ "$arg" == *"-offline"* ]]; then
+    found=true
+    break  # Exit the loop once the string is found
   fi
-}
+done
+if $found; then
+  export is_offline="true"
+fi
 
 #load shrendd.yml for properties
-echo "shrendding..."
+shrenddEchoIfNotSilent "shrendding..."
 export _SHREND_YML="./shrendd.yml"
 if [[ -n "${SHREND_YML+x}" ]]; then
   export _SHREND_YML="$SHREND_YML"
 fi
 if [ -f $_SHREND_YML ]; then
   export _SHRENDD=$(cat $_SHREND_YML)
-  echo "found shrendd.yml, will use values defined there, if no value specified, will use default values."
+  shrenddEchoIfNotSilent "found shrendd.yml, will use values defined there, if no value specified, will use default values."
 else
-  echo "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
+  shrenddEchoIfNotSilent "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
   export _SHRENDD=""
 fi
 
@@ -636,8 +676,11 @@ export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
 export SHRENDD_WORKING_DIR=$(pwd)
 export SHRENDD_DIR=$(shrenddOrDefault "shrendd.dir")
 export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
-echo "shrendd version: $_SHRENDD_VERSION"
-initColors
+
+shrenddEchoIfNotSilent "shrendd version: $_SHRENDD_VERSION"
+if [[ "$_getting" == "0" ]]; then
+  initColors
+fi
 
 ##check for yq, error if not present with message
 checkCommand "yq" 1
@@ -656,20 +699,7 @@ else
     fi
   fi
 fi
-#have to initialize _is_debug
-export _is_debug="true"
-#have to do a precheck of parameters for -offline
-export is_offline="false"
-found=false
-for arg in "$@"; do
-  if [[ "$arg" == *"-offline"* ]]; then
-    found=true
-    break  # Exit the loop once the string is found
-  fi
-done
-if $found; then
-  export is_offline="true"
-fi
+
 
 if [[ "${is_offline}" == "false" ]]; then
   cloneShrendd "$_GETTER" "render"
@@ -682,54 +712,59 @@ else
   exit 42
 fi
 source $SHRENDD_DIR/parse_parameters.sh
-shrenddStub
+if [[ "$_getting" == "0" ]]; then
+  shrenddStub
+fi
 
 #bootstrap any plugin definitions or other stuff before shrendding.
-if [ -f ./plugin.shrendd ]; then
-  echo "found a plugin.shrendd file, sourcing it now..."
-  source ./plugin.shrendd
-else
-  echo "no plugin.shrendd found"
-fi
-initPlugins
-#exit 0
+if [[ "$_getting" == "0" ]]; then
+  if [ -f ./plugin.shrendd ]; then
+    shrenddEchoIfNotSilent "found a plugin.shrendd file, sourcing it now..."
+    source ./plugin.shrendd
+  else
+    shrenddEchoIfNotSilent "no plugin.shrendd found"
+  fi
+  initPlugins
 
-#bootstrap any add ons or other stuff before shrendding.
-if [ -f ./boot.shrendd ]; then
-  echo "found a boot.shrendd file, sourcing it now..."
-  source ./boot.shrendd
-else
-  echo "no boot.shrendd found"
+  #bootstrap any add ons or other stuff before shrendding.
+  if [ -f ./boot.shrendd ]; then
+    shrenddEchoIfNotSilent "found a boot.shrendd file, sourcing it now..."
+    source ./boot.shrendd
+  else
+    shrenddEchoIfNotSilent "no boot.shrendd found"
+  fi
 fi
-
 
 #loop over targets
-initTargets "true"
-
+if [[ "$_getting" == "0" ]]; then
+  initTargets "true"
+fi
 if [[ -n "${_JUST_INITIALIZE+x}" ]]; then
   :
 else
   export _JUST_INITIALIZE="true"
 fi
-checkShrenddVersion
+if [[ "$_getting" == "0" ]]; then
+  checkShrenddVersion
+fi
 if [ "$_JUST_INITIALIZE" == "true" ]; then
   echo -e "${_TEXT_INFO}just initializing, nothing to see here.${_CLEAR_TEXT_COLOR}"
   exit 0
 fi
 
 export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
-echo "======================================================="
-echo -e "${_TEXT_INFO}                 best shrendds forever                 ${_CLEAR_TEXT_COLOR}"
-echo "using: $_config_path"
+shrenddEchoIfNotSilent "======================================================="
+shrenddEchoIfNotSilent "${_TEXT_INFO}                 best shrendds forever                 ${_CLEAR_TEXT_COLOR}"
+shrenddEchoIfNotSilent "using: $_config_path"
 if [[ $_stub == "false" ]]; then
   source $SHRENDD_DIR/deploy.sh
   shrenddDeployRun
 else
-  echo "stubbing: $_stub/toes"
+  shrenddEchoIfNotSilent "stubbing: $_stub/toes"
   source $SHRENDD_DIR/stub.sh
 fi
 end_time=$SECONDS
 duration=$((end_time - start_time))
 durationM=$((duration / 60))
-echo -e "${_TEXT_PASS}execution time: ${duration} seconds (${durationM} minutes)${_CLEAR_TEXT_COLOR}"
+shrenddEchoIfNotSilent "${_TEXT_PASS}execution time: ${duration} seconds (${durationM} minutes)${_CLEAR_TEXT_COLOR}"
 #checkShrenddVersion
