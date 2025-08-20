@@ -133,6 +133,8 @@ function resetLocal {
 function shrenddEchoIfNotSilent {
   if [[ "$_IS_SILENT" == "0" ]]; then
     shrenddEcho "$1"
+  else
+    shrenddLog "$1"
   fi
 }
 

@@ -157,6 +157,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 
     let shrenddPath: string | null = null;
     let shrenddStart = '';
+    let shrenddModule = "";
     let shrenddTargetDir: string | null = null;
     let foldersToCheck: string[] = [];
     // foldersToCheck.push("test1");
@@ -202,12 +203,26 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     for (const folder of foldersToCheck) {
       if (!folder) continue;
       const candidate = path.join(folder, 'shrendd');
+      const moduleCandidate = path.join(folder, 'shrendd.yml');
       checkedPaths.push(candidate);
+      if (fs.existsSync(moduleCandidate)) {
+        if (!shrenddModule) {
+          shrenddModule = folder;
+        }
+      }
       if (fs.existsSync(candidate)) {
         shrenddPath = candidate;
         shrenddStart += folder;
         break;
       }
+    }
+    shrenddModule = shrenddModule.replaceAll(`${shrenddStart}`, "");
+    if (!shrenddModule) {
+      console.log("no module detected");
+      shrenddModule = ".";
+    } else {
+      console.log(`Detected shrendd module: ${shrenddModule}`);
+      shrenddModule = shrenddModule.replace(/^[/\\]+/, ''); // remove leading slashes
     }
     checkedPaths.push(doc.uri.path.split("/").slice(0, -1).join("/"));
     if (!shrenddPath) {
@@ -239,8 +254,10 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     if (this.targetFile === '') {
       const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
       const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
+      const target = "render";
+      const propertyCommand = `export target="${target}"; ./shrendd --get-property "shrendd.default.build.dir" --module "${shrenddModule}" > ${shrenddTempFile}`;
       const thePromise = new Promise((resolve) => {
-        exec(`export target="render"; ./shrendd --get-property "shrendd.default.build.dir" > ${shrenddTempFile}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+        exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
           const uri = vscode.Uri.file(tempFile)
           try {
             vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
@@ -263,7 +280,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             console.error(`Error executing command: ${stderr || error.message}`);
             // resolve(`Error: ${stderr || error.message}`);
           } else {
-            console.log(`Command (export target="render"; ./shrendd --get-property "shrendd.render.render.dir" > ${shrenddTempFile}) executed successfully: ${stdout}`);
+            console.log(`${propertyCommand}) executed successfully: ${stdout}`);
             console.log(`Error message just incase: ${stderr}`);
             // resolve(stdout);
           }
