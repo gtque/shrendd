@@ -738,9 +738,9 @@ if [[ "$_getting" == "0" ]]; then
 fi
 
 #loop over targets
-if [[ "$_getting" == "0" ]]; then
-  initTargets "true"
-fi
+# if [[ "$_getting" == "0" ]]; then
+initTargets "true"
+# fi
 if [[ -n "${_JUST_INITIALIZE+x}" ]]; then
   :
 else

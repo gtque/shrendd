@@ -8,6 +8,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   readonly context: vscode.ExtensionContext;
   
   private targetFile: string = '';
+  private shrenddProperties = new Map();
 
   public static register(context: vscode.ExtensionContext): vscode.Disposable {
     const provider = new ShrenddEditorProvider(context);
@@ -205,6 +206,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       const candidate = path.join(folder, 'shrendd');
       const moduleCandidate = path.join(folder, 'shrendd.yml');
       checkedPaths.push(candidate);
+      //module in this case is only important
       if (fs.existsSync(moduleCandidate)) {
         if (!shrenddModule) {
           shrenddModule = folder;
@@ -217,13 +219,16 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       }
     }
     shrenddModule = shrenddModule.replaceAll(`${shrenddStart}`, "");
+    let shrenddDefaultModuleName = 'dot';
     if (!shrenddModule) {
       console.log("no module detected");
       shrenddModule = ".";
     } else {
       console.log(`Detected shrendd module: ${shrenddModule}`);
       shrenddModule = shrenddModule.replace(/^[/\\]+/, ''); // remove leading slashes
+      shrenddDefaultModuleName = shrenddModule;
     }
+
     checkedPaths.push(doc.uri.path.split("/").slice(0, -1).join("/"));
     if (!shrenddPath) {
       return [
@@ -250,20 +255,167 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     // vscode.window.showInformationMessage(`shell: ${platform}: ${shrenddStart}: ${shellPath}`);
 
     const { execFile } = require('child_process');
-
-    if (this.targetFile === '') {
+    let currentTarget = "";
+    let myTargets = "";
+    if (this.shrenddProperties.has(`${shrenddDefaultModuleName}`)) {
+      if (this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has('targets')) {
+        myTargets = this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get('targets');
+      }
+    } else {
+      // also get shrendd.working.dir to use as part of module calculation, will be be prepended to the path after stripping the plugins working dir.
+      this.shrenddProperties.set(`${shrenddDefaultModuleName}`, new Map());
       const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
       const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
-      const target = "render";
-      const propertyCommand = `export target="${target}"; ./shrendd --get-property "shrendd.default.build.dir" --module "${shrenddModule}" > ${shrenddTempFile}`;
+      const propertyCommand = `./shrendd --get-property "shrendd.targets" --module "${shrenddModule}" > ${shrenddTempFile}`;
       const thePromise = new Promise((resolve) => {
         exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
           const uri = vscode.Uri.file(tempFile)
           try {
             vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
               const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+              console.log(`${shrenddDefaultModuleName} targets:`, contentString);
+              myTargets = contentString.trim(); // get the list of targets for the module.
+              this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set('targets', myTargets);
+              fs.unlinkSync(uri.fsPath);
+              resolve(myTargets);
+            });
+          } catch (error) {
+              if (error instanceof Error) {
+                console.error(`Failed to read file: ${error.message}`);
+              } else {
+                console.error('Failed to read file: Unknown error');
+              }
+              resolve(''); // Resolve with empty string on error
+          }
+          // fs.unlinkSync(uri.fsPath); // Clean up the temp file
+          if (error) {
+            console.error(`Error executing command: ${stderr || error.message}`);
+            // resolve(`Error: ${stderr || error.message}`);
+          } else {
+            console.log(`${propertyCommand}) executed successfully: ${stdout}`);
+            console.log(`Error message just incase: ${stderr}`);
+            // resolve(stdout);
+          }
+        });
+      });
+      await thePromise;
+      let defaultTargets = "--get-property shrendd.default.template.dir";
+      let currentTargets = myTargets.split(" ");
+      for (const possibleTarget of currentTargets) {
+        defaultTargets += ` --get-property shrendd.${possibleTarget}.template.dir`;
+      }
+      console.log(`defaultTargets: ${defaultTargets}`);
+      const tempFile2 = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
+      const shrenddTempFile2 = "/" + path.normalize(tempFile2).replace(/:/g, "").replace(/\\/g, "/");
+      const propertyCommand2 = `./shrendd ${defaultTargets} --module "${shrenddModule}" > ${shrenddTempFile2}`;
+      const thePromiseOfTemplateProperties = new Promise((resolve) => {
+        exec(`${propertyCommand2}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+          const uri = vscode.Uri.file(tempFile2)
+          try {
+            vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+              const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+              console.log(`${shrenddDefaultModuleName} templateDirs:\n`, contentString);
+              defaultTargets = contentString.trim(); // get the list of targets for the module.
+              let targetProperties = defaultTargets.split("<<<>>>");
+              console.log("length of targetProperties: ", targetProperties.length);
+              // let defaultProperty = targetProperties.shift()?.trim() || '';
+              // console.log(`defaultProperty: ${defaultProperty}`);
+              let onDefault = "default-";
+              for (const targetProperty of targetProperties) {
+                console.log(`parsing targetProperty: ${targetProperty}`);
+                let propertyList = targetProperty.trimStart().split("\n");
+                console.log("length of propertyList: ", propertyList.length);
+                for (const possibleTarget of currentTargets) {
+                  let dirValue = (propertyList.shift()?.trim() || '').replace(`${possibleTarget}:`,"").trim()
+                  if (dirValue === '' || dirValue === 'null' ) {
+                    console.log(`no template dir defined for target ${onDefault}${possibleTarget}, skipping`);
+                    continue; // skip if no template dir is defined
+                  }
+                  console.log(`setting template.dir for target ${onDefault}${possibleTarget} to ${dirValue}`);
+                  if (this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(`${onDefault}${possibleTarget}`)) {
+                    //.set('targets', myTargets);
+                  } else {
+                    this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set(`${onDefault}${possibleTarget}`, new Map());
+                  }
+                  this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${onDefault}${possibleTarget}`).set('template.dir', dirValue);
+                }
+                onDefault = "";
+              }
+              fs.unlinkSync(uri.fsPath);
+              resolve(defaultTargets);
+            });
+          } catch (error) {
+              if (error instanceof Error) {
+                console.error(`Failed to read file: ${error.message}`);
+              } else {
+                console.error('Failed to read file: Unknown error');
+              }
+              resolve(''); // Resolve with empty string on error
+          }
+          // fs.unlinkSync(uri.fsPath); // Clean up the temp file
+          if (error) {
+            console.error(`Error executing command: ${stderr || error.message}`);
+            // resolve(`Error: ${stderr || error.message}`);
+          } else {
+            console.log(`${propertyCommand}) executed successfully: ${stdout}`);
+            console.log(`Error message just incase: ${stderr}`);
+            // resolve(stdout);
+          }
+        });
+      });
+      await thePromiseOfTemplateProperties;
+    }
+    if (myTargets != null && myTargets.trim().length > 0) {
+      let currentTargets = myTargets.split(" ");
+      console.log(`checking file path: ${filePath}`);
+      for (const possibleTarget of currentTargets) {
+        console.log(`checking target: ${possibleTarget}`);
+        if (filePath.includes(possibleTarget)) {
+          currentTarget = possibleTarget;
+          break;
+        }
+      }
+    }
+    if (currentTarget === "") {
+      console.error(`No target found for file ${filePath} in module ${shrenddDefaultModuleName}. This file does not appear to be in a valid shrendd project. Make sure the file is in a proper module and target directory. If you are using custom directories for the targets, please make sure the path includes the target name does not include names that match other targets defined in your project: ${myTargets}`);
+      return `No target found for file ${filePath} in module ${shrenddDefaultModuleName}. This file does not appear to be in a valid shrendd project. Please see error log for more information.`;
+    }
+    let shrenddModuleName = shrenddDefaultModuleName;
+    if (shrenddModuleName === "dot") {
+      console.log(`no module explicitely detected, will see if it can be parsed from the file path: ${filePath}`);
+      console.log(`shrenddStart: ${shrenddStart}`);
+      // shrenddModule = shrenddModule.replaceAll(`${shrenddStart}`, "");
+      // let shrenddDefaultModuleName = 'dot';
+      // if (!shrenddModule) {
+      //   console.log("no module detected");
+      //   shrenddModule = ".";
+      // } else {
+      //   console.log(`Detected shrendd module: ${shrenddModule}`);
+      //   shrenddModule = shrenddModule.replace(/^[/\\]+/, ''); // remove leading slashes
+      //   shrenddDefaultModuleName = shrenddModule;
+      // }
+    } else {
+      console.log("a defined module has already been detected, assuming that is the module for this file");
+    }
+    let myTargetFile = "";
+    if (this.shrenddProperties.get(`${shrenddModuleName}`) && this.shrenddProperties.get(`${shrenddModuleName}`).has(`${currentTarget}`) && this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).has(`build.dir`)) {
+      myTargetFile = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get(`build.dir`);
+    }
+    if (myTargetFile === '') {
+      console.log('no build dir defined yet, getting it from shrendd');
+      const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
+      const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
+      const target = currentTarget;
+      const propertyCommand = `export target="${target}"; ./shrendd --get-property "shrendd.${target}.build.dir" --get-property "shrendd.default.build.dir" --module "${shrenddModule}" > ${shrenddTempFile}`;
+      const thePromiseOfProperties = new Promise((resolve) => {
+        exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+          const uri = vscode.Uri.file(tempFile)
+          try {
+            vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+              const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
               console.log('Content of file:', contentString);
-              this.targetFile = contentString.trim(); // Set the target file path
+              myTargetFile = contentString.trim(); // Set the target file path
+              this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).set('build.dir', myTargets);
               fs.unlinkSync(uri.fsPath);
               resolve(this.targetFile);
             });
@@ -286,10 +438,10 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           }
         });
       });
-      await thePromise;
+      await thePromiseOfProperties;
     }
     
-    let rendered = this.targetFile + ":\n"
+    let rendered = myTargetFile + ":\n"
     return rendered;
   }
 }

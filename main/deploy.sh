@@ -485,6 +485,15 @@ function moduleRender {
   fi
 }
 
+function moduleGetProperty {
+  export _the_module="$1"
+
+  for _target in $targets; do
+    export target="$_target"
+    echo "${target}: $(shrenddOrDefault "$_property")"
+  done
+}
+
 function shrenddDeployRun {
   export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
   if [ -d $_DEPLOY_ERROR_DIR ]; then
@@ -582,7 +591,21 @@ function shrenddDeployRun {
       export _MODULE_DIR=$(pwd)
       export _SHRENDD_DEPLOY_DIRECTORY=$(shrenddOrDefault "shrendd.deploy.dir")
       if [[ -n "$GET_PROPERTY" ]]; then
-        echo "$(shrenddOrDefault "$GET_PROPERTY")"
+        initTargets
+        properties="$(echo -e "$GET_PROPERTY")"
+        _multiple_properties=""
+        while IFS= read -r _property; do #for _property in $GET_PROPERTY; do
+          if [[ "$_property" == "shrendd.targets" ]]; then
+            echo "$targets"
+          else
+            #echo "$(shrenddOrDefault "$_property")"
+            if [[ -n "$_multiple_properties" ]]; then
+              echo "<<<>>>"
+            fi
+            moduleGetProperty "$_property"
+            _multiple_properties="true"
+          fi
+        done <<< "$properties"
         exit 0
       fi
       shrenddEchoIfNotSilent "shrendd deploy dir: $_SHRENDD_DEPLOY_DIRECTORY"
