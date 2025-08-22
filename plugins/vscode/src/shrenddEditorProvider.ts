@@ -254,7 +254,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     execOptions.cwd = shrenddStart;
     // vscode.window.showInformationMessage(`shell: ${platform}: ${shrenddStart}: ${shellPath}`);
 
-    const { execFile } = require('child_process');
+    // const { execFile } = require('child_process');
     let currentTarget = "";
     let myTargets = "";
     if (this.shrenddProperties.has(`${shrenddDefaultModuleName}`)) {
@@ -266,7 +266,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       this.shrenddProperties.set(`${shrenddDefaultModuleName}`, new Map());
       const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
       const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
-      const propertyCommand = `./shrendd --get-property "shrendd.targets" --module "${shrenddModule}" > ${shrenddTempFile}`;
+      const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --module "${shrenddModule}" > ${shrenddTempFile}`;
       const thePromise = new Promise((resolve) => {
         exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
           const uri = vscode.Uri.file(tempFile)
@@ -274,8 +274,19 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
               const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
               console.log(`${shrenddDefaultModuleName} targets:`, contentString);
-              myTargets = contentString.trim(); // get the list of targets for the module.
+              myTargets = contentString.trim().trimStart(); // get the list of targets for the module.
+              let targetProperties = myTargets.split("\n");
+              myTargets = targetProperties.shift() || '';
               this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set('targets', myTargets);
+              for (const templateTarget of targetProperties) {
+                let parts = templateTarget.split(": ");
+                if (this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(parts[0])) {
+                } else {
+                  this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set(parts[0], new Map());
+                }
+                this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(parts[0]).set("shrenddStart", parts[1].trim());
+              }
+              
               fs.unlinkSync(uri.fsPath);
               resolve(myTargets);
             });
@@ -293,7 +304,6 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             // resolve(`Error: ${stderr || error.message}`);
           } else {
             console.log(`${propertyCommand}) executed successfully: ${stdout}`);
-            console.log(`Error message just incase: ${stderr}`);
             // resolve(stdout);
           }
         });
@@ -357,8 +367,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             console.error(`Error executing command: ${stderr || error.message}`);
             // resolve(`Error: ${stderr || error.message}`);
           } else {
-            console.log(`${propertyCommand}) executed successfully: ${stdout}`);
-            console.log(`Error message just incase: ${stderr}`);
+            console.log(`${propertyCommand2}) executed successfully: ${stdout}`);
             // resolve(stdout);
           }
         });
@@ -384,6 +393,24 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     if (shrenddModuleName === "dot") {
       console.log(`no module explicitely detected, will see if it can be parsed from the file path: ${filePath}`);
       console.log(`shrenddStart: ${shrenddStart}`);
+      const actualShrenddStart = this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).get("shrenddStart");
+      let actualShrenddTemplateDir = this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`default-${currentTarget}`).get(`template.dir`).replace(`${actualShrenddStart}`, "");
+      if(this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(`${currentTarget}`) && this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).has(`template.dir`)) {
+        actualShrenddTemplateDir = this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).get(`template.dir`).replace(`${actualShrenddStart}`, "");
+      }
+      let moduleDetectionPath = path.dirname(filePath).replace(`${shrenddStart}`, "").replace(/\\/g, "/").replace(`${actualShrenddTemplateDir}`, "");
+      console.log(`moduleDetectionPath: ${moduleDetectionPath}`);
+      if (!moduleDetectionPath || moduleDetectionPath === '' || moduleDetectionPath === '/') {
+        console.log("no module detected, using default module name");
+      } else {
+        shrenddModule = moduleDetectionPath.replace(/^[/\\]+/, ''); // remove leading slashes
+        console.log(`Detected shrendd module from file path: ${shrenddModule}`);
+        shrenddModuleName = shrenddModule;
+      }
+      // trim shrenddStart and normalize slashes
+      // trim actualShrenddStart from build dir
+      //trim build dir from remaining path
+      //check if empty, if not empty, set shrenddModule to the remaining path
       // shrenddModule = shrenddModule.replaceAll(`${shrenddStart}`, "");
       // let shrenddDefaultModuleName = 'dot';
       // if (!shrenddModule) {
@@ -414,10 +441,44 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
               const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
               console.log('Content of file:', contentString);
-              myTargetFile = contentString.trim(); // Set the target file path
-              this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).set('build.dir', myTargets);
+              myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
+              let targetProperties = myTargetFile.split("<<<>>>");
+              let targetedBuildDir = targetProperties.shift() || '';
+              let targetedBuildDirs = targetedBuildDir.trimStart().trimEnd().split("\n");
+              let defaultBuildDir = targetProperties.shift() || '';
+              let defaultBuildDirs = defaultBuildDir.trimStart().trimEnd().split("\n");
+              if (!this.shrenddProperties.has(`${shrenddModuleName}`)) {
+                this.shrenddProperties.set(`${shrenddModuleName}`, new Map());
+              }
+              for (const currentBuildDir of defaultBuildDirs) {
+                console.log(`parsing default build dir: ${currentBuildDir}`);
+                const finalTarget = currentBuildDir.split(": ")[0].trim();
+                const finalDir = currentBuildDir.split(": ")[1].trim();
+                if (!this.shrenddProperties.get(`${shrenddModuleName}`).has(`default-${finalTarget}`)) {
+                  this.shrenddProperties.get(`${shrenddModuleName}`).set(`default-${finalTarget}`, new Map());
+                }
+                this.shrenddProperties.get(`${shrenddModuleName}`).get(`default-${finalTarget}`).set('target.dir', finalDir);
+              }
+              for (const currentBuildDir of targetedBuildDirs) {
+                console.log(`parsing default build dir: ${currentBuildDir}`);
+                const finalTarget = currentBuildDir.split(": ")[0].trim();
+                const finalDir = currentBuildDir.split(": ")[1].trim();
+                if (!this.shrenddProperties.get(`${shrenddModuleName}`).has(`${finalTarget}`)) {
+                  this.shrenddProperties.get(`${shrenddModuleName}`).set(`${finalTarget}`, new Map());
+                }
+                this.shrenddProperties.get(`${shrenddModuleName}`).get(`${finalTarget}`).set('target.dir', finalDir);
+              }
+              defaultBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`default-${currentTarget}`).get('target.dir');
+              targetedBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get('target.dir');
+              console.log("defaultBuildDir: ", defaultBuildDir);
+              myTargetFile = defaultBuildDir;
+              if (`${targetedBuildDir}` !== '' && `${targetedBuildDir}` !== 'null') {
+                myTargetFile = targetedBuildDir;
+                console.log(`Using targeted build dir: ${myTargetFile}`);
+              }
+              this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).set('build.dir', myTargetFile);
               fs.unlinkSync(uri.fsPath);
-              resolve(this.targetFile);
+              resolve(myTargetFile);
             });
           } catch (error) {
               if (error instanceof Error) {
