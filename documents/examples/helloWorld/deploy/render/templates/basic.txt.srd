@@ -1,2 +1,4 @@
 hello, $(getConfig my.first.shrendd)!
+what's up?
+the sky.
 ${SIMPLE_QUESTION}

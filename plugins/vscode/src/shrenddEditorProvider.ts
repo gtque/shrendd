@@ -38,9 +38,10 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     // Listen for document changes
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
       if (e.document.uri.toString() === document.uri.toString()) {
+        console.log("document change detected, updating webview");
         webviewPanel.webview.postMessage({
           type: 'update',
-          text: document.getText()
+          text: e.document.getText()
         });
       }
     });
@@ -53,12 +54,25 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel.webview.onDidReceiveMessage(async message => {
       switch (message.type) {
         case 'edit':
+          console.log("edit message received: ", message.text);
           this.updateTextDocument(document, message.text);
           break;
         case 'process':
           const processed = await this.processTemplate(document, this.context);
           webviewPanel.webview.postMessage({ type: 'processed', text: processed });
           break;
+      }
+    });
+
+    webviewPanel.onDidChangeViewState(e => {
+      if (e.webviewPanel.active) {
+          // The webview has been selected/focused.
+          // You can perform an action here, for example:
+          console.log(`MyCustomEditor: Tab for ${document.fileName} is now active.`);
+
+          // You might need to update the webview with fresh content,
+          // in case it was hidden and re-rendered.
+          this.updateWebview(webviewPanel, document);
       }
     });
   }
@@ -109,6 +123,14 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   </script>
 </body>
 </html>`;
+  }
+
+  private updateWebview(webviewPanel: vscode.WebviewPanel, document: vscode.TextDocument) {
+    // Post the latest document content to the webview
+    webviewPanel.webview.postMessage({
+        type: 'update',
+        text: document.getText(),
+    });
   }
 
   private updateTextDocument(document: vscode.TextDocument, text: string) {
@@ -452,7 +474,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     console.log(`final moduleTemplateDir: ${moduleDetectionPath}`);
     const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
     const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
-    const propertyCommand = `./shrendd -b --module "${shrenddModule}" > ${shrenddTempFile}`;
+    const propertyCommand = `./shrendd -b --module "${shrenddModule} -offline" > ${shrenddTempFile}`;
     const thePromiseOfTheBuild = new Promise((resolve) => {
         exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
           const uri = vscode.Uri.file(moduleDetectionPath)
