@@ -9,8 +9,6 @@ shrendd:
       dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/${target}
   render:
     action: render
-    template:
-      dir: $(shrenddOrDefault shrendd.deploy.dir)/mymodule/templates
     build:
       dir: $(shrenddOrDefault shrendd.deploy.dir)/shabam/myhouse/${target}
     render:

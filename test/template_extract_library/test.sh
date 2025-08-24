@@ -6,7 +6,7 @@ source ../../build/test/start.sh
 rm -rf ./config
 echo "attempting extract"
 if [ $# -gt 0 ]; then
-  ./shrendd -extract
+  ./shrendd -extract -verbose
   exit 0
 fi
 _valid=$(./shrendd -extract)

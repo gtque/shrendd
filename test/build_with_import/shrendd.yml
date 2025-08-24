@@ -13,3 +13,9 @@ shrendd:
         method: curlD
       version: 2.0.0
       type: yaml
+    module_path:
+      get:
+        src: $_MODULE_DIR/test_library
+        method: devD
+      version: latest
+      type: text

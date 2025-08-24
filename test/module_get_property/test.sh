@@ -17,15 +17,15 @@ echo "------------------------------------------------------"
 
 export test_results="module_get_property:\n"
 
-if [[ "$no_module" == "hello, world!" ]]; then
+if [[ "$no_module" == "$(echo -e "test: hello, world!\nk8s: hello, world!")" ]]; then
   passed "property without module specified"
 else
-  failed "property without module specified"
+  failed "property without module specified: $no_module"
 fi
-if [[ "$folder_module" == "howdy, partner!" ]]; then
+if [[ "$folder_module" == "test: howdy, partner!" ]]; then
   passed "property with module specified"
 else
-  failed "property with module specified"
+  failed "property with module specified: $folder_module"
 fi
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

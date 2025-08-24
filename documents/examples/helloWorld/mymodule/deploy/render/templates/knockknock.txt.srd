@@ -1,0 +1,2 @@
+who's there?
+$(importShrendd "helloWorld:mymodule2>render/templates/hello.txt.srd:text")

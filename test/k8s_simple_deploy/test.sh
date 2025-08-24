@@ -11,7 +11,7 @@ fi
 _shrendd=$(./shrendd -d)
 #./shrendd -d
 echo -e "$_shrendd"
-export test_results="k8s simple deploy, configmap only:\n"
+export test_results="k8s_simple_deploy, configmap only:\n"
 _name=$(yq ".app.test.name" ./deploy/config/localdev.yml)
 _configmap=$(kubectl -n shrendd-test get cm $_name -o yaml)
 _configmap_explicit=$(kubectl -n shrendd-test get cm $_name-imported -o yaml)

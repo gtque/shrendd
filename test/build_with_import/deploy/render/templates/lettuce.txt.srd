@@ -1,0 +1,1 @@
+$(importShrendd "module_path:folder>k8s/templates/test1.yml.srd:text")

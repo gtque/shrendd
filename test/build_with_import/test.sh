@@ -26,6 +26,9 @@ _no_imports=$(yq e ".metadata.labels.[\"kubernetes.io/metadata.name\"]" "./deplo
 _configmap_namespace=$(yq e ".metadata.namespace" "./deploy/target/build/k8s/01_configmap.yml")
 _configmap_version=$(yq e ".apiVersion" "./deploy/target/build/k8s/01_configmap.yml")
 _configmap_script=$(cat ./deploy/target/build/k8s/01_configmap.yml | grep "echo \"\\\\\"\$(getConfig \\\\\"lib.script.message2\\\\\")\\\\\"\"" || echo "failed")
+_expected_leafy_green=$(echo -e "hello:\n  greeting1: \$(getConfig \"TEST_HELLO\")\n  greeting2: \$(getConfig \"test.hello\")\n  greeting3: \$(getConfig \"test.hello\")\n  greeting4: \$(getConfig \"TEST_HELLO\")\n")
+_lettuce=$(cat ./deploy/target/build/render/lettuce.txt)
+_cabbage=$(cat ./deploy/target/build/render/cabbage.txt)
 if [ "$_r1" == "passed" ]; then
   passed "build"
 else
@@ -66,5 +69,15 @@ if [ "${_configmap_script}" != "failed" ]; then
 else
   failed "yaml import 3"
 fi
-#../../build/test/cleanup_shrendd.sh
+if [ "${_cabbage}" == "${_expected_leafy_green}" ]; then
+  passed "self library with module reference with custom module shrendd.config"
+else
+  failed "self library with module reference with custom module shrendd.config: ${_cabbage}"
+fi
+if [ "${_lettuce}" == "${_expected_leafy_green}" ]; then
+  passed "external library with module reference"
+else
+  failed "external library with module reference with custom module shrendd.config: ${_lettuce}"
+fi
+../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

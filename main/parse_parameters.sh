@@ -41,6 +41,13 @@ while [ $# -gt 0 ]; do
       fi
       export GET_PROPERTY="${GET_PROPERTY}${useNewLine}$2"
       shift
+    elif [[ "$param" == "target" ]]; then
+      useSpace=" "
+      if [[ -z "$GIVEN_TARGETS" ]]; then
+        useSpace=""
+      fi
+      export GIVEN_TARGETS="${GIVEN_TARGETS}${useSpace}$2"
+      shift
     else
       echo "=>setting $param=\"$2\""
       declare $param="$2"
@@ -98,6 +105,7 @@ while [ $# -gt 0 ]; do
     echo -e "  --config [relative\\path\\\to\\\config.yml]\n\t  the path to the config.yml file to use for the deployment, relative to the configured config path (shrendd.config.path which defaults to './config').\n\t  default value: localdev.yml"
     echo -e "  --deployaction [deploy|teardown|render]\n\t  the deployment action being performed, deploy to render and deploy, teardown to uninstall or delete the deployment, defaults to render only.\n\t  The last specified deploy action will be respected, this includes any short hand action parameters specified."
     echo -e "  --get-property [shrendd.property.name]\n\t  print out the specified named property from the config file and exit.\n\t  Specyfing multiple --get-property values will print the values separated by a new line.\n\t  This is useful for getting the value of a property without running the deployment or teardown."
+    echo -e "  --target [target]\n\t  specify the target to run against. This overrides the target list in the shrendd.config\n\t  Specyfing multiple --target values will add the given target to the list."
     echo -e "  -b, --build\n\t  build the templates without rendering them.\n\t    This is particularly useful if using libraries and importing templates."
     echo -e "  -d\n\t  deploy as the deployment action, short hand for --deployaction deploy\n\t    you may specify this and -t, but the last one specified wins and will determine the deployment action."
     echo -e "  -t\n\t  teardown as the deployment action, short hand for --deployaction teardown\n\t    you may specify this and -s, but the last one specified wins and will determine the deployment action."

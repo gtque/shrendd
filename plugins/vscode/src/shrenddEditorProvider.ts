@@ -262,6 +262,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         myTargets = this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get('targets');
       }
     } else {
+      console.log(`no properties cached for module ${shrenddDefaultModuleName}, getting them now`);
       // also get shrendd.working.dir to use as part of module calculation, will be be prepended to the path after stripping the plugins working dir.
       this.shrenddProperties.set(`${shrenddDefaultModuleName}`, new Map());
       const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
@@ -309,70 +310,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         });
       });
       await thePromise;
-      let defaultTargets = "--get-property shrendd.default.template.dir";
-      let currentTargets = myTargets.split(" ");
-      for (const possibleTarget of currentTargets) {
-        defaultTargets += ` --get-property shrendd.${possibleTarget}.template.dir`;
-      }
-      console.log(`defaultTargets: ${defaultTargets}`);
-      const tempFile2 = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
-      const shrenddTempFile2 = "/" + path.normalize(tempFile2).replace(/:/g, "").replace(/\\/g, "/");
-      const propertyCommand2 = `./shrendd ${defaultTargets} --module "${shrenddModule}" > ${shrenddTempFile2}`;
-      const thePromiseOfTemplateProperties = new Promise((resolve) => {
-        exec(`${propertyCommand2}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
-          const uri = vscode.Uri.file(tempFile2)
-          try {
-            vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
-              const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
-              console.log(`${shrenddDefaultModuleName} templateDirs:\n`, contentString);
-              defaultTargets = contentString.trim(); // get the list of targets for the module.
-              let targetProperties = defaultTargets.split("<<<>>>");
-              console.log("length of targetProperties: ", targetProperties.length);
-              // let defaultProperty = targetProperties.shift()?.trim() || '';
-              // console.log(`defaultProperty: ${defaultProperty}`);
-              let onDefault = "default-";
-              for (const targetProperty of targetProperties) {
-                console.log(`parsing targetProperty: ${targetProperty}`);
-                let propertyList = targetProperty.trimStart().split("\n");
-                console.log("length of propertyList: ", propertyList.length);
-                for (const possibleTarget of currentTargets) {
-                  let dirValue = (propertyList.shift()?.trim() || '').replace(`${possibleTarget}:`,"").trim()
-                  if (dirValue === '' || dirValue === 'null' ) {
-                    console.log(`no template dir defined for target ${onDefault}${possibleTarget}, skipping`);
-                    continue; // skip if no template dir is defined
-                  }
-                  console.log(`setting template.dir for target ${onDefault}${possibleTarget} to ${dirValue}`);
-                  if (this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(`${onDefault}${possibleTarget}`)) {
-                    //.set('targets', myTargets);
-                  } else {
-                    this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set(`${onDefault}${possibleTarget}`, new Map());
-                  }
-                  this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${onDefault}${possibleTarget}`).set('template.dir', dirValue);
-                }
-                onDefault = "";
-              }
-              fs.unlinkSync(uri.fsPath);
-              resolve(defaultTargets);
-            });
-          } catch (error) {
-              if (error instanceof Error) {
-                console.error(`Failed to read file: ${error.message}`);
-              } else {
-                console.error('Failed to read file: Unknown error');
-              }
-              resolve(''); // Resolve with empty string on error
-          }
-          // fs.unlinkSync(uri.fsPath); // Clean up the temp file
-          if (error) {
-            console.error(`Error executing command: ${stderr || error.message}`);
-            // resolve(`Error: ${stderr || error.message}`);
-          } else {
-            console.log(`${propertyCommand2}) executed successfully: ${stdout}`);
-            // resolve(stdout);
-          }
-        });
-      });
-      await thePromiseOfTemplateProperties;
+      let didGet = this.getTemplateDirs(myTargets, shrenddModule, shrenddDefaultModuleName, execOptions);
+      await didGet;
     }
     if (myTargets != null && myTargets.trim().length > 0) {
       let currentTargets = myTargets.split(" ");
@@ -406,26 +345,17 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         shrenddModule = moduleDetectionPath.replace(/^[/\\]+/, ''); // remove leading slashes
         console.log(`Detected shrendd module from file path: ${shrenddModule}`);
         shrenddModuleName = shrenddModule;
+        if (!this.shrenddProperties.has(`${shrenddModuleName}`)) {
+          console.log(`no properties cached for module ${shrenddModuleName}, getting them now`);
+          let didGet = this.getTemplateDirs(myTargets, shrenddModule, shrenddModuleName, execOptions);
+          await didGet;
+        }
       }
-      // trim shrenddStart and normalize slashes
-      // trim actualShrenddStart from build dir
-      //trim build dir from remaining path
-      //check if empty, if not empty, set shrenddModule to the remaining path
-      // shrenddModule = shrenddModule.replaceAll(`${shrenddStart}`, "");
-      // let shrenddDefaultModuleName = 'dot';
-      // if (!shrenddModule) {
-      //   console.log("no module detected");
-      //   shrenddModule = ".";
-      // } else {
-      //   console.log(`Detected shrendd module: ${shrenddModule}`);
-      //   shrenddModule = shrenddModule.replace(/^[/\\]+/, ''); // remove leading slashes
-      //   shrenddDefaultModuleName = shrenddModule;
-      // }
     } else {
       console.log("a defined module has already been detected, assuming that is the module for this file");
     }
     let myTargetFile = "";
-    if (this.shrenddProperties.get(`${shrenddModuleName}`) && this.shrenddProperties.get(`${shrenddModuleName}`).has(`${currentTarget}`) && this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).has(`build.dir`)) {
+    if (this.shrenddProperties.get(`${shrenddModuleName}`) && this.shrenddProperties.get(`${shrenddModuleName}`).has(`${currentTarget}`) && this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).has(`build.dir`)) {
       myTargetFile = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get(`build.dir`);
     }
     if (myTargetFile === '') {
@@ -457,7 +387,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
                 if (!this.shrenddProperties.get(`${shrenddModuleName}`).has(`default-${finalTarget}`)) {
                   this.shrenddProperties.get(`${shrenddModuleName}`).set(`default-${finalTarget}`, new Map());
                 }
-                this.shrenddProperties.get(`${shrenddModuleName}`).get(`default-${finalTarget}`).set('target.dir', finalDir);
+                this.shrenddProperties.get(`${shrenddModuleName}`).get(`default-${finalTarget}`).set('build.dir', finalDir);
               }
               for (const currentBuildDir of targetedBuildDirs) {
                 console.log(`parsing default build dir: ${currentBuildDir}`);
@@ -466,10 +396,10 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
                 if (!this.shrenddProperties.get(`${shrenddModuleName}`).has(`${finalTarget}`)) {
                   this.shrenddProperties.get(`${shrenddModuleName}`).set(`${finalTarget}`, new Map());
                 }
-                this.shrenddProperties.get(`${shrenddModuleName}`).get(`${finalTarget}`).set('target.dir', finalDir);
+                this.shrenddProperties.get(`${shrenddModuleName}`).get(`${finalTarget}`).set('build.dir', finalDir);
               }
-              defaultBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`default-${currentTarget}`).get('target.dir');
-              targetedBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get('target.dir');
+              defaultBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`default-${currentTarget}`).get('build.dir');
+              targetedBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get('build.dir');
               console.log("defaultBuildDir: ", defaultBuildDir);
               myTargetFile = defaultBuildDir;
               if (`${targetedBuildDir}` !== '' && `${targetedBuildDir}` !== 'null') {
@@ -494,16 +424,143 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             // resolve(`Error: ${stderr || error.message}`);
           } else {
             console.log(`${propertyCommand}) executed successfully: ${stdout}`);
-            console.log(`Error message just incase: ${stderr}`);
             // resolve(stdout);
           }
         });
       });
       await thePromiseOfProperties;
     }
-    
-    let rendered = myTargetFile + ":\n"
+    let moduleTemplateDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get('template.dir');
+    let moduleBuildDir = this.shrenddProperties.get(`${shrenddModuleName}`).get(`${currentTarget}`).get('build.dir');
+    let moduleDetectionPath = "/" + path.normalize(filePath).replace(/:/g, "").replace(/\\/g, "/");
+    console.log(`original file path: ${path.normalize(filePath)}`);
+    console.log(`normalized file path: ${moduleDetectionPath}`);
+    console.log(`template dir: ${moduleTemplateDir}`);
+    console.log(`build dir: ${moduleBuildDir}`);
+    moduleDetectionPath = moduleDetectionPath.replace(`${moduleTemplateDir}`, `${moduleBuildDir}`).replace(".srd", "");
+    if (process.platform === 'win32') {
+      // Replace all forward slashes with backslashes.
+      // The 'g' flag ensures all occurrences are replaced, not just the first.
+      // return linuxPath.replace(/\//g, '\\');
+      console.log("converting to Windows path: ", moduleDetectionPath);
+      moduleDetectionPath = moduleDetectionPath.replace(/^[/\\]+/, '').replace(/\//g, "\\").replace(/^([a-zA-Z])\\/, '$1:\\'); // Ensure Windows paths start with a drive letter
+    } else {
+      // If not Windows (e.g., Linux, macOS), the path is already in the correct format.
+      // return linuxPath;
+      console.log("not Windows, keeping path as is");
+    }
+    console.log(`final moduleTemplateDir: ${moduleDetectionPath}`);
+    const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
+    const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
+    const propertyCommand = `./shrendd -b --module "${shrenddModule}" > ${shrenddTempFile}`;
+    const thePromiseOfTheBuild = new Promise((resolve) => {
+        exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+          const uri = vscode.Uri.file(moduleDetectionPath)
+          try {
+            vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+              const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+              console.log('Content of file:', contentString);
+              myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
+              fs.unlinkSync(uri.fsPath);
+              resolve(myTargetFile);
+            });
+          } catch (error) {
+              if (error instanceof Error) {
+                console.error(`Failed to read file: ${error.message}`);
+              } else {
+                console.error('Failed to read file: Unknown error');
+              }
+              resolve(`error building, please run './shrendd -b --module ${shrenddModule}' for more information`); // Resolve with empty string on error
+          }
+        });
+      });
+    let rendered = moduleDetectionPath + ":\n" + await thePromiseOfTheBuild;
+    // .replace(/^[/\\]+/, '');
     return rendered;
+  }
+
+  private async getTemplateDirs(myTargets: string, shrenddModule: string, shrenddDefaultModuleName: string, execOptions: any) {
+    const tmp = require('os').tmpdir();
+    const fs = require('fs');
+    const path = require('path');
+    const cp = require('child_process');
+
+    let currentTargets = myTargets.split(" ");
+    let defaultTargets = "--get-property shrendd.default.template.dir";
+    for (const possibleTarget of currentTargets) {
+      defaultTargets += ` --get-property shrendd.${possibleTarget}.template.dir`;
+    }
+    console.log(`defaultTargets: ${defaultTargets}`);
+    const tempFile2 = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
+    const shrenddTempFile2 = "/" + path.normalize(tempFile2).replace(/:/g, "").replace(/\\/g, "/");
+    const propertyCommand2 = `./shrendd ${defaultTargets} --module "${shrenddModule}" > ${shrenddTempFile2}`;
+    const thePromiseOfTemplateProperties = new Promise((resolve) => {
+      exec(`${propertyCommand2}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+        const uri = vscode.Uri.file(tempFile2)
+        try {
+          vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+            const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+            console.log(`${shrenddDefaultModuleName} templateDirs:\n`, contentString);
+            defaultTargets = contentString.trim(); // get the list of targets for the module.
+            let targetProperties = defaultTargets.split("<<<>>>");
+            console.log("length of targetProperties: ", targetProperties.length);
+            // let defaultProperty = targetProperties.shift()?.trim() || '';
+            // console.log(`defaultProperty: ${defaultProperty}`);
+            let onDefault = "default-";
+            for (const targetProperty of targetProperties) {
+              console.log(`parsing targetProperty: ${targetProperty}`);
+              let propertyList = targetProperty.trimStart().split("\n");
+              console.log("length of propertyList: ", propertyList.length);
+              for (const possibleTarget of currentTargets) {
+                let dirValue = (propertyList.shift()?.trim() || '').replace(`${possibleTarget}:`,"").trim()
+                if (dirValue === '' || dirValue === 'null' ) {
+                  console.log(`no template dir defined for target ${onDefault}${possibleTarget}, skipping`);
+                  continue; // skip if no template dir is defined
+                }
+                console.log(`setting template.dir for target ${onDefault}${possibleTarget} to ${dirValue}`);
+                if (!this.shrenddProperties.has(`${shrenddDefaultModuleName}`)) {
+                  this.shrenddProperties.set(`${shrenddDefaultModuleName}`, new Map());
+                }
+                if (!this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(`${onDefault}${possibleTarget}`)) {
+                  this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set(`${onDefault}${possibleTarget}`, new Map());
+                }
+                this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${onDefault}${possibleTarget}`).set('template.dir', dirValue);
+              }
+              onDefault = "";
+            }
+            for (const possibleTarget of currentTargets) {
+              if (!this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(`${possibleTarget}`)) {
+                this.shrenddProperties.get(`${shrenddDefaultModuleName}`).set(`${possibleTarget}`, new Map());
+              }
+              if (!this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${possibleTarget}`).has('template.dir') 
+                || this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${possibleTarget}`).get('template.dir') === null 
+                || this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${possibleTarget}`).get('template.dir') === "null") {
+                console.log(`no template dir dedfined for ${possibleTarget}, setting to default dir: ${this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`default-${possibleTarget}`).get('template.dir')}`);
+                this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${possibleTarget}`).set('template.dir', this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`default-${possibleTarget}`).get('template.dir'));
+              }
+            }
+            fs.unlinkSync(uri.fsPath);
+            resolve(defaultTargets);
+          });
+        } catch (error) {
+            if (error instanceof Error) {
+              console.error(`Failed to read file: ${error.message}`);
+            } else {
+              console.error('Failed to read file: Unknown error');
+            }
+            resolve(''); // Resolve with empty string on error
+        }
+        // fs.unlinkSync(uri.fsPath); // Clean up the temp file
+        if (error) {
+          console.error(`Error executing command: ${stderr || error.message}`);
+          // resolve(`Error: ${stderr || error.message}`);
+        } else {
+          console.log(`${propertyCommand2}) executed successfully: ${stdout}`);
+          // resolve(stdout);
+        }
+      });
+    });
+    await thePromiseOfTemplateProperties;
   }
 }
 
@@ -528,3 +585,4 @@ function escapeHtml(unsafe: string): string {
     }
   });
 }
+

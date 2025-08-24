@@ -17,7 +17,7 @@ function doEval {
       eval "echo -e \"$1\"" 2>> $_DEPLOY_ERROR_DIR/config_error.log
     fi
   else
-    _text=$(echo -e "$1" | sed -e "s/\$(importShrendd \([-\"a-zA-Z0-9:/._ ]*\))/_dollar_parenthesis_importShrendd \1_importShrendd_close_curly/g" | sed -e "s/\${/_dollar_curly_/g" | sed -e "s/}/_close_curly_/g" | sed -e "s/\$(/_dollar_parenthesis_/g" | sed -e "s/)/_close_parenthesis_/g" | sed -e "s/\\$/_dollar_sign_/g")
+    _text=$(echo -e "$1" | sed -e "s/\$(importShrendd \([-\"a-zA-Z0-9:/._> ]*\))/_dollar_parenthesis_importShrendd \1_importShrendd_close_curly/g" | sed -e "s/\${/_dollar_curly_/g" | sed -e "s/}/_close_curly_/g" | sed -e "s/\$(/_dollar_parenthesis_/g" | sed -e "s/)/_close_parenthesis_/g" | sed -e "s/\\$/_dollar_sign_/g")
     _text=$(echo -e "${_text}" | sed -e "s/\"/_double_shrendd_quotes/g" | sed -e "s/_dollar_parenthesis_importShrendd/\$(importShrendd/g" | sed -e "s/_importShrendd_close_curly/)/g" | sed -e "s/importShrendd _double_shrendd_quotes/importShrendd \"/g" | sed -e "s/_double_shrendd_quotes\( *\))/\"\1)/g")
 #    _has_import="$(echo -e "${_text}" | grep "_dollar_parenthesis_importShrendd" || echo "false")"
 #    while [[ "${_has_import}" != "false" ]]; do
@@ -34,8 +34,11 @@ function doEval {
       shrenddLog "build only: doEval(in-line):\n${_text}"
     fi
     if [[ $# -gt 1 ]]; then
+      shrenddLog "echo some sensitive values..."
       eval "echo -e \"${_text}\" | sed -e \"s/_double_shrendd_quotes/\\\"/g\" | sed -e \"s/_dollar_curly_/\\\${/g\" | sed -e \"s/_close_curly_/}/g\" | sed -e \"s/_dollar_parenthesis_/\\\$(/g\" | sed -e \"s/_close_parenthesis_/)/g\" | sed -e \"s/_dollar_sign_/\\$/g\" > $2" 2>> $_DEPLOY_ERROR_DIR/config_error.log
+      shrenddLog "checking: $_DEPLOY_ERROR_DIR/config_error.log"
       if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+        shrenddLog "dumping error log..."
         _error=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
         if [[ -z "$_error" ]]; then
           shrenddLog "no errors building"
@@ -48,6 +51,7 @@ function doEval {
     else
       eval "echo -e \"${_text}\" | sed -e \"s/_double_shrendd_quotes/\\\"/g\" | sed -e \"s/_dollar_curly_/\\\${/g\" | sed -e \"s/_close_curly_/}/g\" | sed -e \"s/_dollar_parenthesis_/\\\$(/g\" | sed -e \"s/_close_parenthesis_/)/g\" | sed -e \"s/_dollar_sign_/\\$/g\"" 2>> $_DEPLOY_ERROR_DIR/config_error.log
       if [ -f $_DEPLOY_ERROR_DIR/config_error.log ]; then
+        _error=$(cat $_DEPLOY_ERROR_DIR/config_error.log)
         if [[ -z "$_error" ]]; then
           shrenddLog "no errors building"
         else
