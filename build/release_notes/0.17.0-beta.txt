@@ -1,0 +1,3 @@
+* `--target <targetname>` overrides target list in shrendd.config
+* library module support specified in the template part of the import path separated by `>`
+* vscode plugin support for displaying the built version of the template file. does not render, only processes imports.
