@@ -3,6 +3,9 @@ import { exec } from 'child_process';
 import { resolve } from 'path';
 import * as vscode from 'vscode';
 
+// Import specific workers if needed, e.g., for language features
+// import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+
 export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   
   readonly context: vscode.ExtensionContext;
@@ -33,7 +36,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       enableScripts: true
     };
 
-    webviewPanel.webview.html = this.getHtmlForWebview(document);
+    webviewPanel.webview.html = this.getHtmlForWebview(document, webviewPanel.webview, this.context);
 
     // Listen for document changes
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
@@ -77,53 +80,57 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     });
   }
 
-  private getHtmlForWebview(document: vscode.TextDocument): string {
-    const nonce = getNonce();
-    return `<!DOCTYPE html>
+  private getHtmlForWebview(
+  document: vscode.TextDocument,
+  webview: vscode.Webview,
+  context: vscode.ExtensionContext
+): string {
+  const nonce = getNonce();
+  const bundleUri = webview.asWebviewUri(
+    vscode.Uri.file(
+      require('path').join(context.extensionUri.fsPath, 'media', 'bundled', 'bundle.js')
+    )
+  );
+  const initialValue = JSON.stringify(document.getText());
+  console.log("Initial value for webview:", initialValue);
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shrendd Template Editor</title>
+  <style>
+    #editor-container { width: 100%; height: 90vh; }
+    #source { width: 100%; height: 100%; }
+    #processed { width: 100%; height: 100%; display: none; white-space: pre; }
+    .tab-btn { margin-right: 8px; }
+    body {
+      font-family: var(--vscode-editor-font-family); /* Example: using a VS Code CSS variable */
+      font-size: var(--vscode-editor-font-size);
+      color: var(--vscode-editor-foreground);
+      background-color: var(--vscode-editor-background);
+    }
+  </style>
 </head>
 <body>
+  <script nonce="${nonce}">
+   console.log("trying to initialize shrendd content");
+    window.initialShrenddContent = '${initialValue}';
+    console.log("Set initialShrenddContent in HTML:", window.initialShrenddContent);
+  </script>
   <div>
-    <button id="tab-source">Source</button>
-    <button id="tab-processed">Preview</button>
+    <button class="tab-btn" id="tab-source">Source</button>
+    <button class="tab-btn" id="tab-processed">Preview</button>
   </div>
   <div id="editor-container">
-  <textarea id="source" style="width:100%;height:300px;display:block;overflow:auto;white-space:pre;resize:none;">${escapeHtml(document.getText())}</textarea>
-    <pre id="processed" style="width:100%;height:300px;display:none;"></pre>
+    <div id="source"></div>
+    <pre id="processed"></pre>
   </div>
-  <script nonce="${nonce}">
-    const vscode = acquireVsCodeApi();
-    const source = document.getElementById('source');
-    const processed = document.getElementById('processed');
-    document.getElementById('tab-source').onclick = () => {
-      source.style.display = 'block';
-      processed.style.display = 'none';
-    };
-    document.getElementById('tab-processed').onclick = () => {
-      source.style.display = 'none';
-      processed.style.display = 'block';
-      vscode.postMessage({ type: 'process' });
-    };
-    source.addEventListener('input', () => {
-      vscode.postMessage({ type: 'edit', text: source.value });
-    });
-    window.addEventListener('message', event => {
-      const message = event.data;
-      if (message.type === 'update') {
-        source.value = message.text;
-      } else if (message.type === 'processed') {
-        processed.textContent = message.text;
-      }
-    });
-  </script>
+  <script nonce="${nonce}" src="${bundleUri}"></script>
 </body>
 </html>`;
-  }
+}
 
   private updateWebview(webviewPanel: vscode.WebviewPanel, document: vscode.TextDocument) {
     // Post the latest document content to the webview

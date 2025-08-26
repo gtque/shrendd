@@ -38,15 +38,23 @@
     ]
   },
   "scripts": {
+    "build": "webpack --mode production",
     "vscode:prepublish": "tsc -p ./",
     "compile": "tsc -p ./"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
     "@types/vscode": "^1.74.0",
-    "typescript": "^5.0.0",
-    "vscode": "*"
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.2",
+    "vscode": "*",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "monaco-editor": "^0.52.2",
+    "monaco-editor-webpack-plugin": "^7.1.0"
   }
 }
