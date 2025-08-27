@@ -33,7 +33,10 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     _token: vscode.CancellationToken
   ): Promise<void> {
     webviewPanel.webview.options = {
-      enableScripts: true
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.file(require('path').join(this.context.extensionUri.fsPath, 'media'))
+      ]
     };
 
     webviewPanel.webview.html = this.getHtmlForWebview(document, webviewPanel.webview, this.context);
@@ -91,13 +94,14 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       require('path').join(context.extensionUri.fsPath, 'media', 'bundled', 'bundle.js')
     )
   );
-  const initialValue = JSON.stringify(document.getText());
-  console.log("Initial value for webview:", initialValue);
+  
+  const initialValue = document.getText().replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+  console.log("Initial value for webview:", JSON.stringify(document.getText()));
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' vscode-webview: 'unsafe-eval'; style-src 'unsafe-inline' vscode-webview:; font-src vscode-webview: data:; worker-src blob: vscode-webview:; child-src blob:; img-src data: vscode-webview:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shrendd Template Editor</title>
   <style>
@@ -115,7 +119,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 </head>
 <body>
   <script nonce="${nonce}">
-   console.log("trying to initialize shrendd content");
+    console.log("trying to initialize shrendd content");
     window.initialShrenddContent = '${initialValue}';
     console.log("Set initialShrenddContent in HTML:", window.initialShrenddContent);
   </script>
@@ -296,7 +300,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       this.shrenddProperties.set(`${shrenddDefaultModuleName}`, new Map());
       const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
       const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
-      const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --module "${shrenddModule}" > ${shrenddTempFile}`;
+      const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --module "${shrenddModule}" -verbose > ${shrenddTempFile}`;
       const thePromise = new Promise((resolve) => {
         exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
           const uri = vscode.Uri.file(tempFile)
@@ -514,10 +518,17 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     const path = require('path');
     const cp = require('child_process');
 
+    console.log(`getting template dirs for module ${shrenddDefaultModuleName} with targets: ${myTargets}`);
     let currentTargets = myTargets.split(" ");
     let defaultTargets = "--get-property shrendd.default.template.dir";
     for (const possibleTarget of currentTargets) {
-      defaultTargets += ` --get-property shrendd.${possibleTarget}.template.dir`;
+      console.log("adding target:", possibleTarget);
+      if (`${possibleTarget}` !== "." ) {
+        console.log("target added");
+        defaultTargets += ` --get-property shrendd.${possibleTarget}.template.dir`;
+      } else {
+        console.log("appears to be an empty target, nothing to add.")
+      }
     }
     console.log(`defaultTargets: ${defaultTargets}`);
     const tempFile2 = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);

@@ -1,0 +1,9 @@
+node_modules
+.gitignore
+.vscode
+.github
+.gitignore
+*.log
+tsconfig.json
+webpack.config.js
+**.vsix
