@@ -104,19 +104,19 @@ EndOfYml
 function resetLocal {
   if [[ "$_IS_SILENT" == "0" ]]; then
     if [[ -v _DEPLOY_ERROR_DIR ]]; then
-      if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
+      if [ -f "$_DEPLOY_ERROR_DIR/render_info.log" ]; then
         shrenddEchoIfNotSilent "information during shrendd:"
-        cat $_DEPLOY_ERROR_DIR/render_info.log | sed -e "s/^/  /g"
+        cat "$_DEPLOY_ERROR_DIR/render_info.log" | sed -e "s/^/  /g"
       fi
-      if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
+      if [ -f "$_DEPLOY_ERROR_DIR/render_warning.log" ]; then
         shrenddEchoIfNotSilent "${_TEXT_WARN}warnings during shrendd:"
-        cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
+        cat "$_DEPLOY_ERROR_DIR/render_warning.log" | sed -e "s/^/  /g"
       fi
-      if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+      if [ $? -ne 0 ] || [ -f "$_DEPLOY_ERROR_DIR/render_error.log" ]; then
         shrenddEchoIfNotSilent "${_TEXT_ERROR}It seems there was an error during the process. Please review the logs for more information."
-        if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+        if [ -f "$_DEPLOY_ERROR_DIR/render_error.log" ]; then
           shrenddEchoIfNotSilent "errors during shrendd:"
-          cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+          cat "$_DEPLOY_ERROR_DIR/render_error.log" | sed -e "s/^/  /g"
         fi
       fi
       shrenddEchoIfNotSilent "${_CLEAR_TEXT_COLOR}"
@@ -156,16 +156,16 @@ function dateTimeStamp {
 
 function shrenddLog {
   if [[ -v _DEPLOY_ERROR_DIR ]]; then
-    if [ -d $_DEPLOY_ERROR_DIR ]; then
+    if [ -d "$_DEPLOY_ERROR_DIR" ]; then
       :
     else
-      mkdir -p $_DEPLOY_ERROR_DIR
+      mkdir -p "$_DEPLOY_ERROR_DIR"
     fi
     if [[ "${LOG_VERBOSE}" == "true" ]]; then
       if [[ $# -gt 1 ]]; then
-        echo -e "$(dateTimeStamp): $1" >> $_DEPLOY_ERROR_DIR/shrendd.log
+        echo -e "$(dateTimeStamp): $1" >> "$_DEPLOY_ERROR_DIR/shrendd.log"
       else
-        echoSensitive "$(dateTimeStamp): $1" "true" >> $_DEPLOY_ERROR_DIR/shrendd.log
+        echoSensitive "$(dateTimeStamp): $1" "true" >> "$_DEPLOY_ERROR_DIR/shrendd.log"
       fi
     fi
   fi
@@ -201,10 +201,10 @@ function echoSensitive {
 function checkShrenddVersion {
   _UPSHRENDD_VERSION="0.0.0-dev"
   _SHRENDD_CURRENT_VERSION="$_UPSHRENDD_VERSION"
-  if [ -f $SHRENDD_DIR/version.yml ]; then
-    _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" $SHRENDD_DIR/version.yml)
+  if [ -f "$SHRENDD_DIR/version.yml" ]; then
+    _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" "$SHRENDD_DIR/version.yml")
   fi
-  if [[ $_UPSHRENDD_VERSION == $_SHRENDD_CURRENT_VERSION ]]; then
+  if [[ "$_UPSHRENDD_VERSION" == "$_SHRENDD_CURRENT_VERSION" ]]; then
     :
   else
     echo -e "${_TEXT_INFO}shrendd file does not match shrendd version, consider running $SHRENDD_DIR/upshrendd${_CLEAR_TEXT_COLOR}"
@@ -223,7 +223,7 @@ function checkCommand {
 }
 
 function checkFile {
-  if [ -f $1 ]; then
+  if [ -f "$1" ]; then
     echo "true"
   else
     echo "false"
@@ -241,7 +241,7 @@ function shrenddStub {
     _stub_shrendd=$(shrenddOrDefault "shrendd.config.stub")
     if [[ "$_stub_shrendd" == "true" ]]; then
       echo "stubbing $_SHREND_YML"
-      echo -e "$(defaultShrendd)" > $_SHREND_YML
+      echo -e "$(defaultShrendd)" > "$_SHREND_YML"
     fi
   fi
 }
@@ -252,19 +252,19 @@ function getThis {
 
 function devDS {
   shrenddEchoIfNotSilent "you must be a developer of shrendd and running a test, copying latest '$1' from shrendd_src"
-  if [ -d $SHRENDD_DIR/$1 ]; then
+  if [ -d "$SHRENDD_DIR/$1" ]; then
     shrenddLog "devDS: rm $SHRENDD_DIR/$1"
-    rm -rf $SHRENDD_DIR/$1
+    rm -rf "$SHRENDD_DIR/$1"
   fi
   _source=$(shrenddOrDefault "shrendd.test.local")
-  cp -rf $_source/$1 $SHRENDD_DIR/$1
+  cp -rf "$_source/$1" "$SHRENDD_DIR/$1"
   if [ "$1" == "render" ]; then
     shrenddEchoIfNotSilent "copy additional render scripts..."
-    cp -rf $_source/deploy.sh $SHRENDD_DIR/
-    cp -rf $_source/stub.sh $SHRENDD_DIR/
-    cp -rf $_source/parse_parameters.sh $SHRENDD_DIR/
-    cp -rf $_source/upshrendd $SHRENDD_DIR/
-    cp -rf $_source/version.yml $SHRENDD_DIR/
+    cp -rf "$_source/deploy.sh" "$SHRENDD_DIR/"
+    cp -rf "$_source/stub.sh" "$SHRENDD_DIR/"
+    cp -rf "$_source/parse_parameters.sh" "$SHRENDD_DIR/"
+    cp -rf "$_source/upshrendd" "$SHRENDD_DIR/"
+    cp -rf "$_source/version.yml" "$SHRENDD_DIR/"
   fi
 }
 
@@ -340,33 +340,10 @@ function testIf {
   fi
 }
 
-function shrenddOrDefaultDebug {
-  _value=""
-  echo "debugging..."
-  trueName $1
-  if [ "$(testIf $1)" == "true" ]; then
-    echo "found truth!!!"
-    _parm=$(trueName $1)
-    _value="$(echo ${!_parm})"
-  else
-    echo "nothing found..."
-    _value=$(echo "$_SHRENDD" | yq e ".$1" -)
-    if [ -z "$_value" ] || [ "$_value" == "null" ]; then
-      _value=$(echo "$_SHRENDD_DEFAULTS" | yq e ".$1" -)
-    fi
-  fi
-  if [ -z "${2+x}" ] || [ "$2" -lt 1 ]; then
-    echo $(eval echo "$_value")
-  else
-    echo -e "$_value"
-  fi
-  echo "...debugging"
-}
-
 function shrenddOrDefault {
   _value=""
-  if [ "$(testIf $1)" == "true" ]; then
-    _parm=$(trueName $1)
+  if [ "$(testIf "$1")" == "true" ]; then
+    _parm=$(trueName "$1")
     _value="$(echo ${!_parm})"
   else
     _plugin=$(echo "$1" | cut -d'.' -f1)
@@ -384,13 +361,13 @@ function shrenddOrDefault {
       if [ "${_plugin_location}" == "null" ]; then
         _plugin_location="./$_the_module/$_plugin.yml"
       fi
-      if [ -f $_plugin_location ]; then
+      if [ -f "$_plugin_location" ]; then
         :
       else
         _plugin_location="./$_plugin.yml"
       fi
-      if [ -f $_plugin_location ]; then
-        _plugin_yaml=$(echo "$_SHRENDD" | yq eval-all '. as $item ireduce ({}; . * $item )' - $_plugin_location)
+      if [ -f "$_plugin_location" ]; then
+        _plugin_yaml=$(echo "$_SHRENDD" | yq eval-all '. as $item ireduce ({}; . * $item )' - "$_plugin_location")
       else
         _plugin_yaml="$_SHRENDDO"
       fi
@@ -446,29 +423,29 @@ function isUpToDate {
   if [ "$1" == "devD" ]; then
     _SHRENDD_IS_UPTODATE="false"
   else
-    _the_dir=$SHRENDD_DIR
+    _the_dir="$SHRENDD_DIR"
     if [ "$5" == "plugin" ]; then
       _the_dir="$_the_dir/$2"
     fi
-    if [ -f $_the_dir/version.yml ]; then
-      _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" $_the_dir/version.yml)
+    if [ -f "$_the_dir/version.yml" ]; then
+      _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" "$_the_dir/version.yml")
       if [[ "$_SHRENDD_CURRENT_VERSION" == "null" ]]; then
-        _SHRENDD_CURRENT_VERSION=$(yq e ".version" $_the_dir/version.yml)
+        _SHRENDD_CURRENT_VERSION=$(yq e ".version" "$_the_dir/version.yml")
       fi
       if [ "$4" == "latest" ]; then
-        if [ -d $_the_dir/.latest ]; then
+        if [ -d "$_the_dir/.latest" ]; then
           shrenddLog "isUpToDate: rm ${_the_dir}/.latest"
-          rm -rf $_the_dir/.latest
+          rm -rf "$_the_dir/.latest"
         fi
-        mkdir $_the_dir/.latest
+        mkdir "$_the_dir/.latest"
         if [ $# -gt 5 ]; then
           eval "$1 \"$_the_dir/.latest/version.yml\" \"$3/version.yml\" \"$6\""
         else
           eval "$1 \"$_the_dir/.latest/version.yml\" \"$3/version.yml\""
         fi
-        _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" $_the_dir/.latest/version.yml)
+        _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" "$_the_dir/.latest/version.yml")
         if [[ "$_SHRENDD_LATEST_VERSION" == "null" ]]; then
-          _SHRENDD_LATEST_VERSION=$(yq e ".version" $_the_dir/.latest/version.yml)
+          _SHRENDD_LATEST_VERSION=$(yq e ".version" "$_the_dir/.latest/version.yml")
         fi
         if [ "$_SHRENDD_LATEST_VERSION" == "$_SHRENDD_CURRENT_VERSION" ]; then
           _SHRENDD_IS_UPTODATE="true"
@@ -525,7 +502,7 @@ function initTargets {
         if [[ "$_target_shrendd" != "null" ]]; then
           if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
             shrenddLog "initTargets: rm ${SHRENDD_DIR}/${_target}"
-            rm -rf $SHRENDD_DIR/$_target
+            rm -rf "$SHRENDD_DIR/$_target"
           fi
           shrenddEchoIfNotSilent "shrendd.${_target}.source: ${_target_source}"
           eval "${_target_source}"
@@ -560,18 +537,18 @@ function clonePlugin {
   if [ "$_IS_UPTODATE_NOW" == "true" ]; then
     :
   else
-    if [ -d $SHRENDD_DIR ]; then
+    if [ -d "$SHRENDD_DIR" ]; then
       :
     else
       mkdir "$SHRENDD_DIR"
     fi
     shrenddEchoIfNotSilent "downloading $5:$3"
-    if [ -d $SHRENDD_DIR/$2 ]; then
+    if [ -d "$SHRENDD_DIR/$2" ]; then
       shrenddLog "clonePlugin: rm ${SHRENDD_DIR}/${2}"
-      rm -rf $SHRENDD_DIR/$2
+      rm -rf "$SHRENDD_DIR/$2"
     fi
     shrenddLog "clonePlugin: before downloading: rm ${SHRENDD_DIR}/${2}.zip"
-    rm -f $SHRENDD_DIR/$2.zip
+    rm -f "$SHRENDD_DIR/$2.zip"
     shrenddEchoIfNotSilent "downloading with $1...$2"
     #curlD or wgetD...
     if [[ "$_clone_parameters" == "null" ]]; then
@@ -584,9 +561,9 @@ function clonePlugin {
       shrenddEchoIfNotSilent "cloned locally, nothing to unzip."
     else
       shrenddEchoIfNotSilent "unzipping cloned file: $2.zip"
-      unzip -ao $SHRENDD_DIR/$2.zip -d $SHRENDD_DIR
+      unzip -ao "$SHRENDD_DIR/$2.zip" -d "$SHRENDD_DIR"
       shrenddLog "clonePlugin: after unzipping: rm ${SHRENDD_DIR}/${2}.zip"
-      rm $SHRENDD_DIR/$2.zip
+      rm "$SHRENDD_DIR/$2.zip"
     fi
   fi
 }
@@ -609,7 +586,7 @@ function initPlugins {
       else
         if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
           shrenddLog "initPlugins: force updates: rm ${SHRENDD_DIR}/${_plug}"
-          rm -rf $SHRENDD_DIR/$_plug
+          rm -rf "$SHRENDD_DIR/$_plug"
         fi
         _clone_parameters=$(shrenddOrDefault "shrendd.plugins.$_plug.parameters")
         shrenddEchoIfNotSilent "  $_plug parameters: $_clone_parameters"
@@ -668,8 +645,8 @@ export _SHREND_YML="./shrendd.yml"
 if [[ -n "${SHREND_YML+x}" ]]; then
   export _SHREND_YML="$SHREND_YML"
 fi
-if [ -f $_SHREND_YML ]; then
-  export _SHRENDD=$(cat $_SHREND_YML)
+if [ -f "$_SHREND_YML" ]; then
+  export _SHRENDD=$(cat "$_SHREND_YML")
   shrenddEchoIfNotSilent "found shrendd.yml, will use values defined there, if no value specified, will use default values."
 else
   shrenddEchoIfNotSilent "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
@@ -694,7 +671,7 @@ fi
 ##check for yq, error if not present with message
 checkCommand "yq" 1
 
-if [ -d $(shrenddOrDefault "shrendd.test.local") ]; then
+if [ -d "$(shrenddOrDefault "shrendd.test.local")" ]; then
   export _GETTER="devD"
 else
   if [[ -z $(checkCommand "curl" 0) ]]; then
@@ -720,7 +697,7 @@ else
   echo "there is no shrendd, did you run in offline mode with no shrendd downloaded?"
   exit 42
 fi
-source $SHRENDD_DIR/parse_parameters.sh
+source "$SHRENDD_DIR/parse_parameters.sh"
 if [[ "$_getting" == "0" ]]; then
   shrenddStub
 fi
@@ -761,16 +738,16 @@ if [ "$_JUST_INITIALIZE" == "true" ]; then
   exit 0
 fi
 
-export _config_path=$(shrenddOrDefault shrendd.config.path)/${_config}
+export _config_path="$(shrenddOrDefault shrendd.config.path)/${_config}"
 shrenddEchoIfNotSilent "======================================================="
 shrenddEchoIfNotSilent "${_TEXT_INFO}                 best shrendds forever                 ${_CLEAR_TEXT_COLOR}"
 shrenddEchoIfNotSilent "using: $_config_path"
 if [[ $_stub == "false" ]]; then
-  source $SHRENDD_DIR/deploy.sh
+  source "$SHRENDD_DIR/deploy.sh"
   shrenddDeployRun
 else
   shrenddEchoIfNotSilent "stubbing: $_stub/toes"
-  source $SHRENDD_DIR/stub.sh
+  source "$SHRENDD_DIR/stub.sh"
 fi
 end_time=$SECONDS
 duration=$((end_time - start_time))

@@ -12,9 +12,9 @@ if [ -z "$TEARDOWN_PRE" ] || [ "$TEARDOWN_PRE" == "null" ]; then
   printf "no pre.sh tear down found.\n"
 else
   printf "running pre.sh tear down\n"
-  printf "$TEARDOWN_PRE" > $RENDER_DIR/pre.sh
-  chmod 777  $RENDER_DIR/*.sh
-  source $RENDER_DIR/pre.sh
+  printf "$TEARDOWN_PRE" > "$RENDER_DIR/pre.sh"
+  chmod 777  "$RENDER_DIR/*.sh"
+  source "$RENDER_DIR/pre.sh"
 fi
 
 if [ "$SKIP_STANDARD_TEARDOWN" == "false" ]; then
@@ -28,9 +28,9 @@ if [ -z "$TEARDOWN_POST" ] || [ "$TEARDOWN_POST" == "null" ]; then
   printf "no post.sh tear down found.\n"
 else
   printf "running post.sh tear down\n"
-  printf "$TEARDOWN_POST" > $RENDER_DIR/post.sh
-  chmod 777  $RENDER_DIR/*.sh
-  source $RENDER_DIR/post.sh
+  printf "$TEARDOWN_POST" > "$RENDER_DIR/post.sh"
+  chmod 777  "$RENDER_DIR/*.sh"
+  source "$RENDER_DIR/post.sh"
 fi
 #kubectl --v=$KUBECTL_VERBOSITY -n $NAMESPACE delete $OBJECT_LIST -l app.kubernetes.io/name=$NAME
 #if custom undeploy script is present, parse it out of the configmap and then run it

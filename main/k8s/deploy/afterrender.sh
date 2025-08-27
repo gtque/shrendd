@@ -8,7 +8,7 @@ function preserveObjects {
   echo "Preserving tear down process."
   echo "Preserving templates from: $RENDER_DIR"
   export APP_K8S_OBJECTS=""
-  files=$(ls $RENDER_DIR | sed -e "s/  /,/g" | grep [0-9].*.yml || echo "shrendd: no files found")
+  files=$(ls "$RENDER_DIR" | sed -e "s/  /,/g" | grep [0-9].*.yml || echo "shrendd: no files found")
   if [ "$files" == "shrendd: no files found" ]; then
     echo "no files found"
   else
@@ -28,7 +28,7 @@ function preserveObjects {
 
 process_k8s_script_maps() {
   FILES_TEMPLATE_DIR=$TEMPLATE_DIR/$1
-  if [ -d $FILES_TEMPLATE_DIR ]; then
+  if [ -d "$FILES_TEMPLATE_DIR" ]; then
     echo "Adding scripts to configmaps..."
     echo "files directory: $FILES_TEMPLATE_DIR"
     config_files="$FILES_TEMPLATE_DIR"
@@ -39,9 +39,9 @@ process_k8s_script_maps() {
     _curdir=$(pwd)
     for fname in $config_files
     do
-      file_dir=$fname
+      file_dir="$fname"
       echo -e "======================================================\nprocessing scripts for $fname"
-      cd $fname
+      cd "$fname"
       #sed -e "s/^/  /g"
       _replace_path=$(echo "$TEMPLATE_DIR/" | sed -e 's/\//\\\//g' )
       echo "replacement: $_replace_path"
@@ -52,7 +52,7 @@ process_k8s_script_maps() {
       config_maps="*.srd"
       script_files="*.sh"
       _target_render_dir="$RENDER_DIR/temp/$_target_render_dir"
-      if [ -d $_target_render_dir ]; then
+      if [ -d "$_target_render_dir" ]; then
         :
       else
         mkdir -p "$_target_render_dir"
@@ -78,13 +78,13 @@ process_k8s_script_maps() {
             echo -e "\ntrying to just load yaml..."
 #            yq -i "." $_target_render_dir/$config_map
             echo "now to do the place holder..."
-            yq -i ".data.shrendd_place_holder = \"doh!\"" $_target_render_dir/$config_map
+            yq -i ".data.shrendd_place_holder = \"doh!\"" "$_target_render_dir/$config_map"
             echo "    place holder placed"
 #            _yq_rendered=$(echo "$_yq" | yq ea '. as $item ireduce ({}; . * $item )' - $_target_render_dir/$config_map)
-            yq -i ".data.[\"$_FILE\"] += strenv(_text)" $_target_render_dir/$config_map
+            yq -i ".data.[\"$_FILE\"] += strenv(_text)" "$_target_render_dir/$config_map"
 #            echo -e "rendered script:\n$_yq_rendered"
 #            echo -e "$_yq_rendered" > $_target_render_dir/$config_map
-            yq -i "del(.data.shrendd_place_holder)" $_target_render_dir/$config_map
+            yq -i "del(.data.shrendd_place_holder)" "$_target_render_dir/$config_map"
 #              echo "  $_FILE: |" >> $RENDER_DIR/temp/scripts/$fname/$config_map
 #              echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/temp/scripts/$fname/$config_map
           fi
@@ -92,10 +92,10 @@ process_k8s_script_maps() {
       done
       doRender "$_target_render_dir"
       echo -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
-      cat $RENDER_DIR/$_CM_FILE
+      cat "$RENDER_DIR/$_CM_FILE"
       echo -e "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
       echo -e "finished processing scripts for $fname\n======================================================"
-      cd $_curdir
+      cd "$_curdir"
     done
     shrenddLog "k8s/afterrender: process_k8s_script_maps: rm ${RENDER_DIR}/temp/scripts"
     rm -rf "$RENDER_DIR/temp/scripts"
