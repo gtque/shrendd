@@ -5,7 +5,7 @@ source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
 rm -rf ./deploy/target
 if [ $# -gt 0 ]; then
-  ./shrendd -r
+  ./shrendd -d -verbose
   exit 0
 fi
 _shrendd=$(./shrendd -d)
@@ -23,7 +23,7 @@ _testscript_givenname=$(echo -e "$_configmap_explicit" | yq e ".data.[\"kitty.sh
 _pie=$(echo -e "$_configmap" | yq e ".data.test6" - | yq e ".pies" - | yq e ".[1].name" -)
 echo "************************************"
 echo "tear down tests"
-_shrendd_t=$(./shrendd -t)
+_shrendd_t=$(./shrendd -t -verbose)
 echo -e "$_shrendd_t"
 _teardown=$(kubectl -n shrendd-test get cm $_name -o yaml || echo "not found")
 _pre_teardown=$(echo -e "$_shrendd_t" | grep "I run before anything of the rest of the teardown scripts, even before the standard teardown" || echo "not found")
