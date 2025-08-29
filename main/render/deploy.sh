@@ -108,7 +108,7 @@ function mergeYaml {
       shrenddLog "mergeYaml: place holder found, processing..."
       if [ "$_place_holder_value" == "null" ]; then
         shrenddLog "mergeYaml: ${_TEXT_WARN}no place holder found ($_place_holder_key), adding one.${_CLEAR_TEXT_COLOR}"
-        yq -i ".${_place_holder_key} = \"doh!\"" $_og
+        yq -i ".${_place_holder_key} = \"doh!\"" "$_og"
       fi
     fi
     shrenddLog "mergeYaml: place holders handled"

@@ -157,17 +157,17 @@ function importShrendd_yaml {
   fi
   export _current_merge_yaml="$_eval_merge_yaml"
   shrenddLog "new _current_merge_yaml: ${_current_merge_yaml}"
-  if [[ -f "${_current_merge_yaml}" ]]; then
-    shrenddLog "new current: \n $(cat "${_current_merge_yaml}")\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    _foundit="$(cat "${_current_merge_yaml}" | grep "/home/angeli217/code/dev/shrendd/test/build_with_import/deploy/target/build/k8s/temp/shrendd-lib-test/k8s/configmaps/script_configmap.yml.srd" || echo "not found")"
-    if [[ "${_foundit}" != "not found" ]]; then
-      shrenddLog "$(cat "/home/angeli217/code/dev/shrendd/test/build_with_import/deploy/target/build/k8s/temp/shrendd-lib-test/k8s/configmaps/script_configmap.yml.srd")\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
-    else
-      shrenddLog "not it..."
-    fi
-  else
-    shrenddLog "no merge yaml for the new current"
-  fi
+#  if [[ -f "${_current_merge_yaml}" ]]; then
+#    shrenddLog "new current: \n $(cat "${_current_merge_yaml}")\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+##    _foundit="$(cat "${_current_merge_yaml}" | grep "/home/angeli217/code/dev/shrendd/test/build_with_import/deploy/target/build/k8s/temp/shrendd-lib-test/k8s/configmaps/script_configmap.yml.srd" || echo "not found")"
+##    if [[ "${_foundit}" != "not found" ]]; then
+##      shrenddLog "$(cat "/home/angeli217/code/dev/shrendd/test/build_with_import/deploy/target/build/k8s/temp/shrendd-lib-test/k8s/configmaps/script_configmap.yml.srd")\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
+##    else
+##      shrenddLog "not it..."
+##    fi
+#  else
+#    shrenddLog "no merge yaml for the new current"
+#  fi
   if [ -f "$_DEPLOY_ERROR_DIR/config_error.log" ]; then
     _error=$(cat "$_DEPLOY_ERROR_DIR/config_error.log")
     if [[ -z "$_error" ]]; then
