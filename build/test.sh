@@ -44,6 +44,7 @@ done
 end_time=$SECONDS
 duration=$((end_time - start_time))
 durationM=$((duration / 60))
+durationS=$((duration % 60))
 echo -e "processing results:$_FULL_TEST_RESULTS"
 passed=$(echo -e "$_FULL_TEST_RESULTS" | grep -v "failed" | grep -c "passed")
 #echo "string to search in" | grep "pattern" > /dev/null 2>&1 || echo "string if not found"
@@ -52,7 +53,7 @@ if [ -z "$failed" ]; then
   failed=$(echo -e "$_FULL_TEST_RESULTS" | grep -c "failed")
 fi
 total=$((passed + failed))
-echo -e "test summary:\n  total: $total passed: $passed failed: $failed\n  execution time: ${duration} seconds (${durationM} minutes) "
+echo -e "test summary:\n  total: $total passed: $passed failed: $failed\n  execution time: ${duration} seconds (${durationM} minutes and ${durationS} seconds) "
 if [ "$failed" -gt 0 ]; then
   exit $failed
 fi
