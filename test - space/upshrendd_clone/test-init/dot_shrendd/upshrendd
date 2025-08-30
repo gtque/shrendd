@@ -1,0 +1,215 @@
+#!/bin/bash
+set -euo pipefail
+
+function checkCommand {
+  if command -v "$1" &> /dev/null; then
+    :
+  else
+    echo "'$1' not found, please make sure it is installed before using shrendd."
+    if [ "$2" -gt 0 ]; then
+      exit $2
+    fi
+  fi
+}
+
+function checkFile {
+  if [ -f $1 ]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+function defaultShrendd {
+  cat << 'EndOfYml'
+shrendd:
+  version: latest
+  git:
+    url: https://github.com/gtque/shrendd
+EndOfYml
+}
+
+function devD {
+  _source=$(shrenddOrDefault "shrendd.test.local")
+  echo "you must be a developer of shrendd and running a test, copying latest '$1' from $_source"
+  rm -f ./$1
+  _clone=$(echo "$2" | sed 's/.*releases.*download//g' | sed 's/v.*\///g')
+  if [ -d $_source/$_clone ]; then
+    echo "seems like cloning a module"
+    cp -f $_source/$_clone/* ./$1
+  else
+    echo "seems like cloning specific file"
+    cp -f $_source/$_clone ./$1
+  fi
+}
+
+function curlD {
+  curl --output ./$1 -L "$2"
+}
+
+function wgetD {
+  wget --output-document=./$1 "$2"
+}
+
+function trueName {
+  echo "$(echo "$1" | sed -e "s/\./_/g" | tr "[:lower:]" "[:upper:]")"
+}
+
+function testIf {
+  _parm=$(trueName $1)
+  echo "parm: $_parm"
+  if [ -v "$_parm" ]; then
+    echo "true"
+    _value="$(echo ${!_parm})"
+  else
+    echo "false"
+  fi
+}
+
+function shrenddOrDefault {
+  _value=""
+  if [ "$(testIf $1)" == true ]; then
+    _parm=$(trueName $1)
+    _value="$(echo ${!_parm})"
+  else
+    _value=$(echo "$_SHRENDD" | yq e ".$1" -)
+    if [ -z "$_value" ] || [ "$_value" == "null" ]; then
+      _value=$(echo "$_SHRENDD_DEFAULTS" | yq e ".$1" -)
+    fi
+  fi
+  if [ -z "${2+x}" ] || [ "$2" -lt 1 ]; then
+    echo $(eval echo "$_value")
+  else
+    echo -e "$_value"
+  fi
+}
+
+function isUpToDate {
+  if [ -f ./.shrendd/targetversion.yml ]; then
+    export _TARGET_VERSION=$(yq e ".shrendd.version" ./.shrendd/targetversion.yml)
+  else
+    #default if not found
+    export export _TARGET_VERSION="0.0.0-sp"
+  fi
+  _current_version=$(cat ./shrendd | grep "  _UPSHRENDD_VERSION" || echo "0.0.0-dev")
+  _current_version=$(echo "$_current_version" | sed 's/  _UPSHRENDD_VERSION=//g' | sed 's/"//g')
+  echo "$_TARGET_VERSION"
+  if [ "$_current_version" == "$_TARGET_VERSION" ]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+function isCompatible {
+  if [ -f ./.shrendd/targetversion.yml ]; then
+    export _TARGET_VERSION=$(yq e ".shrendd.upshrendd" ./.shrendd/targetversion.yml)
+    if [ -z "$_TARGET_VERSION" ] || [ "$_TARGET_VERSION" = "null" ]; then
+      export _TARGET_VERSION=0
+    fi
+  else
+    #default if not found
+    export export _TARGET_VERSION="0"
+  fi
+  _current_version=$(cat ./shrendd | grep "  _UPSHRENDD_VERSION" || echo "0.0.0-dev")
+  _current_version=$(echo "$_current_version" | sed 's/  _UPSHRENDD_VERSION=//g' | sed 's/"//g')
+  _current_version=$(echo "$_current_version" | cut -d'.' -f1)
+  if (( _current_version >= _TARGET_VERSION )); then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+function isUpgrade {
+  if [ -f ./.shrendd/targetversion.yml ]; then
+    export _TARGET_VERSION=$(yq e ".shrendd.upshrendd" ./.shrendd/targetversion.yml)
+    if [ -z "$_TARGET_VERSION" ] || [ "$_TARGET_VERSION" = "null" ]; then
+      export _TARGET_VERSION=0
+    fi
+  else
+    #default if not found
+    export export _TARGET_VERSION="0"
+  fi
+  _current_version=$(yq e ".shrendd.upshrendd" ./.shrendd/version.yml)
+  if [ -z "$_current_version" ] || [ "$_current_version" = "null" ]; then
+    export _current_version="0"
+  fi
+  if (( "$_current_version" <= "$_TARGET_VERSION" )); then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+function cloneShrendd {
+  if [ "$_SHRENDD_VERSION" == "latest" ]; then
+    export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/latest/download"
+  else
+    export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/download/v$_SHRENDD_VERSION"
+  fi
+  rm -f ./.shrendd/targetversion.yml
+  eval "$1 \"./.shrendd/targetversion.yml\" \"$_SHRENDD_ARTIFACT_URL/version.yml\""
+  export _SHRENDD_IS_UPTODATE_NOW=$(isUpToDate)
+  export _SHRENDD_IS_COMPATIBLE=$(isCompatible)
+  export _SHRENDD_IS_UPGRADE=$(isUpgrade)
+  #rm -f ./.shrendd/targetversion.yml
+  echo "$2 uptodate: $_SHRENDD_IS_UPTODATE, now: $_SHRENDD_IS_UPTODATE_NOW"
+  if [ -z "$_SHRENDD_IS_UPTODATE" ]; then
+    export _SHRENDD_IS_UPTODATE="$_SHRENDD_IS_UPTODATE_NOW"
+  fi
+  if [ "$_SHRENDD_IS_UPTODATE_NOW" == "true" ]; then
+    echo "seems shrendd is already up to date."
+  else
+    if [ "$_SHRENDD_IS_COMPATIBLE" == "true" ]; then
+      if [ "$_SHRENDD_IS_UPGRADE" == "true" ]; then
+        echo "downloading shrendd:$_SHRENDD_VERSION"
+        if [ -d ./.shrendd/$2 ]; then
+          rm -rf ./.shrendd/$2
+        fi
+        rm -f ./.shrendd/$2.zip
+        echo "downloading with $1...$2"
+        eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
+      else
+        echo "it appears as though you are downgrading. That is not recommended, as it seems there were breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+      fi
+    else
+      echo "It seems there are breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
+    fi
+  fi
+}
+
+#check for yq, error if not present with message
+checkCommand "yq" 1
+
+#load shrendd.yml for properties
+if [ -f ./shrendd.yml ]; then
+  export _SHRENDD=$(cat ./shrendd.yml)
+  echo "found shrendd.yml, will use values defined there, if no value specified, will use default values."
+else
+  echo "no shrendd.yml found, using defaults. For more information on configuring shrendd, please see:"
+  export _SHRENDD=""
+fi
+export _SHRENDD_DEFAULTS=$(defaultShrendd)
+
+export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
+export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
+echo "shrendd version: $_SHRENDD_VERSION"
+
+if [ -d $(shrenddOrDefault "shrendd.test.local") ]; then
+  export _GETTER="devD"
+else
+  if [[ -z $(checkCommand "curl" 0) ]]; then
+    export _GETTER="curlD"
+  else
+    if [[ -z $(checkCommand "wget" 0) ]]; then
+      export _GETTER="wgetD"
+    else
+      echo "you must have curl or wget installed to use shrendd or you can manually down load it to a directory in this project called '.shrendd'."
+      exit 1
+    fi
+  fi
+fi
+
+export _SHRENDD_IS_UPTODATE=""
+cloneShrendd "$_GETTER" "shrendd"

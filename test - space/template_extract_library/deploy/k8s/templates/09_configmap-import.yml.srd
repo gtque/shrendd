@@ -1,0 +1,1 @@
+$(importShrendd "k8s_simple_deploy:k8s/templates/09_configmap-imported.yml.srd")

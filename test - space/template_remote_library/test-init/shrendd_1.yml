@@ -1,0 +1,17 @@
+shrendd:
+  config:
+    path: ./deploy/config
+  test:
+    local: ../../main
+  targets:
+    - name: k8s
+    - name: render
+  library:
+    cache:
+      dir: "~/.shrendd/cache - space"
+    shrendd-lib-test:
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/download/v$(shrenddOrDefault \"shrendd.library.shrendd-lib-test.version\")/shrendd-lib-test.zip"
+        method: curlD
+      version: 1.0.0
+      type: yaml

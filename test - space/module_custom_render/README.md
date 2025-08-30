@@ -1,0 +1,1 @@
+render a module with a custom config.

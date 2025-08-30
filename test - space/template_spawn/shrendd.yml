@@ -1,0 +1,15 @@
+shrendd:
+  test:
+    local: ../../main
+    array:
+      - name: a
+        age: 15
+      - name: t
+        age: 27
+      - name: e
+        age: 44
+  render:
+    template:
+      dir: ./resources/templates
+    render:
+      dir: ./target/render/rendered

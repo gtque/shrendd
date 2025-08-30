@@ -1,0 +1,101 @@
+app:
+  k8s:
+    objects: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  test:
+    manager: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    name: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    namespace: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    test4: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    version: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+does:
+  not:
+    exist:
+      test3: |-
+        required: true
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+lib:
+  app:
+    test:
+      manager2: |-
+        required: true
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+      name2: |-
+        required: true
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+      namespace2: |-
+        required: true
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+      version2: |-
+        required: true
+        description: "something to summarize or express what this value is and used for"
+        sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+        indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+        #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  butter:
+    alternative2: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    milk2: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  script:
+    message2: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  test2: |-
+    required: true
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"

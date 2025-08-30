@@ -1,0 +1,8 @@
+shrendd:
+  targets:
+    - name: test
+  default:
+    template:
+      dir: $_MODULE_DIR/deploy/${target}/abstracts
+    render:
+      dir: $_MODULE_DIR/deploy/${target}/generated

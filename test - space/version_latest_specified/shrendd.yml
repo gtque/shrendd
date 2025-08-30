@@ -1,0 +1,4 @@
+shrendd:
+  version: latest
+  targets:
+    - name: test

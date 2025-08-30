@@ -1,0 +1,34 @@
+shrendd:
+  test:
+    local: ../../main
+  targets:
+    - name: house
+    - name: shanty
+    - name: crib
+    - name: mobile
+  plugins:
+    house:
+      source: "https://github.com/gtque/shrendd-lib-test/releases/download/v2.0.0"
+      version: "2.0.0"
+      getter: "wgetD"
+    shanty:
+      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      version: "latest"
+      getter: curlD
+    crib:
+      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      version: "latest"
+      getter: curlD
+    mobile:
+      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      version: "latest"
+      getter: curlD
+house:
+  greeting: "welcome to my abode."
+#  plugins:
+#    hello_world:
+#      src: "http://google.com"
+#      version: "latest"
+#    chipsisters:
+#      src: "https://takiAndRuffles"
+#      version: "1.0"

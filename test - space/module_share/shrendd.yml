@@ -1,0 +1,8 @@
+shrendd:
+  config:
+    unwind: false
+  test:
+    local: ../../main
+  targets:
+    - name: test
+    - name: k8s

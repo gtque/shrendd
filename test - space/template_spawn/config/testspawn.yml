@@ -1,0 +1,33 @@
+psych:
+  # d buttersworth
+  burton guster: "true"
+  fru it:
+    # something to summarize or express what this value is and used for
+    pin-a p_pl e: pen
+  # something to summarize or express what this value is and used for
+  juliet: "42"
+  spencer:
+    # something to summarize or express what this value is and used for
+    henry: ""
+    # something to summarize or express what this value is and used for
+    shawn: ""
+test:
+  # this is an example of an array default
+  array:
+    - age: 15
+      name: a
+    - age: 27
+      name: t
+    - age: 44
+      name: e
+  # something to summarize or express what this value is and used for
+  corbin: ""
+  # world!
+  hello: ""
+  howdy: ""
+  # something to summarize or express what this value is and used for
+  multipass: ""
+  # something to summarize or express what this value is and used for
+  multipass2: ""
+# something to summarize or express what this value is and used for
+test-howdy: ""

@@ -1,0 +1,7 @@
+shrendd:
+  version: 0.0.0-dev
+  upshrendd: 42
+  git:
+    user: gtque
+    repo: shrendd
+  required: "* mikefarah/yq v4\\\\n* curl or wget\\\\n* unzip"

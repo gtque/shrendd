@@ -1,0 +1,1 @@
+tests offline mode: plugins not updated when offline

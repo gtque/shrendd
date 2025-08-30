@@ -1,0 +1,14 @@
+app:
+  id: shrendd-test
+  test:
+    name: shrendd-test-single-level-localdev
+    namespace: shrendd-test
+    manager: shrendd
+    version: 0.0-SNAPSHOT
+test:
+  hello: world
+  sup: "snart"
+  message1: 42
+  message2: "0"
+release:
+  stage: dev

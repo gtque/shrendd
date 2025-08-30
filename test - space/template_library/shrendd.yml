@@ -1,0 +1,17 @@
+shrendd:
+  config:
+    path: ./deploy/config
+  test:
+    local: ../../main
+  targets:
+    - name: render
+    - name: k8s
+  library:
+    cache:
+      dir: "~/.shrendd/cache - space"
+    template_library:
+      get:
+        src: $_MODULE_DIR/lib
+        method: devD
+      version: latest
+      type: yaml

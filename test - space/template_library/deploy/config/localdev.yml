@@ -1,0 +1,23 @@
+app:
+  id: shrendd-test
+  text:
+    name: Parker Baily
+  test:
+    name: shrendd-test-single-level-localdev
+    namespace: shrendd-test
+    manager: shrendd
+    version: 0.0-SNAPSHOT
+    test10: "i shouldn't be here."
+    test1: "hello, world!"
+    test2: |
+      pets:
+        cats:
+        - name: takis
+        - name: ruffles
+        - name: catniss
+    test4: "the chip sisters!!!"
+    test8: "pre-sent"
+release:
+  stage: dev
+ralph:
+  wiggum: I'm a brick

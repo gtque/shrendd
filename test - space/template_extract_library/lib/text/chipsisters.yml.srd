@@ -1,0 +1,3 @@
+$(importShrendd "template_extract:text/mamabird.yml.srd")
+library:
+ cats:${LIBRARY_RUFFLESORTAKI}
