@@ -26,77 +26,89 @@ function preserveObjects {
   fi
 }
 
-process_k8s_script_maps() {
+function doProcessK8sScripts() {
+#  file_dir="$fname"
+  fname="$1"
+  _curdir="$2"
+  shrenddEchoIfNotSilent -e "======================================================\nprocessing scripts for $fname"
+  cd "$fname"
+  #sed -e "s/^/  /g"
+  _replace_path=$(echo "$TEMPLATE_DIR/" | sed -e 's/\//\\\//g' )
+  shrenddEchoIfNotSilent "replacement: $_replace_path"
+  _target_render_dir=$(echo "$fname" | sed -e "s/${_replace_path}//g" )
+  shrenddEchoIfNotSilent "target render dir: $_target_render_dir"
+#      doRender "$fname"
+  #ansible-playbook $SHRENDD_DIR/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$fname" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
+  config_maps="*.srd"
+  script_files="*.sh"
+  _target_render_dir="$RENDER_DIR/temp/$_target_render_dir"
+  if [ -d "$_target_render_dir" ]; then
+    :
+  else
+    mkdir -p "$_target_render_dir"
+  fi
+  for config_map in $config_maps
+  do
+    shrenddEchoIfNotSilent "  templating: $config_map"
+    _CM_FILE=$(basename "$config_map" | sed 's/.srd//')
+    cp "$config_map" "$_target_render_dir/$config_map"
+    for sname in $script_files
+    do
+      if [ "$sname" == "*.sh" ]; then
+        shrenddEchoIfNotSilent "no scripts found, nothing to append to config map..."
+      else
+        _FILE=$(basename "$sname")
+        shrenddEchoIfNotSilent "    adding $_FILE: $_CM_FILE"
+        export _text=$(cat "$sname")
+        shrenddEchoIfNotSilent "    configified..."
+#            _yq=$(yq --null-input ".data.[\"$_FILE\"] += strenv(_text)")
+#            echo -e "configured script:\n$_yq"
+#            cp $_target_render_dir/$config_map $_target_render_dir/$config_map
+#            cat $_target_render_dir/$config_map
+        shrenddEchoIfNotSilent "\ntrying to just load yaml..."
+#            yq -i "." $_target_render_dir/$config_map
+        echo "now to do the place holder..."
+        yq -i ".data.shrendd_place_holder = \"doh!\"" "$_target_render_dir/$config_map"
+        shrenddEchoIfNotSilent "    place holder placed"
+#            _yq_rendered=$(echo "$_yq" | yq ea '. as $item ireduce ({}; . * $item )' - $_target_render_dir/$config_map)
+        yq -i ".data.[\"$_FILE\"] += strenv(_text)" "$_target_render_dir/$config_map"
+#            echo -e "rendered script:\n$_yq_rendered"
+#            echo -e "$_yq_rendered" > $_target_render_dir/$config_map
+        yq -i "del(.data.shrendd_place_holder)" "$_target_render_dir/$config_map"
+#              echo "  $_FILE: |" >> $RENDER_DIR/temp/scripts/$fname/$config_map
+#              echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/temp/scripts/$fname/$config_map
+      fi
+    done
+  done
+  doRender "$_target_render_dir"
+  shrenddEchoIfNotSilent -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
+  cat "$RENDER_DIR/$_CM_FILE"
+  shrenddEchoIfNotSilent "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
+  shrenddEchoIfNotSilent "finished processing scripts for $fname\n======================================================"
+  cd "$_curdir"
+}
+
+function process_k8s_script_maps() {
   FILES_TEMPLATE_DIR=$TEMPLATE_DIR/$1
   if [ -d "$FILES_TEMPLATE_DIR" ]; then
     shrenddEchoIfNotSilent "Adding scripts to configmaps..."
     shrenddEchoIfNotSilent "files directory: $FILES_TEMPLATE_DIR"
     config_files="$FILES_TEMPLATE_DIR"
-    if [ "$2" -gt 0 ]; then
-      config_files="$config_files/*"
-    fi
-    shrenddEchoIfNotSilent "files should be in: $config_files"
     _curdir=$(pwd)
-    for fname in "$config_files"
-    do
-      file_dir="$fname"
-      shrenddEchoIfNotSilent -e "======================================================\nprocessing scripts for $fname"
-      cd "$fname"
-      #sed -e "s/^/  /g"
-      _replace_path=$(echo "$TEMPLATE_DIR/" | sed -e 's/\//\\\//g' )
-      shrenddEchoIfNotSilent "replacement: $_replace_path"
-      _target_render_dir=$(echo "$fname" | sed -e "s/${_replace_path}//g" )
-      shrenddEchoIfNotSilent "target render dir: $_target_render_dir"
-#      doRender "$fname"
-      #ansible-playbook $SHRENDD_DIR/render/ansible/site.yml -i hosts -e "template_output_dir=$RENDER_DIR" -e "template_input_dir=$fname" -e @$_config -e "playbook_operations=render" --extra-vars "app_k8s_objects=$OBJECT_LIST" -D
-      config_maps="*.srd"
-      script_files="*.sh"
-      _target_render_dir="$RENDER_DIR/temp/$_target_render_dir"
-      if [ -d "$_target_render_dir" ]; then
-        :
-      else
-        mkdir -p "$_target_render_dir"
-      fi
-      for config_map in $config_maps
+    if [ "$2" -gt 0 ]; then
+      shrenddEchoIfNotSilent "looking for files... $2"
+#      config_files="'$config_files'/*"
+      for fname in "$config_files"/*
       do
-        shrenddEchoIfNotSilent "  templating: $config_map"
-        _CM_FILE=$(basename "$config_map" | sed 's/.srd//')
-        cp "$config_map" "$_target_render_dir/$config_map"
-        for sname in $script_files
-        do
-          if [ "$sname" == "*.sh" ]; then
-            shrenddEchoIfNotSilent "no scripts found, nothing to append to config map..."
-          else
-            _FILE=$(basename "$sname")
-            shrenddEchoIfNotSilent "    adding $_FILE: $_CM_FILE"
-            export _text=$(cat "$sname")
-            shrenddEchoIfNotSilent "    configified..."
-#            _yq=$(yq --null-input ".data.[\"$_FILE\"] += strenv(_text)")
-#            echo -e "configured script:\n$_yq"
-#            cp $_target_render_dir/$config_map $_target_render_dir/$config_map
-#            cat $_target_render_dir/$config_map
-            shrenddEchoIfNotSilent "\ntrying to just load yaml..."
-#            yq -i "." $_target_render_dir/$config_map
-            echo "now to do the place holder..."
-            yq -i ".data.shrendd_place_holder = \"doh!\"" "$_target_render_dir/$config_map"
-            shrenddEchoIfNotSilent "    place holder placed"
-#            _yq_rendered=$(echo "$_yq" | yq ea '. as $item ireduce ({}; . * $item )' - $_target_render_dir/$config_map)
-            yq -i ".data.[\"$_FILE\"] += strenv(_text)" "$_target_render_dir/$config_map"
-#            echo -e "rendered script:\n$_yq_rendered"
-#            echo -e "$_yq_rendered" > $_target_render_dir/$config_map
-            yq -i "del(.data.shrendd_place_holder)" "$_target_render_dir/$config_map"
-#              echo "  $_FILE: |" >> $RENDER_DIR/temp/scripts/$fname/$config_map
-#              echo "$(echo -e -n "$(cat $sname | sed 's/^/    /')")" >> $RENDER_DIR/temp/scripts/$fname/$config_map
-          fi
-        done
+        shrenddEchoIfNotSilent "file found: $fname"
+        doProcessK8sScripts "$fname" "$_curdir"
       done
-      doRender "$_target_render_dir"
-      shrenddEchoIfNotSilent -e "${_TEXT_PASS}+++++++++++++++rendered $fname+++++++++++++++"
-      cat "$RENDER_DIR/$_CM_FILE"
-      shrenddEchoIfNotSilent "+++++++++++++++rendered $fname+++++++++++++++${_CLEAR_TEXT_COLOR}"
-      shrenddEchoIfNotSilent "finished processing scripts for $fname\n======================================================"
-      cd "$_curdir"
-    done
+    else
+      shrenddEchoIfNotSilent "config files: \"$config_files\""
+      doProcessK8sScripts "$config_files" "$_curdir"
+    fi
+#    shrenddEchoIfNotSilent "files should be in: $config_files"
+
     shrenddLog "k8s/afterrender: process_k8s_script_maps: rm ${RENDER_DIR}/temp/scripts"
     rm -rf "$RENDER_DIR/temp/scripts"
     sleep 1

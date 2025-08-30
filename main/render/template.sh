@@ -381,7 +381,7 @@ function extractCleanUp {
 function deleteEmptyKeys {
   while [ "$(cat "$1" | yq 'map(.. | select(tag == "!!map" and length == 0)) | any')" = "true" ]
   do
-    yq -i 'del(.. | select(tag == "!!map" and length == 0))' $1
+    yq -i 'del(.. | select(tag == "!!map" and length == 0))' "$1"
   done
 }
 
@@ -506,9 +506,12 @@ function spawnTemplate {
         echo -e "  ${_TEXT_WARN}invalid key, if actually present, please manually delete it.${_CLEAR_TEXT_COLOR}"
       else
         echo -e "${_TEXT_WARN}dropping key:${_yq_name} -> $_config_key${_CLEAR_TEXT_COLOR}"
+        shrenddLog "yq to spawn:$_spawn_path"
         yq -i "del(.${_yq_name})" "$_spawn_path"
+        shrenddLog "deleted from spawn..."
       fi
     done
+    shrenddLog "deleting spawn keys."
     deleteEmptyKeys "$_spawn_path"
 #    yq -i 'del(.. | select(tag == "!!map" and length == 0))' "$_spawn_path"
 #    yq -i 'del(.. | select(length == 0))' "$_spawn_path"
