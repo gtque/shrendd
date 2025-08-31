@@ -159,7 +159,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     const tmp = require('os').tmpdir();
     const fs = require('fs');
     const path = require('path');
-    const cp = require('child_process');
+    // const cp = require('child_process');
     // Get the user's configured shell from VS Code settings
     const platform = process.platform;
     let shellConfigKey = 'terminal.integrated';
@@ -486,15 +486,31 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     const tempFile = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
     const shrenddTempFile = "/" + path.normalize(tempFile).replace(/:/g, "").replace(/\\/g, "/");
     const propertyCommand = `./shrendd -b --module "${shrenddModule} -offline" > ${shrenddTempFile}`;
-    const thePromiseOfTheBuild = new Promise((resolve) => {
-        exec(`${propertyCommand}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
-          const uri = vscode.Uri.file(moduleDetectionPath)
+    const ouri = vscode.Uri.file(filePath);
+    const uri = vscode.Uri.file(moduleDetectionPath);
+    let mustBuild = true;
+    try {
+      let fileTime = (await vscode.workspace.fs.stat(ouri)).mtime;
+      let builtTime = (await vscode.workspace.fs.stat(uri)).mtime;
+      if ( fileTime < builtTime ) {
+        console.log("no change detected, no need to build.")
+        mustBuild = false;
+      } else {
+        console.log(`change detected, must rebuild: ${filePath} < ${builtTime}`)
+      }
+    } catch (error) {
+      console.log("some file did not exist, assuming it is the compiled file, as it would be hard to get here if it was the template file. will run the build.");
+    }
+    let rendered = moduleDetectionPath + ":\n";
+    if ( mustBuild ) {
+    const thePromiseOfTheBuild = (cmd: string) => new Promise((resolve) => {
+        exec(`${cmd}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
           try {
             vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
               const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
               console.log('Content of file:', contentString);
               myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
-              fs.unlinkSync(uri.fsPath);
+              // fs.unlinkSync(uri.fsPath);
               resolve(myTargetFile);
             });
           } catch (error) {
@@ -507,7 +523,30 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           }
         });
       });
-    let rendered = moduleDetectionPath + ":\n" + await thePromiseOfTheBuild;
+      rendered += await thePromiseOfTheBuild(`${propertyCommand}`);
+    } else {
+      const thePromiseOfTheBuild = new Promise((resolve) => {
+        try {
+            vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+              const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+              console.log('Content of file:', contentString);
+              myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
+              // fs.unlinkSync(uri.fsPath);
+              resolve(myTargetFile);
+            });
+          } catch (error) {
+              if (error instanceof Error) {
+                console.error(`Failed to read file: ${error.message}`);
+              } else {
+                console.error('Failed to read file: Unknown error');
+              }
+              resolve(`error building, please run './shrendd -b --module ${shrenddModule}' for more information`); // Resolve with empty string on error
+          }
+        });
+        rendered += await thePromiseOfTheBuild
+          // rendered += myTargetFile
+    }
+    
     // .replace(/^[/\\]+/, '');
     return rendered;
   }
@@ -516,7 +555,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     const tmp = require('os').tmpdir();
     const fs = require('fs');
     const path = require('path');
-    const cp = require('child_process');
+    // const cp = require('child_process');
 
     console.log(`getting template dirs for module ${shrenddDefaultModuleName} with targets: ${myTargets}`);
     let currentTargets = myTargets.split(" ");
@@ -534,8 +573,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     const tempFile2 = path.join(tmp, `shrendd-preview-${Date.now()}.srd`);
     const shrenddTempFile2 = "/" + path.normalize(tempFile2).replace(/:/g, "").replace(/\\/g, "/");
     const propertyCommand2 = `./shrendd ${defaultTargets} --module "${shrenddModule}" > ${shrenddTempFile2}`;
-    const thePromiseOfTemplateProperties = new Promise((resolve) => {
-      exec(`${propertyCommand2}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+    const thePromiseOfTemplateProperties = (cmd: string) => new Promise((resolve) => {
+      exec(`${cmd}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
         const uri = vscode.Uri.file(tempFile2)
         try {
           vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
@@ -595,12 +634,12 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           console.error(`Error executing command: ${stderr || error.message}`);
           // resolve(`Error: ${stderr || error.message}`);
         } else {
-          console.log(`${propertyCommand2}) executed successfully: ${stdout}`);
+          console.log(`${cmd}) executed successfully: ${stdout}`);
           // resolve(stdout);
         }
       });
     });
-    await thePromiseOfTemplateProperties;
+    await thePromiseOfTemplateProperties(`${propertyCommand2}`);
   }
 }
 
