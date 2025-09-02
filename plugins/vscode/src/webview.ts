@@ -6,6 +6,7 @@ const vscode = acquireVsCodeApi();
 window.addEventListener('DOMContentLoaded', () => {
   const source = document.getElementById('source') as HTMLDivElement;
   const processed = document.getElementById('processed') as HTMLPreElement;
+  const shrenddStatus = document.getElementById('text-status') as HTMLInputElement;
   let initialContent = (window as any).initialShrenddContent || '';  
   // Create an enhanced editor with line numbers
   source.innerHTML = `
@@ -122,6 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle tab key for proper indentation
   editor.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
+      shrenddStatus.value = "template updated";
       e.preventDefault();
       const start = editor.selectionStart;
       const end = editor.selectionEnd;
@@ -156,6 +158,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle content changes
   editor.addEventListener('input', () => {
     updateLineNumbers();
+    shrenddStatus.value = "template updated";
     if (!suppressUpdate) {
       suppressUpdate = true;
       vscode.postMessage({ type: 'edit', text: editor.value });
@@ -193,6 +196,9 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     } else if (message.type === 'processed') {
       processed.textContent = message.text;
+    } else if (message.type === 'set-status') {
+      console.log(`updating shrendd status: ${message.text}`);
+      shrenddStatus.value = message.text;
     }
   });
 
@@ -200,6 +206,14 @@ window.addEventListener('DOMContentLoaded', () => {
   (document.getElementById('tab-source') as HTMLButtonElement).onclick = () => {
     source.style.display = 'block';
     processed.style.display = 'none';
+    let processedBtn = document.getElementById('tab-processed');
+    if (processedBtn) {
+      processedBtn.classList.remove('selected');
+    }
+    let sourcedBtn = document.getElementById('tab-source');
+    if (sourcedBtn){
+      sourcedBtn.classList.add('selected');
+    }
     setTimeout(() => {
       editor.focus();
       updateLineNumbers();
@@ -210,6 +224,15 @@ window.addEventListener('DOMContentLoaded', () => {
   (document.getElementById('tab-processed') as HTMLButtonElement).onclick = () => {
     source.style.display = 'none';
     processed.style.display = 'block';
+    let processedBtn = document.getElementById('tab-processed');
+    if (processedBtn) {
+      processedBtn.classList.add('selected');
+    }
+    let sourcedBtn = document.getElementById('tab-source');
+    if (sourcedBtn){
+      sourcedBtn.classList.remove('selected');
+    }
+    shrenddStatus.textContent = "checking template state"
     vscode.postMessage({ type: 'process' });
   };
 
