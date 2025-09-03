@@ -1,4 +1,4 @@
-# Shrendd Template Editor VS Code Extension
+Shrendditor VS Code Extension
 
 This extension provides a custom editor for editing "shrendd" template files. It features a two-tab interface:
 - **Source Tab**: Displays the raw contents of the template file.
@@ -9,7 +9,7 @@ This extension provides a custom editor for editing "shrendd" template files. It
 - View processed/compiled output in a separate tab.
 
 ## Usage
-Open any shrendd template file (e.g., `.srd`) and select "Open with Shrendd Template Editor".
+Open any shrendd template file (e.g., `.srd`) and select "Open with Shrendditor".
 
 ## Development
 - The extension is written in TypeScript.
@@ -33,11 +33,11 @@ See the `test` folder for example shrendd templates.
 ```
   * where path is set to the appropriate value for your os, this should actually point to the actual `bash.exe` and not the `git-bash.exe`
   * if you don't point it to `bash.exe`, you may notice terminal windows opening as the plugin processes `.srd` files.
-* install the `shrendd-template-editor` plugin
+* install the `Shrendditor` plugin
   * currently the plugin is only provided as a VSIX file from shrendd's release page. In the future it may be provided through the market place.
   * `ctrl+shift+p` (or `cmd+shift+p` on mac)
   * search for "extensions install from vsix"
-  * select the shrendd-template-editor vsix file.
+  * select the Shrendditor vsix file.
 * close or reload vscode
   * `ctrl+shift+p` (or `cmd+shift+p` on mac)
   * search for "reload window"
