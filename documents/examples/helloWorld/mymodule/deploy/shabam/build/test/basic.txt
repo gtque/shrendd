@@ -1,2 +1,0 @@
-hello, $(getConfig my.first.shrendd)!
-$(getConfig "SIMPLE_QUESTION")
