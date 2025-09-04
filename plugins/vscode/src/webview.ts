@@ -7,6 +7,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const source = document.getElementById('source') as HTMLDivElement;
   const processed = document.getElementById('processed') as HTMLPreElement;
   const shrenddStatus = document.getElementById('text-status') as HTMLInputElement;
+  const checkForce = document.getElementById('check-force') as HTMLInputElement;
   let initialContent = (window as any).initialShrenddContent || '';  
   // Create an enhanced editor with line numbers
   source.innerHTML = `
@@ -199,6 +200,9 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (message.type === 'set-status') {
       console.log(`updating shrendd status: ${message.text}`);
       shrenddStatus.value = message.text;
+    } else if (message.type === 'set-force') {
+      console.log(`updating force: ${message.text}`);
+      checkForce.checked = message.text;
     }
   });
 
@@ -236,11 +240,17 @@ window.addEventListener('DOMContentLoaded', () => {
     vscode.postMessage({ type: 'process' });
   };
 
+  checkForce.onclick = () => {
+    const isChecked: boolean = checkForce.checked;
+    vscode.postMessage({ type: `force-${isChecked}` });
+  };
+
   // Initialize line numbers and focus
   setTimeout(() => {
     updateLineNumbers();
     syncScroll();
     editor.focus();
+    vscode.postMessage({ type: `refocus` });
   }, 100);
 
   console.log('Enhanced Shrendd editor with line numbers initialized successfully');
