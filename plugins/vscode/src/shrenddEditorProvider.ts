@@ -10,6 +10,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   
   readonly context: vscode.ExtensionContext;
   
+  private shrenddLocal = null;
   private shrenddProperties = new Map();
   private documentShrendder = new Map();
   private forceShrendd = false;
@@ -93,7 +94,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
                 this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: processed });
               }
             } catch (error) {
-              console.log("error updating template, plesae try loading the preview again.");
+              console.log("error updating template, please try loading the preview again.");
               if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
                 this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: "error building template, please try loading the preview again." });
               }
@@ -164,6 +165,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     #meditor-container { width: 100%; height: 90vh; }
     #source { width: 100%; height: 100%; }
     #processed { width: 100%; height: 100%; display: none; white-space: pre; }
+    #select-render { width: 150px; }
     .label-status {  border: none; border-left: 3px solid #0411ff; font-weight: bold; padding-left: 3px; }
     .tab-status { width: 175px; }
     .tab-btn { margin-right: 8px; }
@@ -184,6 +186,9 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   <div>
     <button class="tab-btn selected" id="tab-source">Source</button>
     <button class="tab-btn" id="tab-processed">Preview</button>
+    <select class="tab-btn" id="select-render">
+      <option value="!build!">pre-rendered</option>
+    </select>
     <input class="tab-btn" id="check-force" type="checkbox">Force Refresh</input>
     <label class="label-status" for="test-status">Status:</label>
     <input class="tab-status" id="text-status" type="text" readonly></input>
@@ -253,104 +258,25 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   }
 
   private async processTemplate(panelTitle: string, webviewPanel: vscode.WebviewPanel, doc: vscode.TextDocument, context: vscode.ExtensionContext): Promise<string> {
-    // Run 'shrendd -b' on the current file and return its output
     const tmp = require('os').tmpdir();
     const fs = require('fs');
     const path = require('path');
-    // const cp = require('child_process');
-    // Get the user's configured shell from VS Code settings
+    
     const forcedAtStart = this.forceShrendd;
-    const platform = process.platform;
-    let shellConfigKey = 'terminal.integrated';
-    let shellOs = 'defaultProfile.'
-    let shellProfiles = 'profiles.';
-    if (platform === 'win32') {
-      shellOs += 'windows';
-      shellProfiles += 'windows';
-    } else if (platform === 'darwin') {
-      shellOs += 'osx';
-      shellProfiles += 'osx';
-    } else {
-      shellOs += 'linux';
-      shellProfiles += 'linux';
-    }
-    const shellConfig = vscode.workspace.getConfiguration(shellConfigKey);
-    const defaultProfile = 'Shrendd Terminal'; //shellConfig.get(`${shellOs}`);
-    // const defaultProfile = shellConfig.get('defaultProfile.windows');
-    // const profiles = shellConfig.get('profiles.windows');
-    const profiles = shellConfig.get<Record<string, any>>(`${shellProfiles}`);
-    let shellPath = '';
-    // console.log(`Platform: ${platform}, Shell OS: ${shellOs}, default profile: ${defaultProfile}, Profiles: ${JSON.stringify(profiles)}`);
-    if (profiles && typeof defaultProfile === 'string' && profiles[defaultProfile]) {
-      shellPath += profiles[defaultProfile].path;
-      // console.log(`Default Windows shell path: ${shellPath}`);
-    } else {
-      console.error('shrendd terminal profile not found or misconfigured.');
-    }
 
-    let shrenddPath: string | null = null;
-    let shrenddStart = '';
-    let shrenddModule = "";
-    let shrenddTargetDir: string | null = null;
-    let foldersToCheck: string[] = [];
-    // foldersToCheck.push("test1");
-    if (vscode.window.activeTextEditor) {
-      // foldersToCheck.push("test1_a");
-      const filePath = vscode.window.activeTextEditor.document.uri.fsPath;
-      let currentDir = path.dirname(filePath);
-      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-      // Normalize for Windows case-insensitivity
-      const norm = (p: string) => p.replace(/\\/g, '/').toLowerCase();
-      const normRoot = workspaceRoot ? norm(workspaceRoot) : undefined;
-      while (currentDir) {
-        foldersToCheck.push(currentDir);
-        if (normRoot && norm(currentDir) === normRoot) break;
-        const parentDir = path.dirname(currentDir);
-        if (parentDir === currentDir) break;
-        currentDir = parentDir;
-      }
+    if (!this.shrenddLocal) {
+      this.shrenddLocal = await this.loadShrenddLocal();
     }
-    // foldersToCheck.push("test1_b");
-
+    
+    // Get the user's configured shell from VS Code settings
+    const shellPath = this.detectTerminal();
+    
     const filePath = doc.uri.fsPath;
-    let currentDir = path.dirname(filePath);
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    // Normalize for Windows case-insensitivity
-    const norm = (p: string) => p.replace(/\\/g, '/').toLowerCase();
-    const normRoot = workspaceRoot ? norm(workspaceRoot) : undefined;
-    while (currentDir) {
-      foldersToCheck.push(currentDir);
-      if (normRoot && norm(currentDir) === normRoot) break;
-      const parentDir = path.dirname(currentDir);
-      if (parentDir === currentDir) break;
-      currentDir = parentDir;
-    }
-    // foldersToCheck.push("test2");
-    // Also check workspace root and extension folder
-    if (vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) {
-      foldersToCheck.push(vscode.workspace.workspaceFolders[0].uri.fsPath);
-    }
-    // foldersToCheck.push("test3");
-    foldersToCheck.push(this.context.extensionUri.fsPath);
-    const checkedPaths: string[] = [];
-    for (const folder of foldersToCheck) {
-      if (!folder) continue;
-      const candidate = path.join(folder, 'shrendd');
-      const moduleCandidate = path.join(folder, 'shrendd.yml');
-      checkedPaths.push(candidate);
-      //module in this case is only important
-      if (fs.existsSync(moduleCandidate)) {
-        if (!shrenddModule) {
-          shrenddModule = folder;
-        }
-      }
-      if (fs.existsSync(candidate)) {
-        shrenddPath = candidate;
-        shrenddStart += folder;
-        break;
-      }
-    }
-    shrenddModule = shrenddModule.replaceAll(`${shrenddStart}`, "");
+    // let shrenddTargetDir: string | null = null;
+
+    const shrenddInfo = this.findShrenddStart(filePath);
+
+    let shrenddModule = shrenddInfo.get("shrenddModule").replaceAll(`${shrenddInfo.get("shrenddStart")}`, "");
     let shrenddDefaultModuleName = 'dot';
     if (!shrenddModule) {
       console.log("no module detected");
@@ -363,13 +289,13 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 
     this.updateStatusWebview(panelTitle, webviewPanel, `initially detected module: ${shrenddModule}`);
 
-    checkedPaths.push(doc.uri.path.split("/").slice(0, -1).join("/"));
-    if (!shrenddPath) {
+    shrenddInfo.get("checkedPaths").push(doc.uri.path.split("/").slice(0, -1).join("/"));
+    if (!shrenddInfo.get("shrenddStart")) {
       return [
-        '6 Shrendd executable not found in the file\'s folder or any parent folder up to the workspace root.',
+        'Shrendd executable not found in the file\'s folder or any parent folder up to the workspace root.',
         '',
         'Paths checked:',
-        ...checkedPaths.map(p => '  ' + p),
+        ...shrenddInfo.get("checkedPaths").map((p: any) => '  ' + p),
         '',
         'Please ensure \'shrendd\' exists in your project directory.',
         '',
@@ -377,15 +303,15 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       ].join('\n');
     }
 
-    shrenddTargetDir = 'not set';
-    let output = '';
-    let errorOutput = '';
+    // shrenddTargetDir = 'not set';
+    // let output = '';
+    // let errorOutput = '';
     // Example: run 'pwd' using the user's configured shell
     const execOptions: any = {};
     if (shellPath) {
       execOptions.shell = shellPath;
     }
-    execOptions.cwd = shrenddStart;
+    execOptions.cwd = shrenddInfo.get("shrenddStart");
     // vscode.window.showInformationMessage(`shell: ${platform}: ${shrenddStart}: ${shellPath}`);
 
     // const { execFile } = require('child_process');
@@ -484,7 +410,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       if(this.shrenddProperties.get(`${shrenddDefaultModuleName}`).has(`${currentTarget}`) && this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).has(`template.dir`)) {
         actualShrenddTemplateDir = this.shrenddProperties.get(`${shrenddDefaultModuleName}`).get(`${currentTarget}`).get(`template.dir`).replace(`${actualShrenddStart}`, "");
       }
-      let moduleDetectionPath = path.dirname(filePath).replace(`${shrenddStart}`, "").replace(/\\/g, "/").replace(`${actualShrenddTemplateDir}`, "");
+      let moduleDetectionPath = path.dirname(filePath).replace(`${shrenddInfo.get("shrenddStart")}`, "").replace(/\\/g, "/").replace(`${actualShrenddTemplateDir}`, "");
       // console.log(`moduleDetectionPath: ${moduleDetectionPath}`);
       if (!moduleDetectionPath || moduleDetectionPath === '' || moduleDetectionPath === '/') {
         console.log("no module detected, using default module name");
@@ -685,6 +611,146 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     this.shrenddProperties.get(`${shrenddModuleName}`).set('isRunning', false);
     // .replace(/^[/\\]+/, '');
     return rendered;
+  }
+
+  private async loadShrenddLocal() {
+    const fs = require('fs');
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    try {
+      let directory = vscode.Uri.file(`${workspaceRoot}/.shrendd`);
+      await vscode.workspace.fs.createDirectory(directory);
+      console.log(`Directory created or already exists: ${directory.fsPath}`);
+    } catch (error: any) {
+      vscode.window.showErrorMessage(`Failed to create directory: ${error.message}`);
+    }
+    try {
+      let directory = vscode.Uri.file(`${workspaceRoot}/.shrendd/.vscode`);
+      await vscode.workspace.fs.createDirectory(directory);
+      console.log(`Directory created or already exists: ${directory.fsPath}`);
+    } catch (error: any) {
+      vscode.window.showErrorMessage(`Failed to create directory: ${error.message}`);
+    }
+    let shrenddProperties = vscode.Uri.file(`${workspaceRoot}/.shrendd/.vscode/shrendd.json`);
+    try {
+      (await vscode.workspace.fs.stat(shrenddProperties)).mtime;
+    } catch (error: any) {
+        console.log("no local shrendd.json found, stubbing a basic one.");
+        try {
+          fs.writeFileSync(shrenddProperties.fsPath, "{\"shrendd\":\"vscode\"}");
+        } catch (error2: any) {
+          console.log(`problem stubbing shrendd.json ${error2.message}`);
+          vscode.window.showErrorMessage(`Failed to create file: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    const shrenddLoco = JSON.parse(fs.readFileSync(`${workspaceRoot}/.shrendd/.vscode/shrendd.json`, 'utf-8'))
+
+    // type PersonalInfo = typeof personalInfoData;
+
+    // const myInfo: PersonalInfo = personalInfoData;
+    console.log(shrenddLoco.sprinkle.frosting);
+    return shrenddLoco;
+  }
+
+  private detectTerminal() {
+    const platform = process.platform;
+    let shellConfigKey = 'terminal.integrated';
+    let shellOs = 'defaultProfile.'
+    let shellProfiles = 'profiles.';
+    if (platform === 'win32') {
+      shellOs += 'windows';
+      shellProfiles += 'windows';
+    } else if (platform === 'darwin') {
+      shellOs += 'osx';
+      shellProfiles += 'osx';
+    } else {
+      shellOs += 'linux';
+      shellProfiles += 'linux';
+    }
+    const shellConfig = vscode.workspace.getConfiguration(shellConfigKey);
+    const defaultProfile = 'Shrendd Terminal'; //shellConfig.get(`${shellOs}`);
+    // const defaultProfile = shellConfig.get('defaultProfile.windows');
+    // const profiles = shellConfig.get('profiles.windows');
+    const profiles = shellConfig.get<Record<string, any>>(`${shellProfiles}`);
+    let shellPath = '';
+    // console.log(`Platform: ${platform}, Shell OS: ${shellOs}, default profile: ${defaultProfile}, Profiles: ${JSON.stringify(profiles)}`);
+    if (profiles && typeof defaultProfile === 'string' && profiles[defaultProfile]) {
+      shellPath += profiles[defaultProfile].path;
+      // console.log(`Default Windows shell path: ${shellPath}`);
+    } else {
+      console.error('shrendd terminal profile not found or misconfigured.');
+      return "";
+    }
+    return shellPath;
+  }
+
+  private findShrenddStart(filePath: string) {
+    const fs = require('fs');
+    const path = require('path');
+
+    let shrenddPath: string | null = null;
+    let shrenddStart = '';
+    let shrenddModule = "";
+    let foldersToCheck: string[] = [];
+    // foldersToCheck.push("test1");
+    if (vscode.window.activeTextEditor) {
+      // foldersToCheck.push("test1_a");
+      const filePath = vscode.window.activeTextEditor.document.uri.fsPath;
+      let currentDir = path.dirname(filePath);
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      // Normalize for Windows case-insensitivity
+      const norm = (p: string) => p.replace(/\\/g, '/').toLowerCase();
+      const normRoot = workspaceRoot ? norm(workspaceRoot) : undefined;
+      while (currentDir) {
+        foldersToCheck.push(currentDir);
+        if (normRoot && norm(currentDir) === normRoot) break;
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) break;
+        currentDir = parentDir;
+      }
+    }
+
+    let currentDir = path.dirname(filePath);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    // Normalize for Windows case-insensitivity
+    const norm = (p: string) => p.replace(/\\/g, '/').toLowerCase();
+    const normRoot = workspaceRoot ? norm(workspaceRoot) : undefined;
+    while (currentDir) {
+      foldersToCheck.push(currentDir);
+      if (normRoot && norm(currentDir) === normRoot) break;
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) break;
+      currentDir = parentDir;
+    }
+    // Also check workspace root and extension folder
+    if (vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) {
+      foldersToCheck.push(vscode.workspace.workspaceFolders[0].uri.fsPath);
+    }
+    // foldersToCheck.push("test3");
+    foldersToCheck.push(this.context.extensionUri.fsPath);
+    const checkedPaths: string[] = [];
+    for (const folder of foldersToCheck) {
+      if (!folder) continue;
+      const candidate = path.join(folder, 'shrendd');
+      const moduleCandidate = path.join(folder, 'shrendd.yml');
+      checkedPaths.push(candidate);
+      //module in this case is only important
+      if (fs.existsSync(moduleCandidate)) {
+        if (!shrenddModule) {
+          shrenddModule = folder;
+        }
+      }
+      if (fs.existsSync(candidate)) {
+        shrenddPath = candidate;
+        shrenddStart += folder;
+        break;
+      }
+    }
+    let shrenddInfo = new Map();
+    shrenddInfo.set("shrenddPath", shrenddPath);
+    shrenddInfo.set("shrenddStart", shrenddStart);
+    shrenddInfo.set("shrenddModule", shrenddModule);
+    shrenddInfo.set("checkedPaths", checkedPaths);
+    return shrenddInfo;
   }
 
   private async getTemplateDirs(myTargets: string, shrenddModule: string, shrenddDefaultModuleName: string, execOptions: any) {
