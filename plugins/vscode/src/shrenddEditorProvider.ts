@@ -1,4 +1,3 @@
-
 import { exec } from 'child_process';
 import { resolve } from 'path';
 import * as vscode from 'vscode';
@@ -291,39 +290,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       // shrenddDefaultModuleName = shrenddModule;
     }
 
-    if (this.shrenddLocal 
-      && this.shrenddLocal[shrenddModule] 
-      && this.shrenddLocal[shrenddModule]["properties"] 
-      && moduleProperties === this.shrenddLocal[shrenddModule]["properties"]
-      && this.shrenddLocal[shrenddModule]["properties-last-modified"]) {
-      try {
-        let mpuri = vscode.Uri.file(moduleProperties);
-        let dotmpuri = vscode.Uri.file(`${shrenddInfo.get("shrenddStart")}/shrendd.yml`);
-        let fileTime = (await vscode.workspace.fs.stat(mpuri)).mtime;
-        let dotfileTime = (await vscode.workspace.fs.stat(dotmpuri)).mtime;
-        let builtTime = this.shrenddLocal[shrenddModule]["properties-last-modified"];
-        if ( fileTime < builtTime && dotfileTime < builtTime) {
-          console.debug("no change detected, no need to reload module properties.")
-        } else {
-          console.debug(`change detected, must reload module properties: ${filePath} < ${builtTime}`)
-          this.shrenddLocal[shrenddModule] = new Map();
-        }
-      } catch (error) {
-        console.debug("some file did not exist, assuming must reload properties");
-        this.shrenddLocal[shrenddModule] = new Map();
-      }
-    } else {
-      if (this.shrenddLocal) {
-        this.shrenddLocal[shrenddModule] = new Map();
-      }
-    }
-    console.log("resetting property load time");
-    if (this.shrenddLocal && this.shrenddLocal[shrenddModule] && !this.shrenddLocal[shrenddModule]["properties"]) {
-      this.shrenddLocal[shrenddModule]["forcereload"] = true;
-      this.shrenddLocal[shrenddModule]["properties"] = moduleProperties
-      let fileTime = Date.now();
-      this.shrenddLocal[shrenddModule]["properties-last-modified"] = fileTime;
-    }
+    await this.checkifShrenddLocalIsStale(shrenddModule, shrenddInfo, moduleProperties);
     console.log("continuing with module configuration");
     this.logCurrentShrenddLocal();
     this.updateStatusWebview(panelTitle, webviewPanel, `initially detected module: ${shrenddModule}`);
@@ -403,18 +370,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           shrenddModule = moduleDetectionPath.replace(/^[/\\]+/, ''); // remove leading slashes
           console.log(`Detected shrendd module from file path: ${shrenddModule}`);
           // shrenddModuleName = shrenddModule;
-          if (!this.shrenddLocal[`${shrenddModule}`]) {
-            console.log(`no properties cached for module ${shrenddModule}, getting them now`);
-            let didGet = this.getTemplateDirs(myTargets, shrenddModule, execOptions);
-            await didGet;
-            if (this.shrenddLocal && this.shrenddLocal[shrenddModule] && !this.shrenddLocal[shrenddModule]["properties"]) {
-              this.shrenddLocal[shrenddModule]["forcereload"] = false;
-              this.shrenddLocal[shrenddModule]["properties"] = moduleProperties
-              let fileTime = Date.now();
-              this.shrenddLocal[shrenddModule]["properties-last-modified"] = fileTime;
-            }
-            await this.updateShrenddLocal();
-          }
+          await this.checkifShrenddLocalIsStale(shrenddModule, shrenddInfo, moduleProperties);
+          await this.loadDefaultModuleProperties(shrenddModule, panelTitle, webviewPanel, execOptions);
         }
       } else {
         console.log("a defined module has already been detected, assuming that is the module for this file");
@@ -571,6 +528,43 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     this.shrenddLocalMemory.get(`${shrenddModule}`).set('isRunning', false);
     // .replace(/^[/\\]+/, '');
     return rendered;
+  }
+
+  private async checkifShrenddLocalIsStale(shrenddModule: string, shrenddInfo: Map<string, any>, moduleProperties: string) {
+    console.log(`checking if module (${shrenddModule}) properties are stale...`);
+    if (this.shrenddLocal 
+      && this.shrenddLocal[shrenddModule] 
+      && this.shrenddLocal[shrenddModule]["properties"] 
+      && moduleProperties === this.shrenddLocal[shrenddModule]["properties"]
+      && this.shrenddLocal[shrenddModule]["properties-last-modified"]) {
+      try {
+        let mpuri = vscode.Uri.file(moduleProperties);
+        let dotmpuri = vscode.Uri.file(`${shrenddInfo.get("shrenddStart")}/shrendd.yml`);
+        let fileTime = (await vscode.workspace.fs.stat(mpuri)).mtime;
+        let dotfileTime = (await vscode.workspace.fs.stat(dotmpuri)).mtime;
+        let builtTime = this.shrenddLocal[shrenddModule]["properties-last-modified"];
+        if ( fileTime < builtTime && dotfileTime < builtTime) {
+          console.debug("no change detected, no need to reload module properties.")
+        } else {
+          console.debug(`change detected, must reload module properties: ${fileTime} > ${builtTime}`)
+          this.shrenddLocal[shrenddModule] = new Map();
+        }
+      } catch (error) {
+        console.debug("some file did not exist, assuming must reload properties");
+        this.shrenddLocal[shrenddModule] = new Map();
+      }
+    } else {
+      if (this.shrenddLocal) {
+        this.shrenddLocal[shrenddModule] = new Map();
+      }
+    }
+    console.log("resetting property load time");
+    if (this.shrenddLocal && this.shrenddLocal[shrenddModule] && !this.shrenddLocal[shrenddModule]["properties"]) {
+      this.shrenddLocal[shrenddModule]["forcereload"] = true;
+      this.shrenddLocal[shrenddModule]["properties"] = moduleProperties
+      let fileTime = Date.now();
+      this.shrenddLocal[shrenddModule]["properties-last-modified"] = fileTime;
+    }
   }
 
   private async loadShrenddLocal() {
@@ -768,10 +762,15 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           this.shrenddLocal[shrenddModule] = new Map<string, any>();
         }
 
-        const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --module "${shrenddModule}" -verbose`;
+        const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --get-property shrendd.config.path --module "${shrenddModule}"`;
         myTargets = await this.runCommand(propertyCommand, execOptions) as string;
-        let targetProperties = myTargets.split("\n");
+        console.log("raw targets:", myTargets);
+        let allProperties = myTargets.trim().trimStart().split("<<<>>>");
+        myTargets = allProperties.shift() || '';
+        let configDirs = allProperties.shift() || '';
+        let targetProperties = myTargets.trim().trimStart().split("\n");
         myTargets = targetProperties.shift() || '';
+        let configProperties = configDirs.trim().trimStart().split("\n");
         for (const templateTarget of targetProperties) {
           let parts = templateTarget.split(": ");
           if (this.shrenddLocal[shrenddModule][parts[0]]) {
@@ -781,6 +780,15 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           this.shrenddLocal[shrenddModule][parts[0]]["shrenddStart"] = parts[1].trim();
         }
         this.shrenddLocal[shrenddModule]['targets'] = myTargets;
+        for (const currentBuildDir of configProperties) {
+          const finalTarget = currentBuildDir.split(": ")[0].trim();
+          console.log(`parsing target (${finalTarget}) config dir: ${currentBuildDir}`);
+          const finalDir = currentBuildDir.split(": ")[1].trim();
+          if (!this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]) {
+            this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`] = new Map();
+          }
+          this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]['config.dir'] = finalDir;
+        }
       }
       let didGet = this.getTemplateDirs(myTargets, shrenddModule, execOptions);
       await didGet;
