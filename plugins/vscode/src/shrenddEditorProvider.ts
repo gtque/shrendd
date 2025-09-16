@@ -58,6 +58,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           text: this.documentShrendder.get(panelTitle).get("isRunning"),
       });
     }
+    this.documentShrendder.get(panelTitle).set("selectedRender", "!not-initialized!");
     // Listen for document changes
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
       if (e.document.uri.toString() === document.uri.toString()) {
@@ -78,6 +79,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel.webview.onDidReceiveMessage(async message => {
       switch (message.type) {
         case 'edit':
+          // const processed = await this.processTemplate(panelTitle, webviewPanel, document, this.context, false);
           this.updateTextDocument(panelTitle, document, message.text);
           if (this.documentShrendder.get(panelTitle).has("isRunning")) {
             this.updateStatusWebview(panelTitle, webviewPanel, this.documentShrendder.get(panelTitle).get("isRunning"));
@@ -129,7 +131,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           }
           break;
         case "selectRender":
-          console.log(`selected render option: ${message.value}`);
+          console.log(`updated selected render option: ${message.value}`);
+          this.documentShrendder.get(panelTitle).set("selectedRender", message.value);
           break;
       }
     });
@@ -220,6 +223,17 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   }
 
   private updateStatusWebview(panelTitle: string, webviewPanel: vscode.WebviewPanel, message: string) {
+    // Post the latest document content to the webview
+    if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
+      this.documentShrendder.get(panelTitle).set("isRunning", message);
+      this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({
+          type: 'set-render',
+          text: message,
+      });
+    }
+  }
+
+  private updateSelectedRenderWebview(panelTitle: string, webviewPanel: vscode.WebviewPanel, message: string) {
     // Post the latest document content to the webview
     if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
       this.documentShrendder.get(panelTitle).set("isRunning", message);
@@ -356,9 +370,9 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       myTargets = this.shrenddLocal[`${shrenddModule}`]['targets'];
       if (myTargets != null && myTargets.trim().length > 0) {
         let currentTargets = myTargets.split(" ");
-        console.log(`checking file path: ${filePath}`);
+        // console.log(`checking file path: ${filePath}`);
         for (const possibleTarget of currentTargets) {
-          console.log(`checking target: ${possibleTarget}`);
+          // console.log(`checking target: ${possibleTarget}`);
           if (filePath.includes(possibleTarget)) {
             currentTarget = possibleTarget;
             break;
@@ -474,12 +488,22 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         console.log("not Windows, keeping path as is");
       }
 
-      const configYamls = await this.detectConfigYamlFiles(this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['config.dir']);
+      const configYamls = await this.detectConfigYamlFiles(this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['config.dir'], this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['config.definition']);
       if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
         this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({
             type: 'update-render',
             text: configYamls.join(","),
         });
+      }
+      if (this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config'] !== this.documentShrendder.get(panelTitle).get("selectedRender")) {
+        if (this.documentShrendder.get(panelTitle).get("selectedRender") && this.documentShrendder.get(panelTitle).get("selectedRender") !== "!not-initialized!" && configYamls.includes(this.documentShrendder.get(panelTitle).get("selectedRender"))) {
+          this.documentShrendder.get(panelTitle).set("selectedRender", this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config']);
+
+        } else {
+          this.documentShrendder.get(panelTitle).set("selectedRender", "!build!");
+        }
+        this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config'] = this.documentShrendder.get(panelTitle).get("selectedRender");
+        await this.updateShrenddLocal();
       }
       if (doingBuild) {
         const uri = vscode.Uri.file(moduleDetectionPath);
@@ -763,22 +787,86 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     return shrenddInfo;
   }
 
-  private async detectConfigYamlFiles(pathtoCheck: string): Promise<string[]> {
+  private async detectConfigYamlFiles(pathtoCheck: string, configDefinition: string): Promise<string[]> {
     const path = require('path');
     console.log(`detecting config yaml files in: ${pathtoCheck}`);
+    
+    // Try to get workspace folder first
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(`${pathtoCheck}/`));
-    if (!workspaceFolder) {
-      console
-      vscode.window.showInformationMessage('Could not determine workspace folder.');
-      return [""];
-    }
+    
+    let searchBase: string;
+    let relativePattern: vscode.RelativePattern;
+    
+    // if (workspaceFolder) {
+    //     // Path is within a workspace folder - use relative pattern
+    //     console.log(`Using workspace folder: ${workspaceFolder.uri.fsPath}`);
+    //     searchBase = pathtoCheck;
+    //     relativePattern = new vscode.RelativePattern(pathtoCheck, '**/*.yml');
+    // } else {
+        // Path is outside workspace folders - check if it exists and is accessible
+        console.log(`Path is outside workspace folders: ${pathtoCheck}`);
+        
+        try {
+            // Check if the directory exists
+            const dirUri = vscode.Uri.file(pathtoCheck);
+            await vscode.workspace.fs.stat(dirUri);
+            
+            // Directory exists, but we can't use workspace.findFiles outside workspace
+            // We'll need to use Node.js fs module directly
+            return await this.findYamlFilesDirectly(pathtoCheck, configDefinition);
+            
+        } catch (error) {
+            console.log(`Directory does not exist or is not accessible: ${pathtoCheck}`);
+            return [];
+        }
+    // }
+    
     const searchPattern = '**/*.yml';
-    const relativePattern = new vscode.RelativePattern(pathtoCheck, searchPattern);
     console.log(`searching for pattern: ${relativePattern.pattern} in base: ${relativePattern.base}`);
-    const files = await vscode.workspace.findFiles(relativePattern, null, 1000); // Limit to 1000 results
-    const fileList = files.map(fileUri => path.basename(fileUri.fsPath)); // Or fileUri.path for full path
-    console.log(`found config yaml files: ${fileList.join(",")}`);
-    return fileList;
+    
+    try {
+        const files = await vscode.workspace.findFiles(relativePattern, null, 1000); // Limit to 1000 results
+        const fileList = files.map(fileUri => path.basename(fileUri.fsPath));
+        console.log(`found config yaml files: ${fileList.join(",")}`);
+        return fileList;
+    } catch (error) {
+        console.error(`Error searching for YAML files: ${error}`);
+        return [];
+    }
+  }
+
+  private async findYamlFilesDirectly(pathtoCheck: string, configDefinition: string): Promise<string[]> {
+    const fs = require('fs').promises;
+    
+    const path = require('path');
+    
+    try {
+        const files: string[] = [];
+        
+        async function searchDirectory(dir: string): Promise<void> {
+            try {
+                const entries = await fs.readdir(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                    // const fullPath = path.join(dir, entry.name);
+                    if (entry.isDirectory()) {
+                        // do nothing because the configs are expected to be only one level deep
+                    } else if (entry.isFile() && entry.name.endsWith('.yml') && !configDefinition.includes(entry.name)) {
+                      files.push(entry.name);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error reading directory ${dir}: ${error}`);
+            }
+        }
+        
+        await searchDirectory(pathtoCheck);
+        console.log(`found config yaml files (direct search): ${files.join(",")}`);
+        return files;
+        
+    } catch (error) {
+        console.error(`Error in direct file search: ${error}`);
+        return [];
+    }
   }
 
   private async loadDefaultModuleProperties(shrenddModule: string, panelTitle: string, webviewPanel: vscode.WebviewPanel, execOptions: any) {
@@ -812,15 +900,17 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           this.shrenddLocal[shrenddModule] = new Map<string, any>();
         }
 
-        const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --get-property shrendd.config.path --module "${shrenddModule}"`;
+        const propertyCommand = `./shrendd --get-property "shrendd.targets" --get-property shrendd.working.dir --get-property shrendd.config.path --get-property shrendd.config.definition --module "${shrenddModule}"`;
         myTargets = await this.runCommand(propertyCommand, execOptions) as string;
         console.log("raw targets:", myTargets);
         let allProperties = myTargets.trim().trimStart().split("<<<>>>");
         myTargets = allProperties.shift() || '';
         let configDirs = allProperties.shift() || '';
+        let targetDefinitions = allProperties.shift() || '';
         let targetProperties = myTargets.trim().trimStart().split("\n");
         myTargets = targetProperties.shift() || '';
         let configProperties = configDirs.trim().trimStart().split("\n");
+        let definitionProperties = targetDefinitions.trim().trimStart().split("\n");
         for (const templateTarget of targetProperties) {
           let parts = templateTarget.split(": ");
           if (this.shrenddLocal[shrenddModule][parts[0]]) {
@@ -838,6 +928,15 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`] = new Map();
           }
           this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]['config.dir'] = finalDir;
+        }
+        for (const currentBuildDir of definitionProperties) {
+          const finalTarget = currentBuildDir.split(": ")[0].trim();
+          console.log(`parsing target (${finalTarget}) definition: ${currentBuildDir}`);
+          const finalDir = currentBuildDir.split(": ")[1].trim();
+          if (!this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]) {
+            this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`] = new Map();
+          }
+          this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]['config.definition'] = finalDir;
         }
       }
       let didGet = this.getTemplateDirs(myTargets, shrenddModule, execOptions);

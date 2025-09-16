@@ -205,10 +205,8 @@ window.addEventListener('DOMContentLoaded', () => {
       console.log(`updating force: ${message.text}`);
       checkForce.checked = message.text;
     } else if (message.type === 'set-render') {
-      console.log(`setting render: ${message.text}`);
       let selectoptions = selectRender.getElementsByTagName('option');
       for (const option of Array.from(selectoptions)) {
-        console.log(`checking target: ${option.value}`);
         if (option.value === message.text) {
           option.selected = true;
           break;
@@ -223,13 +221,12 @@ window.addEventListener('DOMContentLoaded', () => {
         theConfig = theConfig.trim().trimStart().trimEnd();
         possibilities.push(theConfig);
         // let found = false;
-        // console.log(`checking target: ${option.value}`);
-        if (selectoptions.find(option => option.value === message.text) === undefined) {
+        if (selectoptions.find(option => option.value === theConfig) === undefined) {
           //need to add option if not found
           let newOption = document.createElement('option');
-          newOption.value = message.text;
-          newOption.text = message.text;
-          newOption.selected = true;
+          newOption.value = theConfig;
+          newOption.text = theConfig;
+          // newOption.selected = true;
           selectRender.appendChild(newOption);
         }
       }
@@ -239,6 +236,7 @@ window.addEventListener('DOMContentLoaded', () => {
         // }
         if (possibilities.find(possibility => possibility === option.value) === undefined) {
           //need to remove option if not found
+          console.log("not found, removing: " + option.value);
           if (option.value !== '!build!') {
             selectRender.removeChild(option);
           }
