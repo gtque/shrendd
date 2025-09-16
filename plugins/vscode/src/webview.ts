@@ -8,6 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const processed = document.getElementById('processed') as HTMLPreElement;
   const shrenddStatus = document.getElementById('text-status') as HTMLInputElement;
   const checkForce = document.getElementById('check-force') as HTMLInputElement;
+  const selectRender = document.getElementById('select-render') as HTMLSelectElement;
   let initialContent = (window as any).initialShrenddContent || '';  
   // Create an enhanced editor with line numbers
   source.innerHTML = `
@@ -203,6 +204,48 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (message.type === 'set-force') {
       console.log(`updating force: ${message.text}`);
       checkForce.checked = message.text;
+    } else if (message.type === 'set-render') {
+      console.log(`setting render: ${message.text}`);
+      let selectoptions = selectRender.getElementsByTagName('option');
+      for (const option of Array.from(selectoptions)) {
+        console.log(`checking target: ${option.value}`);
+        if (option.value === message.text) {
+          option.selected = true;
+          break;
+        }
+      }
+    } else if (message.type === 'update-render') {
+      console.log(`updating render: ${message.text}`);
+      const selectoptions = Array.from(selectRender.getElementsByTagName('option'));
+      const possibleValues = message.text.split(',');
+      let possibilities: string[] = [];
+      for (let theConfig of possibleValues) {
+        theConfig = theConfig.trim().trimStart().trimEnd();
+        possibilities.push(theConfig);
+        // let found = false;
+        // console.log(`checking target: ${option.value}`);
+        if (selectoptions.find(option => option.value === message.text) === undefined) {
+          //need to add option if not found
+          let newOption = document.createElement('option');
+          newOption.value = message.text;
+          newOption.text = message.text;
+          newOption.selected = true;
+          selectRender.appendChild(newOption);
+        }
+      }
+      for (const option of selectoptions) {
+          // option.selected = true;
+          // break;
+        // }
+        if (possibilities.find(possibility => possibility === option.value) === undefined) {
+          //need to remove option if not found
+          if (option.value !== '!build!') {
+            selectRender.removeChild(option);
+          }
+        }
+      }
+      // console.log(`updating render: ${message.text}`);
+      // const options = selectRender.getElementsByTagName('option');
     }
   });
 
@@ -244,6 +287,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const isChecked: boolean = checkForce.checked;
     vscode.postMessage({ type: `force-${isChecked}` });
   };
+
+  selectRender.addEventListener('change', (e) => {
+    const target = e.target as HTMLSelectElement | null;
+    if (target) {
+      vscode.postMessage({ type: 'selectRender', value: target.value });
+    }
+  });
 
   // Initialize line numbers and focus
   setTimeout(() => {
