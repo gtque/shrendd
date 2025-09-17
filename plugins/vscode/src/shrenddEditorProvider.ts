@@ -43,6 +43,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 
     webviewPanel.webview.html = this.getHtmlForWebview(document, webviewPanel.webview, this.context);
     const panelTitle = webviewPanel.title;
+
+    //initialize document state
     if (!this.documentShrendder.has(panelTitle)) {
       this.documentShrendder.set(panelTitle, new Map());
     }
@@ -59,6 +61,11 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       });
     }
     this.documentShrendder.get(panelTitle).set("selectedRender", "!not-initialized!");
+    this.documentShrendder.get(panelTitle).set("moduleState", "!not-initialized!");
+
+    //kick off module initialization but don't wait for it.
+    this.initializeModule(panelTitle, webviewPanel, document);
+
     // Listen for document changes
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
       if (e.document.uri.toString() === document.uri.toString()) {
@@ -79,36 +86,11 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel.webview.onDidReceiveMessage(async message => {
       switch (message.type) {
         case 'edit':
-          // const processed = await this.processTemplate(panelTitle, webviewPanel, document, this.context, false);
           this.updateTextDocument(panelTitle, document, message.text);
-          if (this.documentShrendder.get(panelTitle).has("isRunning")) {
-            this.updateStatusWebview(panelTitle, webviewPanel, this.documentShrendder.get(panelTitle).get("isRunning"));
-          }
+          await this.initializeModule(panelTitle, webviewPanel, document);
           break;
         case 'process':
-          // console.log(`panel: ${webviewPanel.title}`);
-          if (!this.documentShrendder.get(panelTitle).has("isRunning") || this.documentShrendder.get(panelTitle).get("isRunning") === "shrenddered") {
-            console.log("shrendding the document...");
-            this.documentShrendder.get(panelTitle).set("isRunning", "shrendding...");
-            try {
-              const processed = await this.processTemplate(panelTitle, webviewPanel, document, this.context, true);
-              if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
-                this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: processed });
-              }
-            } catch (error) {
-              if (error instanceof Error) {
-                console.log(`error updating template, please try loading the preview again:${error.message}`);
-              } else {
-                console.log('error updating template, please try loading the preview again: unknown error');
-              }
-              if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
-                this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: "error building template, please try loading the preview again." });
-              }
-            }
-            this.documentShrendder.get(panelTitle).set("isRunning", "shrenddered");
-          } else {
-            this.updateStatusWebview(panelTitle, webviewPanel, this.documentShrendder.get(panelTitle).get("isRunning"));
-          }
+          await this.doProcess(panelTitle, webviewPanel, document);
           break;
         case "force-true":
           console.log("set force shrendd to true");
@@ -129,10 +111,12 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
                 text: this.documentShrendder.get(panelTitle).get("isRunning"),
             });
           }
+          await this.initializeModule(panelTitle, webviewPanel, document);
           break;
         case "selectRender":
           console.log(`updated selected render option: ${message.value}`);
           this.documentShrendder.get(panelTitle).set("selectedRender", message.value);
+          await this.initializeModule(panelTitle, webviewPanel, document);
           break;
       }
     });
@@ -148,6 +132,32 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
           this.updateWebview(panelTitle, webviewPanel, document);
       }
     });
+  }
+
+  private async doProcess(panelTitle: string, webviewPanel: vscode.WebviewPanel, document: vscode.TextDocument): Promise<void> {
+    // console.log(`panel: ${webviewPanel.title}`);
+    if (!this.documentShrendder.get(panelTitle).has("isRunning") || this.documentShrendder.get(panelTitle).get("isRunning") === "shrenddered") {
+      console.log("shrendding the document...");
+      this.documentShrendder.get(panelTitle).set("isRunning", "shrendding...");
+      try {
+        const processed = await this.processTemplate(panelTitle, webviewPanel, document, this.context);
+        if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
+          this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: processed });
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          console.log(`error updating template, please try loading the preview again:${error.message}`);
+        } else {
+          console.log('error updating template, please try loading the preview again: unknown error');
+        }
+        if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
+          this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: "error building template, please try loading the preview again." });
+        }
+      }
+      this.documentShrendder.get(panelTitle).set("isRunning", "shrenddered");
+    } else {
+      this.updateStatusWebview(panelTitle, webviewPanel, this.documentShrendder.get(panelTitle).get("isRunning"));
+    }
   }
 
   private getHtmlForWebview(
@@ -227,7 +237,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
       this.documentShrendder.get(panelTitle).set("isRunning", message);
       this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({
-          type: 'set-render',
+          type: 'set-status',
           text: message,
       });
     }
@@ -238,7 +248,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
       this.documentShrendder.get(panelTitle).set("isRunning", message);
       this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({
-          type: 'set-status',
+          type: 'set-render',
           text: message,
       });
     }
@@ -324,11 +334,105 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     return execOptions;
   }
 
-  private async processTemplate(panelTitle: string, webviewPanel: vscode.WebviewPanel, doc: vscode.TextDocument, context: vscode.ExtensionContext, doingBuild: boolean): Promise<string> {
+  private async processTemplate(panelTitle: string, webviewPanel: vscode.WebviewPanel, doc: vscode.TextDocument, context: vscode.ExtensionContext): Promise<string> {
     const path = require('path');
     
     const forcedAtStart = this.forceShrendd;
 
+    if (!this.shrenddLocal) {
+      console.log('no shrendd local, will try to load it now...');
+      await this.loadShrenddLocal();
+    }
+    
+    const filePath = doc.uri.fsPath;
+    
+    let rendered = "";
+    const moduleSettings = await this.initializeModule(panelTitle, webviewPanel, doc);
+    const shrenddModule = moduleSettings.get("module");
+    console.log(`processing templates for module: ${shrenddModule}`);
+    this.shrenddLocalMemory.get(`${shrenddModule}`).set('isRunning', true);
+    if (this.shrenddLocal) {
+      const currentTarget = moduleSettings.get("target");
+      const execOptions = moduleSettings.get("execOptions");
+      const moduleDetectionPath = moduleSettings.get("moduleDetectionPath");
+      const useConfig = moduleSettings.get("useConfig");
+
+      let myTargetFile = "";
+
+      const uri = vscode.Uri.file(moduleDetectionPath);
+      const mustBuild = forcedAtStart || await this.checkIfBuildRequired(shrenddModule, currentTarget, filePath, uri, panelTitle, webviewPanel);
+      console.log(`final moduleTemplateDir: ${moduleDetectionPath}`);
+      const doUseconfig = (useConfig && useConfig !== '' && useConfig !== '!build!') ? `--config "${useConfig}"` : '';
+      const buildOrRender = (useConfig === '!build!' || useConfig === '') ? '-b' : '-r';
+      const buildCommand = `./shrendd ${buildOrRender} --module "${shrenddModule}" ${doUseconfig} -offline`;
+      console.log(`building: ${buildCommand}`);
+      rendered = moduleDetectionPath + ":\n";
+      if ( forcedAtStart || mustBuild ) {
+        this.updateStatusWebview(panelTitle, webviewPanel, `shrendd building`);
+        const thePromiseOfTheBuild = (cmd: string) => new Promise((resolve) => {
+          exec(`${cmd}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
+            try {
+              vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+                const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+                // console.log('Content of file:', contentString);
+                myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
+                // fs.unlinkSync(uri.fsPath);
+                resolve(myTargetFile);
+              });
+            } catch (error) {
+                if (error instanceof Error) {
+                  console.error(`Failed to read file: ${error.message}`);
+                } else {
+                  console.error('Failed to read file: Unknown error');
+                }
+                resolve(`error building, please run './shrendd -b --module ${shrenddModule}' for more information`); // Resolve with empty string on error
+            }
+          });
+        });
+        rendered += await thePromiseOfTheBuild(`${buildCommand}`);
+        this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['built-config'] = useConfig;
+        await this.updateShrenddLocal();
+        this.updateStatusWebview(panelTitle, webviewPanel, `template built`);
+      } else {
+        const thePromiseOfTheBuild = new Promise((resolve) => {
+          try {
+              vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
+                const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
+                // console.log('Content of file:', contentString);
+                myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
+                // fs.unlinkSync(uri.fsPath);
+                resolve(myTargetFile);
+              });
+            } catch (error) {
+                if (error instanceof Error) {
+                  console.error(`Failed to read file: ${error.message}`);
+                } else {
+                  console.error('Failed to read file: Unknown error');
+                }
+                resolve(`error building, please run './shrendd -b --module ${shrenddModule}' for more information`); // Resolve with empty string on error
+            }
+          });
+          rendered += await thePromiseOfTheBuild
+          this.updateStatusWebview(panelTitle, webviewPanel, `template unchanged`);
+            // rendered += myTargetFile
+      }
+    }
+    this.shrenddLocalMemory.get(`${shrenddModule}`).set('isRunning', false);
+    // .replace(/^[/\\]+/, '');
+    return rendered;
+  }
+
+  private async initializeModule(panelTitle: string, webviewPanel: vscode.WebviewPanel, doc: vscode.TextDocument): Promise<Map<string, any>> {
+    const path = require('path');
+    const moduleSettings = new Map<string, any>();
+    const forcedAtStart = this.forceShrendd;
+
+    if (this.documentShrendder.get(panelTitle).get("moduleState") === "loading...") {
+      console.log("waiting for module to finish loading...");
+      await this.waitUntilCondition(() => this.documentShrendder.get(panelTitle).get("moduleState") !== "loading...", 500, 15*60000); // Check every 500ms, with a 15-minute timeout
+    }
+    console.log("proceeding with module initialization");
+    this.documentShrendder.get(panelTitle).set("moduleState", "loading...");
     if (!this.shrenddLocal) {
       console.log('no shrendd local, will try to load it now...');
       await this.loadShrenddLocal();
@@ -365,7 +469,6 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     let myTargets = "";
     let defaultModuleProperties = this.loadDefaultModuleProperties(shrenddModule, panelTitle, webviewPanel, execOptions);
     await defaultModuleProperties;
-    let rendered = "";
     if (this.shrenddLocal) {
       myTargets = this.shrenddLocal[`${shrenddModule}`]['targets'];
       if (myTargets != null && myTargets.trim().length > 0) {
@@ -381,7 +484,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       }
       if (currentTarget === "") {
         console.error(`No target found for file ${filePath} in module ${shrenddModule}. This file does not appear to be in a valid shrendd project. Make sure the file is in a proper module and target directory. If you are using custom directories for the targets, please make sure the path includes the target name does not include names that match other targets defined in your project: ${myTargets}`);
-        return `No target found for file ${filePath} in module ${shrenddModule}. This file does not appear to be in a valid shrendd project. Please see error log for more information.`;
+        this.documentShrendder.get(panelTitle).set("moduleState", "loaded, not found.");
+        return moduleSettings;
       }
       // let shrenddModuleName = shrenddDefaultModuleName;
       if (shrenddModule === ".") {
@@ -431,44 +535,27 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         // console.log('no build dir defined yet, getting it from shrendd');
         this.updateStatusWebview(panelTitle, webviewPanel, `detecting build directory`);
         const target = currentTarget;
-        const propertyCommand = `./shrendd --target "${target}" --get-property "shrendd.${target}.build.dir" --get-property "shrendd.default.build.dir" --module "${shrenddModule}"`;
+        const propertyCommand = `./shrendd --target "${target}" --get-property "shrendd.${target}.build.dir" --get-property "shrendd.default.build.dir" --get-property "shrendd.${target}.render.dir" --get-property "shrendd.default.render.dir" --module "${shrenddModule}"`;
         myTargetFile = await this.runCommand(propertyCommand, execOptions) as string;
         let targetProperties = myTargetFile.split("<<<>>>");
         let targetedBuildDir = targetProperties.shift() || '';
         let targetedBuildDirs = targetedBuildDir.trimStart().trimEnd().split("\n");
         let defaultBuildDir = targetProperties.shift() || '';
         let defaultBuildDirs = defaultBuildDir.trimStart().trimEnd().split("\n");
-        for (const currentBuildDir of defaultBuildDirs) {
-          console.log(`parsing default build dir: ${currentBuildDir}`);
-          const finalTarget = currentBuildDir.split(": ")[0].trim();
-          const finalDir = currentBuildDir.split(": ")[1].trim();
-          if (!this.shrenddLocal[`${shrenddModule}`][`default-${finalTarget}`]) {
-            this.shrenddLocal[`${shrenddModule}`][`default-${finalTarget}`] = new Map();
-          }
-          this.shrenddLocal[`${shrenddModule}`][`default-${finalTarget}`]['build.dir'] = finalDir;
-        }
-        for (const currentBuildDir of targetedBuildDirs) {
-          const finalTarget = currentBuildDir.split(": ")[0].trim();
-          console.log(`parsing target (${finalTarget}) build dir: ${currentBuildDir}`);
-          const finalDir = currentBuildDir.split(": ")[1].trim();
-          if (!this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]) {
-            this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`] = new Map();
-          }
-          this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]['build.dir'] = finalDir;
-        }
-        defaultBuildDir = this.shrenddLocal[`${shrenddModule}`][`default-${currentTarget}`]['build.dir'];
-        targetedBuildDir = this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['build.dir'];
-        console.log("defaultBuildDir: ", defaultBuildDir);
-        myTargetFile = defaultBuildDir;
-        if (`${targetedBuildDir}` !== '' && `${targetedBuildDir}` !== 'null') {
-          myTargetFile = targetedBuildDir;
-          console.log(`Using targeted (${currentTarget}) build dir: ${myTargetFile}`);
-        }
-        this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['build.dir'] = myTargetFile;
+        let targetedRenderDir = targetProperties.shift() || '';
+        let targetedRenderDirs = targetedRenderDir.trimStart().trimEnd().split("\n");
+        let defaultRenderDir = targetProperties.shift() || '';
+        let defaultRenderDirs = defaultRenderDir.trimStart().trimEnd().split("\n");
+        await this.processTargetDirs(defaultBuildDirs, targetedBuildDirs, "build.dir", shrenddModule, currentTarget);
+        await this.processTargetDirs(defaultRenderDirs, targetedRenderDirs, "render.dir", shrenddModule, currentTarget);
         await this.updateShrenddLocal();
       }
       let moduleTemplateDir = this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['template.dir'];
-      let moduleBuildDir = this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['build.dir'];
+      let currentTargetDir = "build.dir";
+      if (this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]["selected-config"] !== "!build!") {
+        currentTargetDir = "render.dir";
+      }
+      let moduleBuildDir = this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`][`${currentTargetDir}`];
       let moduleDetectionPath = "/" + path.normalize(filePath).replace(/:/g, "").replace(/\\/g, "/");
       console.log(`module: ${shrenddModule} -> target: ${currentTarget}`);
       console.log(`original file path: ${path.normalize(filePath)}`);
@@ -487,7 +574,56 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         // return linuxPath;
         console.log("not Windows, keeping path as is");
       }
+      const useConfig = await this.determineConfig(shrenddModule, currentTarget, panelTitle, webviewPanel);
+      moduleSettings.set("module", shrenddModule);
+      moduleSettings.set("target", currentTarget);
+      moduleSettings.set("useConfig", useConfig);
+      moduleSettings.set("execOptions", execOptions);
+      moduleSettings.set("moduleDetectionPath", moduleDetectionPath);
+      await this.updateShrenddLocal();
+    }
+    this.updateStatusWebview(panelTitle, webviewPanel, `module ${shrenddModule} initialized`);
+    this.documentShrendder.get(panelTitle).set("moduleState", "loaded");
+    return moduleSettings;
+  }
 
+  private async processTargetDirs(defaultBuildDirs: any, targetedBuildDirs: any, dirTarget: string, shrenddModule: string, currentTarget: string) {
+    if (this.shrenddLocal) {
+      for (const currentBuildDir of defaultBuildDirs) {
+        console.log(`parsing default ${dirTarget}: ${currentBuildDir}`);
+        const finalTarget = currentBuildDir.split(": ")[0].trim();
+        const finalDir = currentBuildDir.split(": ")[1].trim();
+        if (!this.shrenddLocal[`${shrenddModule}`][`default-${finalTarget}`]) {
+          this.shrenddLocal[`${shrenddModule}`][`default-${finalTarget}`] = new Map();
+        }
+        this.shrenddLocal[`${shrenddModule}`][`default-${finalTarget}`][`${dirTarget}`] = finalDir;
+      }
+      for (const currentBuildDir of targetedBuildDirs) {
+        const finalTarget = currentBuildDir.split(": ")[0].trim();
+        console.debug(`parsing target (${finalTarget}) ${dirTarget}: ${currentBuildDir}`);
+        const finalDir = currentBuildDir.split(": ")[1].trim();
+        if (!this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`]) {
+          this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`] = new Map();
+        }
+        this.shrenddLocal[`${shrenddModule}`][`${finalTarget}`][`${dirTarget}`] = finalDir;
+      }
+      let defaultBuildDir = this.shrenddLocal[`${shrenddModule}`][`default-${currentTarget}`][`${dirTarget}`];
+      let targetedBuildDir = this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`][`${dirTarget}`];
+      let myTargetFile = defaultBuildDir;
+      if (`${targetedBuildDir}` !== '' && `${targetedBuildDir}` !== 'null') {
+        myTargetFile = targetedBuildDir;
+        console.debug(`Using targeted (${currentTarget}) ${dirTarget}: ${myTargetFile}`);
+      }
+      this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`][`${dirTarget}`] = myTargetFile;
+    }
+  }
+
+  private async determineConfig(shrenddModule: string, currentTarget: string, panelTitle: string, webviewPanel: vscode.WebviewPanel): Promise<string> {
+    let doUpdateSelectedRender = false;
+    if (this.documentShrendder.get(panelTitle).get("selectedRender") && this.documentShrendder.get(panelTitle).get("selectedRender") === "!not-initialized!") {
+      doUpdateSelectedRender = true;
+    }
+    if (this.shrenddLocal) {
       const configYamls = await this.detectConfigYamlFiles(this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['config.dir'], this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['config.definition']);
       if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
         this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({
@@ -495,74 +631,30 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
             text: configYamls.join(","),
         });
       }
+      console.log("config options collected.");
       if (this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config'] !== this.documentShrendder.get(panelTitle).get("selectedRender")) {
+        console.log("selected config in shrendd local is different from the webview");
         if (this.documentShrendder.get(panelTitle).get("selectedRender") && this.documentShrendder.get(panelTitle).get("selectedRender") !== "!not-initialized!" && configYamls.includes(this.documentShrendder.get(panelTitle).get("selectedRender"))) {
-          this.documentShrendder.get(panelTitle).set("selectedRender", this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config']);
-
+          console.log("already initialized and selected render is valid: ");
+          this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config'] = this.documentShrendder.get(panelTitle).get("selectedRender");
         } else {
-          this.documentShrendder.get(panelTitle).set("selectedRender", "!build!");
+          if (this.documentShrendder.get(panelTitle).get("selectedRender") && this.documentShrendder.get(panelTitle).get("selectedRender") === "!not-initialized!") {
+            console
+            this.documentShrendder.get(panelTitle).set("selectedRender", this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config']);
+          } else {
+            console.log("was initialized, but selected render is not valid, will set to shrendd local selected config");
+            this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config'] = this.documentShrendder.get(panelTitle).get("selectedRender");
+          }
         }
         this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config'] = this.documentShrendder.get(panelTitle).get("selectedRender");
         await this.updateShrenddLocal();
       }
-      if (doingBuild) {
-        const uri = vscode.Uri.file(moduleDetectionPath);
-        const mustBuild = forcedAtStart || await this.checkIfBuildRequired(shrenddModule, currentTarget, filePath, uri, panelTitle, webviewPanel);
-        console.log(`final moduleTemplateDir: ${moduleDetectionPath}`);
-        const buildCommand = `./shrendd -b --module "${shrenddModule}" -offline`;
-        rendered = moduleDetectionPath + ":\n";
-        if ( forcedAtStart || mustBuild ) {
-          this.updateStatusWebview(panelTitle, webviewPanel, `shrendd building`);
-          const thePromiseOfTheBuild = (cmd: string) => new Promise((resolve) => {
-            exec(`${cmd}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
-              try {
-                vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
-                  const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
-                  // console.log('Content of file:', contentString);
-                  myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
-                  // fs.unlinkSync(uri.fsPath);
-                  resolve(myTargetFile);
-                });
-              } catch (error) {
-                  if (error instanceof Error) {
-                    console.error(`Failed to read file: ${error.message}`);
-                  } else {
-                    console.error('Failed to read file: Unknown error');
-                  }
-                  resolve(`error building, please run './shrendd -b --module ${shrenddModule}' for more information`); // Resolve with empty string on error
-              }
-            });
-          });
-          rendered += await thePromiseOfTheBuild(`${buildCommand}`);
-          this.updateStatusWebview(panelTitle, webviewPanel, `template built`);
-        } else {
-          const thePromiseOfTheBuild = new Promise((resolve) => {
-            try {
-                vscode.workspace.fs.readFile(uri).then((contentBytes: Uint8Array) => {
-                  const contentString = Buffer.from(contentBytes).toString('utf8'); // Convert bytes to string
-                  // console.log('Content of file:', contentString);
-                  myTargetFile = contentString.trim().trimStart().trimEnd(); // Set the target file path
-                  // fs.unlinkSync(uri.fsPath);
-                  resolve(myTargetFile);
-                });
-              } catch (error) {
-                  if (error instanceof Error) {
-                    console.error(`Failed to read file: ${error.message}`);
-                  } else {
-                    console.error('Failed to read file: Unknown error');
-                  }
-                  resolve(`error building, please run './shrendd -b --module ${shrenddModule}' for more information`); // Resolve with empty string on error
-              }
-            });
-            rendered += await thePromiseOfTheBuild
-            this.updateStatusWebview(panelTitle, webviewPanel, `template unchanged`);
-              // rendered += myTargetFile
-        }
-      }
+      return this.shrenddLocal[`${shrenddModule}`][`${currentTarget}`]['selected-config']
     }
-    this.shrenddLocalMemory.get(`${shrenddModule}`).set('isRunning', false);
-    // .replace(/^[/\\]+/, '');
-    return rendered;
+    if (doUpdateSelectedRender) {
+      this.updateSelectedRenderWebview(panelTitle, webviewPanel, this.documentShrendder.get(panelTitle).get("selectedRender"));
+    }
+    return this.documentShrendder.get(panelTitle).get("selectedRender");
   }
 
   private async checkIfBuildRequired(shrenddModule: string, currentTarget: string,filePath: string, uri: vscode.Uri, panelTitle: string, webviewPanel: vscode.WebviewPanel): Promise<boolean> {
@@ -572,12 +664,29 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       let fileTime = (await vscode.workspace.fs.stat(ouri)).mtime;
       let builtTime = (await vscode.workspace.fs.stat(uri)).mtime;
       if ( fileTime < builtTime ) {
-        console.log("no change detected, no need to build.")
-        this.updateStatusWebview(panelTitle, webviewPanel, `no changes detected`);
-        mustBuild = false;
+        console.log("no change detected in templates");
+        if (this.shrenddLocal && this.shrenddLocal[shrenddModule] && this.shrenddLocal[shrenddModule][currentTarget] && this.shrenddLocal[shrenddModule][currentTarget]['built-config'] && this.shrenddLocal[shrenddModule][currentTarget]['built-config'] === this.shrenddLocal[shrenddModule][currentTarget]['selected-config']) {
+          console.log("same config as last build");
+          if (`${this.shrenddLocal[shrenddModule][currentTarget]['built-config']}` === '!build!' || !this.shrenddLocal[shrenddModule][currentTarget]['built-config'] || this.shrenddLocal[shrenddModule][currentTarget]['built-config'] === '') {
+            this.updateStatusWebview(panelTitle, webviewPanel, `no changes detected`);
+            mustBuild = false;
+          } else {
+            console.log(`checking config file: ${this.shrenddLocal[shrenddModule][currentTarget]['config.dir']}/${this.shrenddLocal[shrenddModule][currentTarget]['built-config']}`);
+            const curi = vscode.Uri.file(`${this.shrenddLocal[shrenddModule][currentTarget]['config.dir']}/${this.shrenddLocal[shrenddModule][currentTarget]['built-config']}`);
+            fileTime = (await vscode.workspace.fs.stat(curi)).mtime;
+            if ( fileTime < builtTime ) {
+              this.updateStatusWebview(panelTitle, webviewPanel, `no changes detected`);
+              mustBuild = false;
+            } else {
+              this.updateStatusWebview(panelTitle, webviewPanel, `config changes detected, rebuilding`);
+            }
+          }
+        } else {
+          this.updateStatusWebview(panelTitle, webviewPanel, `config changed, rebuilding`);
+        }
       } else {
         console.log(`change detected, must rebuild: ${filePath} < ${builtTime}`)
-        this.updateStatusWebview(panelTitle, webviewPanel, `changes detected, rebuilding`);
+        this.updateStatusWebview(panelTitle, webviewPanel, `template changed, rebuilding`);
       }
     } catch (error) {
       this.updateStatusWebview(panelTitle, webviewPanel, `no file, rebuilding`);
@@ -670,9 +779,8 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     console.debug(`saving shrenddLocal (${workspaceRoot}/.shrendd/.vscode/shrendd.json):\n${updatedJsonString}`);
     try {
       fs.writeFileSync(`${workspaceRoot}/.shrendd/.vscode/shrendd.json`, updatedJsonString);
-      vscode.window.showInformationMessage('File successfully overwritten!');
     } catch (err: any) {
-      vscode.window.showErrorMessage(`Error overwriting file: ${err.message}`);
+      console.error(`Error overwriting file: ${err.message}`);
     }
     // await fs.writeFile(`${workspaceRoot}/.shrendd/.vscode/shrendd.json`, updatedJsonString);
   }
