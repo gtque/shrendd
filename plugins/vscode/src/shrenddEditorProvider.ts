@@ -64,6 +64,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     this.documentShrendder.get(panelTitle).set("moduleState", "!not-initialized!");
 
     //kick off module initialization but don't wait for it.
+    console.log("initializing module...");
     this.initializeModule(panelTitle, webviewPanel, document);
 
     // Listen for document changes
@@ -84,6 +85,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 
     // Handle messages from the webview
     webviewPanel.webview.onDidReceiveMessage(async message => {
+      console.log(`message received: ${message.type}`);
       switch (message.type) {
         case 'edit':
           this.updateTextDocument(panelTitle, document, message.text);
@@ -136,6 +138,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
 
   private async doProcess(panelTitle: string, webviewPanel: vscode.WebviewPanel, document: vscode.TextDocument): Promise<void> {
     // console.log(`panel: ${webviewPanel.title}`);
+    console.log("processing shrendd template...");
     if (!this.documentShrendder.get(panelTitle).has("isRunning") || this.documentShrendder.get(panelTitle).get("isRunning") === "shrenddered") {
       console.log("shrendding the document...");
       this.documentShrendder.get(panelTitle).set("isRunning", "shrendding...");
@@ -156,6 +159,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       }
       this.documentShrendder.get(panelTitle).set("isRunning", "shrenddered");
     } else {
+      console.log("shrendd already running, ignoring request.");
       this.updateStatusWebview(panelTitle, webviewPanel, this.documentShrendder.get(panelTitle).get("isRunning"));
     }
   }
@@ -246,7 +250,6 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
   private updateSelectedRenderWebview(panelTitle: string, webviewPanel: vscode.WebviewPanel, message: string) {
     // Post the latest document content to the webview
     if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
-      this.documentShrendder.get(panelTitle).set("isRunning", message);
       this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({
           type: 'set-render',
           text: message,
@@ -368,6 +371,9 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       console.log(`building: ${buildCommand}`);
       rendered = moduleDetectionPath + ":\n";
       if ( forcedAtStart || mustBuild ) {
+        if (!this.documentShrendder.get(panelTitle).get("isDisposed")) {
+          this.documentShrendder.get(panelTitle).get("panel").webview.postMessage({ type: 'processed', text: "shrendding..." });
+        }
         this.updateStatusWebview(panelTitle, webviewPanel, `shrendd building`);
         const thePromiseOfTheBuild = (cmd: string) => new Promise((resolve) => {
           exec(`${cmd}`, execOptions, (error: Error | null, stdout: any, stderr: any) => {
@@ -463,7 +469,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
     await this.checkifShrenddLocalIsStale(shrenddModule, shrenddInfo, moduleProperties);
     console.log("continuing with module configuration");
     this.logCurrentShrenddLocal();
-    this.updateStatusWebview(panelTitle, webviewPanel, `initially detected module: ${shrenddModule}`);
+    // this.updateStatusWebview(panelTitle, webviewPanel, `initially detected module: ${shrenddModule}`);
 
     let currentTarget = "";
     let myTargets = "";
@@ -500,7 +506,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
         // console.log(`moduleDetectionPath: ${moduleDetectionPath}`);
         if (!moduleDetectionPath || moduleDetectionPath === '' || moduleDetectionPath === '/') {
           console.log("no module detected, using default module name");
-          this.updateStatusWebview(panelTitle, webviewPanel, `using default module`);
+          // this.updateStatusWebview(panelTitle, webviewPanel, `using default module`);
         } else {
           shrenddModule = moduleDetectionPath.replace(/^[/\\]+/, ''); // remove leading slashes
           console.log(`Detected shrendd module from file path: ${shrenddModule}`);
@@ -511,12 +517,12 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       } else {
         console.log("a defined module has already been detected, assuming that is the module for this file");
       }
-      this.updateStatusWebview(panelTitle, webviewPanel, `module: ${shrenddModule}`);
+      // this.updateStatusWebview(panelTitle, webviewPanel, `module: ${shrenddModule}`);
       let myTargetFile = "";
       if (this.shrenddLocalMemory.has(`${shrenddModule}`) && this.shrenddLocalMemory.get(`${shrenddModule}`).has('isRunning') && this.shrenddLocalMemory.get(`${shrenddModule}`).get('isRunning')) {
           try {
             console.log(`waiting for condition: ${shrenddModule} to not be running`);
-            this.updateStatusWebview(panelTitle, webviewPanel, `${shrenddModule} in progress`);
+            // this.updateStatusWebview(panelTitle, webviewPanel, `${shrenddModule} in progress`);
             await this.waitUntilCondition(() => !this.shrenddLocalMemory.get(`${shrenddModule}`).get('isRunning'), 500, 15*60000); // Check every 500ms, with a 15-minute timeout
             console.log("Condition met: Data is ready for processing.");
             // Proceed with processing the data
@@ -533,7 +539,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       }
       if (myTargetFile === '') {
         // console.log('no build dir defined yet, getting it from shrendd');
-        this.updateStatusWebview(panelTitle, webviewPanel, `detecting build directory`);
+        // this.updateStatusWebview(panelTitle, webviewPanel, `detecting build directory`);
         const target = currentTarget;
         const propertyCommand = `./shrendd --target "${target}" --get-property "shrendd.${target}.build.dir" --get-property "shrendd.default.build.dir" --get-property "shrendd.${target}.render.dir" --get-property "shrendd.default.render.dir" --module "${shrenddModule}"`;
         myTargetFile = await this.runCommand(propertyCommand, execOptions) as string;
@@ -582,8 +588,10 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       moduleSettings.set("moduleDetectionPath", moduleDetectionPath);
       await this.updateShrenddLocal();
     }
-    this.updateStatusWebview(panelTitle, webviewPanel, `module ${shrenddModule} initialized`);
+    // this.updateStatusWebview(panelTitle, webviewPanel, `module ${shrenddModule} initialized`);
+    this.updateSelectedRenderWebview(panelTitle, webviewPanel, `${moduleSettings.get("useConfig")}`);
     this.documentShrendder.get(panelTitle).set("moduleState", "loaded");
+    this.shrenddLocalMemory.get(`${shrenddModule}`).set('isRunning', false);
     return moduleSettings;
   }
 
@@ -985,7 +993,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       } else {
         try {
           console.log(`waiting for condition: ${shrenddModule} initialized.`);
-          this.updateStatusWebview(panelTitle, webviewPanel, `${shrenddModule} initializing`);
+          // this.updateStatusWebview(panelTitle, webviewPanel, `${shrenddModule} initializing`);
           await this.waitUntilCondition(() => this.shrenddLocal && this.shrenddLocal[shrenddModule]['targeted'], 500, 5*60000); // Check every 500ms, with a 5-minute timeout
           console.log("Condition met: Data is ready for processing.");
           // Proceed with processing the data
@@ -1000,7 +1008,7 @@ export class ShrenddEditorProvider implements vscode.CustomTextEditorProvider {
       if (this.shrenddLocal && this.shrenddLocal[shrenddModule]) {
         this.shrenddLocal[shrenddModule]["forcereload"] = false;
       }
-      this.updateStatusWebview(panelTitle, webviewPanel, `initializing module properties`);
+      // this.updateStatusWebview(panelTitle, webviewPanel, `initializing module properties`);
       // console.log(`no properties cached for module ${shrenddDefaultModuleName}, getting them now`);
       // also get shrendd.working.dir to use as part of module calculation, will be be prepended to the path after stripping the plugins working dir.
       if (this.shrenddLocal) {
