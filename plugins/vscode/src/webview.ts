@@ -206,11 +206,16 @@ window.addEventListener('DOMContentLoaded', () => {
       checkForce.checked = message.text;
     } else if (message.type === 'set-render') {
       let selectoptions = selectRender.getElementsByTagName('option');
+      let found = false;
       for (const option of Array.from(selectoptions)) {
         if (option.value === message.text) {
           option.selected = true;
+          found = true;
           break;
         }
+      }
+      if (!found) {
+        vscode.postMessage({ type: 'selectRender', value: "!build!" });
       }
     } else if (message.type === 'update-render') {
       console.log(`updating render: ${message.text}`);
