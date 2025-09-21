@@ -9,7 +9,7 @@
   "version": "0.0.1",
   "publisher": "gtque",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.104.0"
   },
   "categories": [
     "Other"
@@ -19,7 +19,13 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "customEditors": [
+    "commands": [
+      {
+        "command": "shrendd.openTemplateEditor",
+        "title": "shrendd preview"
+      }
+    ],
+	"customEditors": [
       {
         "viewType": "shrendd.templateEditor",
         "displayName": "Shrendditor",
@@ -28,12 +34,6 @@
             "filenamePattern": "*.srd"
           }
         ]
-      }
-    ],
-    "commands": [
-      {
-        "command": "shrendd.openTemplateEditor",
-        "title": "Open with Shrendditor"
       }
     ]
   },
@@ -44,12 +44,12 @@
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
-    "@types/vscode": "^1.74.0",
+    "@types/vscode": "^1.104.0",
     "css-loader": "^7.1.2",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.2",
-    "vscode": "*",
+    "@vscode/test-electron": "*",
     "webpack": "^5.101.3",
     "webpack-cli": "^6.0.1"
   }
