@@ -6,9 +6,9 @@ shrendd:
   targets:
     - name: k8s
     - name: render
+  cache:
+    dir: "~/.shrendd/cache - space"
   library:
-    cache:
-      dir: "~/.shrendd/cache - space"
     shrendd-lib-test:
       get:
         src: "https://github.com/gtque/shrendd-lib-test/releases/download/v$(shrenddOrDefault \"shrendd.library.shrendd-lib-test.version\")/shrendd-lib-test.zip"

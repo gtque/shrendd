@@ -5,9 +5,9 @@ shrendd:
     local: ../../main
   targets:
     - name: render
+  cache:
+    dir: "~/.shrendd/cache - space"
   library:
-    cache:
-      dir: "~/.shrendd/cache - space"
     offline_library_lib:
       get:
         src: $_MODULE_DIR/test-init/part1/lib

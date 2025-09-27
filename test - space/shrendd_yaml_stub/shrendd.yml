@@ -1,8 +1,15 @@
 shrendd:
   version: latest
-#  git:
-#    url: https://github.com/gtque/shrendd
+  cache:
+    dir: ~/.shrendd/cache
+#  url: https://github.com/gtque/shrendd
   dir: $SHRENDD_WORKING_DIR/.shrendd
+  get:
+#   the default is the latest release, this url will redirect to the latest release
+    src: https://github.com/gtque/shrendd/releases/latest/download/${GET_ARTIFACT}
+#   below is an example of getting a specific version, as a reminder of how to specify a specific version
+#    src: "https://github.com/gtque/shrendd/releases/download/v$(shrenddOrDefault shrendd.version)/${GET_ARTIFACT}"
+  version: latest
   default:
     action: render
     template:
@@ -11,6 +18,10 @@ shrendd:
       dir: $(shrenddOrDefault shrendd.deploy.dir)/target/build/${target}
     render:
       dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/${target}
+    plugins:
+      get:
+        method: "$_GETTER"
+        parameters: ""
     source: "cloneShrendd \"$_GETTER\" \"$_target\""
   deploy:
     dir: $_MODULE_DIR/deploy
@@ -33,12 +44,16 @@ shrendd:
 #    render:
 #      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/render
   k8s:
-#    source: "cloneShrendd \"$_GETTER\" \"k8s\""
     yaml:
       padding: 2
+#  plugins:
+#    example:
+#      version: latest
+#      get:
+#        method: "$_GETTER"
+#        src: ""
+#        parameters: ""
   library:
-    cache:
-      dir: ~/.shrendd/cache
     default:
       type: auto
       get:

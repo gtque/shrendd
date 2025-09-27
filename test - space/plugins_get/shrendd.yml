@@ -6,23 +6,30 @@ shrendd:
     - name: shanty
     - name: crib
     - name: mobile
+  default:
+    plugins:
+      get:
+        method: curlD
   plugins:
     house:
-      source: "https://github.com/gtque/shrendd-lib-test/releases/download/v2.0.0"
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/download/v2.0.0/${GET_ARTIFACT}"
+        method: "wgetD"
       version: "2.0.0"
-      getter: "wgetD"
     shanty:
-      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/latest/download/${GET_ARTIFACT}"
+        method: "curlD"
       version: "latest"
-      getter: curlD
     crib:
-      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/latest/download/${GET_ARTIFACT}"
       version: "latest"
-      getter: curlD
     mobile:
-      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/latest/download/${GET_ARTIFACT}"
+        method: curlD
       version: "latest"
-      getter: curlD
 house:
   greeting: "welcome to my abode."
 #  plugins:

@@ -208,7 +208,7 @@ function importShrendd {
   if [ -z "$_type" ] || [ "$_type" == "null" ]; then
     _type="text"
   fi
-  _cache_dir="$(shrenddOrDefault "shrendd.library.cache.dir")"
+  _cache_dir="$(shrenddOrDefault "shrendd.cache.dir")"
   _bank="$_cache_dir/$_library/$_version"
   _shrendd_dir=$(shrenddOrDefault "shrendd.working.dir")
   _is_library=$(shrenddOrDefault "shrendd.library.$_library" 42)

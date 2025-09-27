@@ -27,9 +27,13 @@ function defaultShrendd {
   cat << 'EndOfYml'
 shrendd:
   dir: $SHRENDD_WORKING_DIR/.shrendd
+  get:
+#   the default is the latest release, this url will redirect to the latest release
+    src: https://github.com/gtque/shrendd/releases/latest/download/${GET_ARTIFACT}
+#   below is an example of getting a specific version, as a reminder of how to specify a specific version
+#    src: "https://github.com/gtque/shrendd/releases/download/v$(shrenddOrDefault "shrendd.version")/${GET_ARTIFACT}"
   version: latest
-  git:
-    url: https://github.com/gtque/shrendd
+# version: 0.17.0-beta
 EndOfYml
 }
 
@@ -147,21 +151,22 @@ function isUpgrade {
   fi
 }
 
+function setGettingArtifact {
+  export GET_ARTIFACT="$1"
+  export GET_ARTIFACT_ID=$(echo "${1}.." | cut -d'.' -f1)
+  export GET_ARTIFACT_EXTENSION=$(echo "${1}.." | cut -d'.' -f2)
+}
+
 function cloneShrendd {
   echo "cloning shrendd"
-  if [ "$_SHRENDD_VERSION" == "latest" ]; then
-    export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/latest/download"
-  else
-    export _SHRENDD_ARTIFACT_URL="$_SHRENDD_GIT_URL/releases/download/v$_SHRENDD_VERSION"
-  fi
   rm -f "$SHRENDD_DIR/targetversion.yml"
-  eval "$1 \"$SHRENDD_DIR/targetversion.yml\" \"$_SHRENDD_ARTIFACT_URL/version.yml\""
+  setGettingArtifact "version.yml"
+  eval "$1 \"$SHRENDD_DIR/targetversion.yml\" \"$(shrenddOrDefault shrendd.get.src)\""
   echo "retrieved target version."
   export _SHRENDD_IS_UPTODATE_NOW=$(isUpToDate)
   export _SHRENDD_IS_COMPATIBLE=$(isCompatible)
   export _SHRENDD_IS_UPGRADE=$(isUpgrade)
   _force_message="false"
-  #rm -f $SHRENDD_DIR/targetversion.yml
   if [ "$_SHRENDD_IS_UPTODATE_NOW" == "true" ]; then
     echo "seems shrendd is already up to date."
   else
@@ -181,7 +186,8 @@ function cloneShrendd {
           fi
           rm -f "$SHRENDD_DIR/$2.zip"
           echo "downloading with $1...$2"
-          eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
+          setGettingArtifact "$2"
+          eval "$1 \"$2\" \"$(shrenddOrDefault shrendd.get.src)\""
         else
           echo "It appears as though you are downgrading. That is not recommended, as it seems there were breaking changes between the version you are on and the target version. Please check the Release Notes for more information."
           _force_message="true"
@@ -207,7 +213,8 @@ function cloneShrendd {
       fi
       rm -f "$SHRENDD_DIR/$2.zip"
       echo "downloading with $1...$2"
-      eval "$1 \"$2\" \"$_SHRENDD_ARTIFACT_URL/$2\""
+      setGettingArtifact "$2"
+      eval "$1 \"$2\" \"$(shrenddOrDefault shrendd.get.src)\""
     fi
   fi
   if [ "$_force_message" == "true" ]; then
@@ -230,7 +237,6 @@ export _SHRENDD_DEFAULTS=$(defaultShrendd)
 export SHRENDD_WORKING_DIR=$(pwd)
 export SHRENDD_DIR=$(shrenddOrDefault "shrendd.dir")
 export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
-export _SHRENDD_GIT_URL=$(shrenddOrDefault "shrendd.git.url")
 echo "shrendd version: $_SHRENDD_VERSION"
 
 if [ -d $(shrenddOrDefault "shrendd.test.local") ]; then

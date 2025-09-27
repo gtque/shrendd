@@ -6,9 +6,9 @@ shrendd:
   targets:
     - name: render
     - name: k8s
+  cache:
+    dir: "~/.shrendd/cache - space"
   library:
-    cache:
-      dir: "~/.shrendd/cache - space"
     template_library:
       get:
         src: $_MODULE_DIR/lib

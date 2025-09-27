@@ -5,6 +5,7 @@ shrendd:
     - name: crib
   plugins:
     crib:
-      source: "https://github.com/gtque/shrendd-lib-test/releases/latest/download"
       version: "latest"
-      getter: curlD
+      get:
+        src: "https://github.com/gtque/shrendd-lib-test/releases/latest/download/${GET_ARTIFACT}"
+        method: curlD

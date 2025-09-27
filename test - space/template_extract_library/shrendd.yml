@@ -11,9 +11,9 @@ shrendd:
       dir: ./resources/templates
     render:
       dir: ./target/render/rendered
+  cache:
+    dir: "~/.shrendd/cache - space"
   library:
-    cache:
-      dir: "~/.shrendd/cache - space"
     template_extract:
       get:
         src: $_MODULE_DIR/lib
