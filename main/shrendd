@@ -254,7 +254,9 @@ function checkFile {
 }
 
 function keysFor {
-  echo $(echo -e "$1" | yq e "(.. | select(. == \"*\") | {(path | join(\".\")): .}) | keys " - | sed -e "s/\- //g" | sed -e "s/ /$_SPACE_PLACE_HOLDER/g")
+  _escaped="$(echo "$1" | sed -e "s/\\\\\\\\//g")"
+  shrenddLog "keysFor: $_escaped"
+  echo $(echo -e "$_escaped" | yq e "(.. | select(. == \"*\") | {(path | join(\".\")): .}) | keys " - | sed -e "s/\- //g" | sed -e "s/ /$_SPACE_PLACE_HOLDER/g")
 }
 
 function shrenddStub {
@@ -497,13 +499,17 @@ function isUpToDate {
 
 function initTargets {
   if [[ -z "$GIVEN_TARGETS" ]]; then
+    shrenddEchoIfNotSilent "user defined keys"
     export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
+    shrenddEchoIfNotSilent "default defined keys"
     export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
     #echo "config keys: $_SHRENDD_CONFIG_KEYS"
     #echo "default keys: $_SHRENDD_DEFAULT_KEYS"
     #getTargetsD "$_SHRENDD_CONFIG_KEYS"
+    shrenddEchoIfNotSilent "listing targets"
     _target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
     #echo "trying to load array of targets: $_target_keys"
+    shrenddEchoIfNotSilent "checking if targets found"
     if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
       shrenddEchoIfNotSilent "no targets... using default list"
       #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
