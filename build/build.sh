@@ -108,7 +108,6 @@ sed -i "s/_UPSHRENDD_VERSION=\".*\"/_UPSHRENDD_VERSION=\"$_VERSION\"/g" "./build
 echo "copy version"
 cp main/version.yml "build/target/$_VERSION/"
 sed -i "s/ version: *.*/ version: $_VERSION/g" "./build/target/$_VERSION/version.yml"
-
 #zip contents of each main/[target] to target/[version]/[target].zip, include version.yml in the zip file
 cd main
 echo "add core shrendd files to render.zip"
@@ -124,6 +123,17 @@ for target in $_targets; do
   echo " zipping $target"
   zip -r "../build/target/$_VERSION/$target.zip" "$target"
 done
+cd ../plugins
+echo "processing plugins"
+echo "vscode plugin"
+cd ./vscode
+sed -i "s/\"version\": \"0.0.1\"/\"version\": \"$_VERSION\"/g" "./package.json"
+rm -f ./shrendditor-*.vsix
+npm run build
+vsce package
+mv ./shrendditor-*.vsix ../../build/target/$_VERSION/
+sed -i "s/\"version\": \"$_VERSION\"/\"version\": \"0.0.1\"/g" "./package.json"
+cd ..
 echo "building finished"
 echo  "------------------------------------"
 cd ..

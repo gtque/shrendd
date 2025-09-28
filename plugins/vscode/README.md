@@ -52,7 +52,11 @@ Open any shrendd template file (e.g., `.srd`) and select "Open with Shrendditor"
   * changing the selected config and clicking preview
   * Saving a change to the template file and clicking preview
   * changing the "config" yaml file and clicking preview
-  
+
+npm install -g vsce
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+source ~/.bashrc
+nvm install 22.18.0
 
 ## Help?
 
