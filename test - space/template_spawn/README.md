@@ -1,0 +1,1 @@
+test spawning a config file from a config-template.

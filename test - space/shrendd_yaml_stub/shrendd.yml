@@ -1,0 +1,61 @@
+shrendd:
+  version: latest
+  cache:
+    dir: ~/.shrendd/cache
+#  url: https://github.com/gtque/shrendd
+  dir: $SHRENDD_WORKING_DIR/.shrendd
+  get:
+#   the default is the latest release, this url will redirect to the latest release
+    src: https://github.com/gtque/shrendd/releases/latest/download/${GET_ARTIFACT}
+#   below is an example of getting a specific version, as a reminder of how to specify a specific version
+#    src: "https://github.com/gtque/shrendd/releases/download/v$(shrenddOrDefault shrendd.version)/${GET_ARTIFACT}"
+  version: latest
+  default:
+    action: render
+    template:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
+    build:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/build/${target}
+    render:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/${target}
+    plugins:
+      get:
+        method: "$_GETTER"
+        parameters: ""
+    source: "cloneShrendd \"$_GETTER\" \"$_target\""
+  deploy:
+    dir: $_MODULE_DIR/deploy
+  targets:
+  - name: render
+    description: the default target is just render.
+  config:
+    stub: true
+    path: $SHRENDD_WORKING_DIR/config
+    validate: true
+    unwind: true
+    default: localdev.yml
+    definition: $(shrenddOrDefault shrendd.config.path)/config-template.yml
+    src: $(shrenddOrDefault shrendd.config.path)/src
+#  render:
+#    template:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/render/templates
+#    build:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/build/render
+#    render:
+#      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/render
+  k8s:
+    yaml:
+      padding: 2
+#  plugins:
+#    example:
+#      version: latest
+#      get:
+#        method: "$_GETTER"
+#        src: ""
+#        parameters: ""
+  library:
+    default:
+      type: auto
+      get:
+        method: "${_GETTER}"
+        parameters: ""

@@ -1,0 +1,1 @@
+test extracting a config-template file.

@@ -1,0 +1,17 @@
+test:
+  hello: |-
+    required: false
+    description: hello world value
+    default: cheeseburger
+  fruit: |-
+    required: false
+    description: used to test unset, so it should be overriden in localdev.yml but not in the modules localdev.yml
+    default: orange
+  sandwich: |-
+    required: false
+    description: used to test unset, so it should be overriden in localdev.yml but not in the modules localdev.yml
+    default: turkey club
+  dessert: |-
+    required: false
+    description: used to test unset, so it should be overriden in localdev.yml but not in the modules localdev.yml
+    default: cake

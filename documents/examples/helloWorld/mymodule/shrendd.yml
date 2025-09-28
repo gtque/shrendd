@@ -1,0 +1,18 @@
+shrendd:
+  default:
+    action: render
+    template:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/${target}/templates
+    build:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/shabam/build/${target}
+    render:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/${target}
+  render:
+    action: render
+    build:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/shabam/myhouse/${target}
+    render:
+      dir: $(shrenddOrDefault shrendd.deploy.dir)/target/render/mymodule
+  targets:
+  - name: render
+  - name: test

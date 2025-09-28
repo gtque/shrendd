@@ -1,0 +1,16 @@
+shrendd:
+  config:
+    path: ./deploy/config
+  test:
+    local: ../../main
+  targets:
+    - name: render
+  cache:
+    dir: "~/.shrendd/cache - space"
+  library:
+    offline_library_lib:
+      get:
+        src: $_MODULE_DIR/test-init/part2/lib
+        method: devD
+      version: latest
+      type: yaml

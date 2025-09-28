@@ -1,0 +1,56 @@
+{
+  "name": "shrendditor",
+  "displayName": "Shrendditor",
+  "description": "A VS Code extension providing a custom editor for shrendd template files with importShrendd processing.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gtque/shrendd.git"
+  },
+  "version": "0.0.1",
+  "publisher": "gtque",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCustomEditor:shrendd.templateEditor"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "shrendd.openTemplateEditor",
+        "title": "shrendd preview"
+      }
+    ],
+	"customEditors": [
+      {
+        "viewType": "shrendd.templateEditor",
+        "displayName": "Shrendditor",
+        "selector": [
+          {
+            "filenamePattern": "*.srd"
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.104.0",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.2",
+    "@vscode/test-electron": "*",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
+  }
+}

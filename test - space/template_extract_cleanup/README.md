@@ -1,0 +1,1 @@
+test updating extract of a config-template file to an existing file and remove fields no longer present.

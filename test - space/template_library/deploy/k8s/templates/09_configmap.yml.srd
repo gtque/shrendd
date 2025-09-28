@@ -1,0 +1,13 @@
+$(importShrendd "template_library:k8s/configmap-render-test.yml.srd")
+data:
+  test1a: "${APP_TEST_TEST1}"
+  test1b: "chunkky"
+  test2: |
+$(pad "$(getConfig "app.test.test2")" "2")
+  application-$(echo "$(getConfig "release.stage")" | tr "[:upper:]" "[:lower:]").yml: |
+    server:
+      port: 8080
+      servlet:
+        context-path: '/'
+    hello:
+      world: \"Cheeks!\"

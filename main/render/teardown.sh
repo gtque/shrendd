@@ -1,15 +1,15 @@
 #!/bin/bash
 
 function actualRender {
-  _template=$(cat $1)
+  _template=$(cat "$1")
   _rname=$(echo "$1" | sed -e "s/\.srd//g")
-  eval "echo -e \"$_template\"" > $RENDER_DIR/$_rname
+  eval "echo -e \"$_template\"" > "$RENDER_DIR/$_rname"
 }
 
 function doRender {
   _curdir=$(pwd)
   echo "running bash templating..."
-  cd $1
+  cd "$1"
   config_files="*.srd"
   echo "files should be in: $config_files"
   for fname in $config_files
@@ -18,6 +18,6 @@ function doRender {
       actualRender "$fname"
     fi
   done
-  cd $_curdir
+  cd "$_curdir"
   pwd
 }

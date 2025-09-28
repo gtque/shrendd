@@ -5,6 +5,10 @@
 **/pudding
 **/custom-rendered
 **/target
+**/node_modules
+**/out
+**/media/bundled
+**/*.vsix
 test/template_extract/config
 test/template_extract_cleanup/config
 test/template_extract_library/config
@@ -29,4 +33,4 @@ documents/tutorials/libraryImport/boot.shrendd
 documents/tutorials/libraryImport/shrendd.yml
 documents/tutorials/quickstart
 documents/tutorials/extractTemplate/config
-
+documents/examples/helloWorld/mymodule/deploy/shabam

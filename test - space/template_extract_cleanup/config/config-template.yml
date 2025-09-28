@@ -1,0 +1,69 @@
+i:
+  should:
+    exist: 'indirect: true'
+psych:
+  burton guster: |-
+    required: false
+    description: "i'm still here"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    default: 42
+  fru it:
+    pin-a p_pl e: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  juliet: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  spencer:
+    henry: |-
+      required: false
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+    shawn: |-
+      required: true
+      description: "something to summarize or express what this value is and used for"
+      sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+      indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+test:
+  array: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  corbin: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  hello: |-
+    required: true
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  howdy: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  multipass: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+  multipass2: |-
+    required: false
+    description: "something to summarize or express what this value is and used for"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
+test-howdy: |-
+  required: false
+  description: "something to summarize or express what this value is and used for"
+  sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+  #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"

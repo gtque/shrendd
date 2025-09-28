@@ -1,0 +1,7 @@
+shrendd:
+  test:
+    local: ../../main
+    property: "hello, world!"
+  targets:
+    - name: test
+    - name: k8s

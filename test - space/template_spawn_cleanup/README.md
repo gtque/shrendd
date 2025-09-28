@@ -1,0 +1,1 @@
+test updating spawnd config with removing entries that no longer exist.

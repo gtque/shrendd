@@ -1,0 +1,7 @@
+* `--target [targetname]` overrides target list in shrendd.config
+* library module support specified in the template part of the import path separated by `>`
+* display 'shrendd' properties: `./shrendd --get-property [shrendd.property.name]`
+* vscode plugin support for displaying the built version of the template file. See [shrendditor readme](https://github.com/gtque/shrendd/tree/main/plugins/vscode/README.md) for more details.
+* fixes for handling file paths with spaces or other odd characters in it
+* consolidate to `get` properties (src, method, parameters)
+* escape & in values in properties and handle when getting keys.

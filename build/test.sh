@@ -1,58 +1,65 @@
 #!/bin/bash
-echo "hold my beer - drunk cousin at the wedding"
-export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
-export _TESTS="$_TESTS render_render render_no_template render_only_template render_with_scripts"
-export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
-export _TESTS="$_TESTS shrendd_yaml_override shrendd_yaml_stub shrendd_yaml_nostub"
-export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties module_get_property"
-export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
-export _TESTS="$_TESTS k8s_simple_deploy"
-export _TESTS="$_TESTS plugins_get"
-export _TESTS="$_TESTS offline_init offline_library offline_plugin"
-export _TESTS="$_TESTS build_with_import bootstrap_init"
+rm -rf ./build/target/test
+mkdir ./build/target/test
 
-#export _TESTS="single_level_default"
-source ./build/test/start.sh
-cd test
-export _FULL_TEST_RESULTS=""
-export test_results=""
+./build/test/test_main.sh > ./build/target/test/test_main.log 2>&1 &
+PID1=$! # Capture the Process ID of script1.sh
 
-start_time=$SECONDS
+# Run script2.sh in the background and redirect its output to script2_output.log
+./build/test/test_space.sh > ./build/target/test/test_space.log 2>&1 &
+PID2=$! # Capture the Process ID of script2.sh
 
-for test in $_TESTS; do
-  echo -e "\n*********************running: $test*********************\n"
-  cd $test
-  test_results=$(./test.sh 2>&1 || echo "end of shrendd tests\n------------------------------------------\n${_TEST_ERROR}$test failed${_CLEAR_TEXT_COLOR}\n------------------------------------------")
-  echo -e "$test_results"
-  _check=$(echo -e "$test_results" | grep "end of shrendd tests" || echo "not found")
-  if [[ "$_check" == "not found" ]]; then
-    test_results=$(echo "\n------------------------------------------\n${_TEST_ERROR}$test failed, not successfully ended, make sure 'source ../../build/test/end.sh' is at the end of the test and is reachable.${_CLEAR_TEXT_COLOR}\n------------------------------------------")
-  else
-    test_results=$(echo "$test_results" | sed -z "s/start of shrendd tests.*end of shrendd tests//g" )
-    _check=$(echo -e "$test_results" | grep "passed" || echo "not found")
-    if [[ "$_check" == "not found" ]]; then
-      _check=$(echo -e "$test_results" | grep "failed" || echo "not found")
-      if [[ "$_check" == "not found" ]]; then
-        test_results=$(echo "\n------------------------------------------\n${_TEST_ERROR}$test failed, there does not appear to have been any validations performed, you can use 'passed \"some message\"' and 'failed \"some message\"' to indicate validation statuses${_CLEAR_TEXT_COLOR}\n------------------------------------------")
-      fi
-    fi
+# Wait for both background processes to complete
+i=0
+while kill -0 $PID1 2>/dev/null; do
+  #\|/-\|/-\
+  theTick="-"
+  tickCount=$((i % 4))
+  if [[ $tickCount == 1 ]]; then
+    theTick="\\"
+  elif [[ $tickCount == 2 ]]; then
+    theTick="|"
+  elif [[ $tickCount == 3 ]]; then
+    theTick="/"
   fi
-  export _FULL_TEST_RESULTS="$_FULL_TEST_RESULTS$test_results"
-  cd ..
-  echo -e "\n*********************finished: $test*********************\n"
+  printf "\r(${theTick}) Waiting... %d seconds elapsed" $((i++))
+  sleep 1
 done
-end_time=$SECONDS
-duration=$((end_time - start_time))
-durationM=$((duration / 60))
-echo -e "processing results:$_FULL_TEST_RESULTS"
-passed=$(echo -e "$_FULL_TEST_RESULTS" | grep -v "failed" | grep -c "passed")
-#echo "string to search in" | grep "pattern" > /dev/null 2>&1 || echo "string if not found"
-failed=$(echo -e "$_FULL_TEST_RESULTS" | grep -c "failed" > /dev/null 2>&1 || echo "0" )
-if [ -z "$failed" ]; then
-  failed=$(echo -e "$_FULL_TEST_RESULTS" | grep -c "failed")
-fi
-total=$((passed + failed))
-echo -e "test summary:\n  total: $total passed: $passed failed: $failed\n  execution time: ${duration} seconds (${durationM} minutes) "
-if [ "$failed" -gt 0 ]; then
-  exit $failed
+while kill -0 $PID2 2>/dev/null; do
+  #\|/-\|/-\
+  theTick="-"
+  tickCount=$((i % 4))
+  if [[ $tickCount == 1 ]]; then
+    theTick="\\"
+  elif [[ $tickCount == 2 ]]; then
+    theTick="|"
+  elif [[ $tickCount == 3 ]]; then
+    theTick="/"
+  fi
+  printf "\r(${theTick})Waiting... %d seconds elapsed" $((i++))
+  sleep 1
+done
+printf "\rTests finished.\n"
+wait $PID1
+EXIT_CODE1=$?
+
+wait $PID2
+EXIT_CODE2=$?
+
+echo "Script 1 finished with exit code: $EXIT_CODE1"
+echo "Script 2 finished with exit code: $EXIT_CODE2"
+echo "tests done, please check ./build/target/test for results"
+
+echo "test_main:"
+sed -n '/test summary:/,$p' ./build/target/test/test_main.log | sed -e 's/^/  /'
+echo "test_space:"
+sed -n '/test summary:/,$p' ./build/target/test/test_space.log | sed -e 's/^/  /'
+
+# Check if either script exited with a non-zero code
+if [ $EXIT_CODE1 -ne 0 ] || [ $EXIT_CODE2 -ne 0 ]; then
+    echo "One or both scripts failed. Exiting."
+    exit 1
+else
+    echo "Both scripts completed successfully."
+    exit 0
 fi

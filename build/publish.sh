@@ -13,6 +13,7 @@ upload_release_file ./build/target/$_VERSION/shrendd shrendd
 upload_release_file ./build/target/$_VERSION/render.zip render.zip
 upload_release_file ./build/target/$_VERSION/k8s.zip k8s.zip
 upload_release_file ./build/target/$_VERSION/test.zip test.zip
+upload_release_file ./build/target/$_VERSION/shrendditor-$_VERSION.vsix shrendditor-$_VERSION.vsix
 if [[ "$_IS_LATEST" =~ ^true$ ]]; then
   echo "published a release, bumping patch version"
   ./build/versionpatch.sh

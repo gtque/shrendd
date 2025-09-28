@@ -1,0 +1,4 @@
+""hello, $(getConfig my.first.shrendd)!
+${SIMPLE_QUESTION}hello, how are you doing?df
+$(importShrendd "helloWorld:mymodule2>render/templates/hello.txt.srd:text")
+$(importShrendd "helloWorld:mymodule>render/templates/knockknock.txt.srd:text")""

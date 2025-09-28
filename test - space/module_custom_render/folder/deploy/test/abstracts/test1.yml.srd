@@ -1,0 +1,5 @@
+hello:
+  greeting1: ${TEST_HELLO}
+  greeting2: ${test.hello}
+  greeting3: $(getConfig "test.hello")
+  greeting4: $(getConfig "TEST_HELLO")

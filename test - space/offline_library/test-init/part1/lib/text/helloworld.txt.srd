@@ -1,0 +1,1 @@
+hello, $(getConfig "app.text.naem")

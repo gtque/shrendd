@@ -1,0 +1,10 @@
+shrendd:
+  config:
+    path: $_the_module/config
+  targets:
+    - name: test
+  default:
+    template:
+      dir: $_MODULE_DIR/deploy/${target}/flan
+    render:
+      dir: $_MODULE_DIR/deploy/${target}/pudding

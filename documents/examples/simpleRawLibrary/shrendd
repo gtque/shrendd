@@ -4,6 +4,7 @@ set -euo pipefail
 trap resetLocal EXIT
 
 export FORCE_SHRENDD_UPDATES="false"
+export GIVEN_TARGETS=""
 export LOG_VERBOSE="false"
 export _RED='\033[0;31m'
 export _BLUE='\033[0;34m'
@@ -45,7 +46,7 @@ shrendd:
     this:
       get:
         method: "getThis"
-        src: "$(shrenddOrDefault shrendd.deploy.dir)"
+        src: "$(shrenddOrDefault shrendd.working.dir)"
 EndOfYml
 }
 
@@ -101,38 +102,42 @@ EndOfYml
 }
 
 function resetLocal {
-  if [[ -v _DEPLOY_ERROR_DIR ]]; then  
-    if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
-      shrenddEchoIfNotSilent "information during shrendd:"
-      cat $_DEPLOY_ERROR_DIR/render_info.log | sed -e "s/^/  /g"
-    fi
-    if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
-      shrenddEchoIfNotSilent "${_TEXT_WARN}warnings during shrendd:"
-      cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
-    fi
-    if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-      shrenddEchoIfNotSilent "${_TEXT_ERROR}It seems there was an error during the process. Please review the logs for more information."
-      if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
-        shrenddEchoIfNotSilent "errors during shrendd:"
-        cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+  if [[ "$_IS_SILENT" == "0" ]]; then
+    if [[ -v _DEPLOY_ERROR_DIR ]]; then
+      if [ -f $_DEPLOY_ERROR_DIR/render_info.log ]; then
+        shrenddEchoIfNotSilent "information during shrendd:"
+        cat $_DEPLOY_ERROR_DIR/render_info.log | sed -e "s/^/  /g"
+      fi
+      if [ -f $_DEPLOY_ERROR_DIR/render_warning.log ]; then
+        shrenddEchoIfNotSilent "${_TEXT_WARN}warnings during shrendd:"
+        cat $_DEPLOY_ERROR_DIR/render_warning.log | sed -e "s/^/  /g"
+      fi
+      if [ $? -ne 0 ] || [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+        shrenddEchoIfNotSilent "${_TEXT_ERROR}It seems there was an error during the process. Please review the logs for more information."
+        if [ -f $_DEPLOY_ERROR_DIR/render_error.log ]; then
+          shrenddEchoIfNotSilent "errors during shrendd:"
+          cat $_DEPLOY_ERROR_DIR/render_error.log | sed -e "s/^/  /g"
+        fi
+      fi
+      shrenddEchoIfNotSilent "${_CLEAR_TEXT_COLOR}"
+      if [[ -v _is_debug ]]; then
+        if [ "$_is_debug" == true ]; then
+          shrenddEchoIfNotSilent "running as debug, not deleting render directories"
+        else
+          shrenddEchoIfNotSilent "was live, should be deleting render directories"
+          stageLeft
+        fi
       fi
     fi
-    shrenddEchoIfNotSilent -en "${_CLEAR_TEXT_COLOR}"
-    if [[ -v _is_debug ]]; then
-      if [ "$_is_debug" == true ]; then
-        shrenddEchoIfNotSilent "running as debug, not deleting render directories"
-      else
-        shrenddEchoIfNotSilent "was live, should be deleting render directories"
-        stageLeft
-      fi
-    fi
+    shrenddEchoIfNotSilent "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
   fi
-  shrenddEchoIfNotSilent "${_TEXT_INFO}end of shrendd${_CLEAR_TEXT_COLOR}"
 }
 
 function shrenddEchoIfNotSilent {
   if [[ "$_IS_SILENT" == "0" ]]; then
     shrenddEcho "$1"
+  else
+    shrenddLog "$1"
   fi
 }
 
@@ -485,49 +490,53 @@ function isUpToDate {
 }
 
 function initTargets {
-  export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
-  export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
-  #echo "config keys: $_SHRENDD_CONFIG_KEYS"
-  #echo "default keys: $_SHRENDD_DEFAULT_KEYS"
-  #getTargetsD "$_SHRENDD_CONFIG_KEYS"
-  _target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
-  #echo "trying to load array of targets: $_target_keys"
-  if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
-    shrenddEchoIfNotSilent "no targets... using default list"
-    #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
-    _target_keys=$(getTargets "$_SHRENDD_DEFAULT_KEYS")
-  fi
+  if [[ -z "$GIVEN_TARGETS" ]]; then
+    export _SHRENDD_CONFIG_KEYS=$(keysFor "$_SHRENDD")
+    export _SHRENDD_DEFAULT_KEYS=$(keysFor "$_SHRENDD_DEFAULTS")
+    #echo "config keys: $_SHRENDD_CONFIG_KEYS"
+    #echo "default keys: $_SHRENDD_DEFAULT_KEYS"
+    #getTargetsD "$_SHRENDD_CONFIG_KEYS"
+    _target_keys=$(getTargets "$_SHRENDD_CONFIG_KEYS")
+    #echo "trying to load array of targets: $_target_keys"
+    if [ -z "$(echo $_target_keys | sed -e "s/ //g")" ]; then
+      shrenddEchoIfNotSilent "no targets... using default list"
+      #getTargetsD "$_SHRENDD_DEFAULT_KEYS"
+      _target_keys=$(getTargets "$_SHRENDD_DEFAULT_KEYS")
+    fi
 
-  _targets=""
-  for index in $_target_keys; do
-    index=$(echo "$index" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
-    _target=$(shrenddOrDefault "$index" 0)
-    shrenddEchoIfNotSilent "checking: $_target"
-    if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
-      :
-    else
-      _targets="$_targets "
-    fi
-    _targets="$_targets$_target"
-    if [[ $# -gt 0 && "${_target}" != "render" ]]; then
-      _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
-      if [[ "${_target_source}" == "null" ]]; then
-        _target_source=$(shrenddOrDefault "shrendd.default.source" 1)
+    _targets=""
+    for index in $_target_keys; do
+      index=$(echo "$index" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
+      _target=$(shrenddOrDefault "$index" 0)
+      shrenddEchoIfNotSilent "checking: $_target"
+      if [ -z "$_targets" ] || [ "$_targets" == "" ]; then
+        :
+      else
+        _targets="$_targets "
       fi
-      _target_shrendd=$(shrenddOrDefault "shrendd.provided.${_target}" 1)
-      #cloneShrendd "$_GETTER" "$_target"
-      if [[ "$_target_shrendd" != "null" ]]; then
-        if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
-          shrenddLog "initTargets: rm ${SHRENDD_DIR}/${_target}"
-          rm -rf $SHRENDD_DIR/$_target
+      _targets="$_targets$_target"
+      if [[ $# -gt 0 && "${_target}" != "render" ]]; then
+        _target_source=$(shrenddOrDefault "shrendd.${_target}.source" 1)
+        if [[ "${_target_source}" == "null" ]]; then
+          _target_source=$(shrenddOrDefault "shrendd.default.source" 1)
         fi
-        shrenddEchoIfNotSilent "shrendd.${_target}.source: ${_target_source}"
-        eval "${_target_source}"
+        _target_shrendd=$(shrenddOrDefault "shrendd.provided.${_target}" 1)
+        #cloneShrendd "$_GETTER" "$_target"
+        if [[ "$_target_shrendd" != "null" ]]; then
+          if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+            shrenddLog "initTargets: rm ${SHRENDD_DIR}/${_target}"
+            rm -rf $SHRENDD_DIR/$_target
+          fi
+          shrenddEchoIfNotSilent "shrendd.${_target}.source: ${_target_source}"
+          eval "${_target_source}"
+        fi
       fi
-    fi
-  done
-  shrenddEchoIfNotSilent "targets initialized"
-  export targets="$_targets"
+    done
+    shrenddEchoIfNotSilent "targets initialized"
+    export targets="$_targets"
+  else
+    export targets="$GIVEN_TARGETS"
+  fi
 }
 
 function cloneShrendd {
@@ -736,9 +745,9 @@ if [[ "$_getting" == "0" ]]; then
 fi
 
 #loop over targets
-if [[ "$_getting" == "0" ]]; then
-  initTargets "true"
-fi
+# if [[ "$_getting" == "0" ]]; then
+initTargets "true"
+# fi
 if [[ -n "${_JUST_INITIALIZE+x}" ]]; then
   :
 else

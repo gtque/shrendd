@@ -1,0 +1,3 @@
+shrendd:
+  deploy:
+    dir: $_MODULE_DIR

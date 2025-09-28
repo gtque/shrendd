@@ -5,3 +5,4 @@ shrendd:
   targets:
     - name: test
     - name: k8s
+  special: "$(shrenddOrDefault shrendd.test.property)\\&check\\&test"
