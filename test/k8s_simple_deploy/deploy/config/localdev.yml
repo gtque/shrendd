@@ -21,3 +21,4 @@ ralph:
   wiggum: I'm a brick
 chief:
   wiggum: Bake him away, toys.
+special: "$(shrenddOrDefault shrendd.test.property)\\&check\\&test"

@@ -52,3 +52,7 @@ release:
     required: true
     description: "something to summarize or express what this value is and used for"
     #default: "the default value to use"
+special: |-
+  required: false
+  description: "something to summarize or express what this value is and used for"
+  default: "$(shrenddOrDefault shrendd.test.property)\\&check\\&test"
