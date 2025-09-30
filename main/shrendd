@@ -458,6 +458,9 @@ function isUpToDate {
     if [ "$_get_type" == "plugin" ]; then
       _the_dir="$_the_dir/$_get_artifact"
     fi
+    if [[ "$_get_type" == "shrendd" ]] && [[ "$_get_artifact" != "render" ]]; then
+      _the_dir="$_the_dir/$_get_artifact"
+    fi
     if [ -f "$_the_dir/version.yml" ]; then
       _SHRENDD_CURRENT_VERSION=$(yq e ".shrendd.version" "$_the_dir/version.yml")
       if [[ "$_SHRENDD_CURRENT_VERSION" == "null" ]]; then
