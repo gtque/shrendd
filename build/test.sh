@@ -6,7 +6,7 @@ mkdir ./build/target/test
 PID1=$! # Capture the Process ID of script1.sh
 
 # Run script2.sh in the background and redirect its output to script2_output.log
-./build/test/test_space.sh > ./build/target/test/test_space.log 2>&1 &
+./build/test/test_space.sh 20 > ./build/target/test/test_space.log 2>&1 &
 PID2=$! # Capture the Process ID of script2.sh
 
 # Wait for both background processes to complete

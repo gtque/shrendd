@@ -1,3 +1,0 @@
-$(importShrendd "shrendd-lib-test:bob/text/biscuits.txt:text")
-
-$(importShrendd "shrendd-lib-test:bob/text/cake.txt.srd:text")

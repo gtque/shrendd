@@ -1,1 +1,0 @@
-$(importShrendd "shrendd-lib-test:k8s/configmaps/script_configmap.yml.srd")

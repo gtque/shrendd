@@ -1,4 +1,9 @@
 #!/bin/bash
+
+if [ $# -gt 0 ]; then
+  sleep $1 #sleepping to stagger tests a bit
+fi
+
 echo "hold my beer - drunk cousin at the wedding"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
 export _TESTS="$_TESTS render_render render_no_template render_only_template render_with_scripts"
@@ -7,7 +12,7 @@ export _TESTS="$_TESTS shrendd_yaml_override shrendd_yaml_stub shrendd_yaml_nost
 export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties module_get_property"
 export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
 export _TESTS="$_TESTS k8s_simple_deploy"
-export _TESTS="$_TESTS plugins_get"
+export _TESTS="$_TESTS plugins_get plugins_command"
 export _TESTS="$_TESTS offline_init offline_library offline_plugin"
 export _TESTS="$_TESTS build_with_import bootstrap_init"
 
@@ -22,7 +27,13 @@ start_time=$SECONDS
 for test in $_TESTS; do
   echo -e "\n*********************running: $test*********************\n"
   cd $test
+  test_start_time=$SECONDS
   test_results=$(./test.sh 2>&1 || echo "end of shrendd tests\n------------------------------------------\n${_TEST_ERROR}$test failed${_CLEAR_TEXT_COLOR}\n------------------------------------------")
+  test_end_time=$SECONDS
+  test_duration=$((test_end_time - test_start_time))
+  test_durationM=$((test_duration / 60))
+  test_durationS=$((test_duration % 60))
+  test_execution_time="execution time: ${test_duration} seconds (${test_durationM} minutes and ${test_durationS} seconds)"
   echo -e "$test_results"
   _check=$(echo -e "$test_results" | grep "end of shrendd tests" || echo "not found")
   if [[ "$_check" == "not found" ]]; then
@@ -37,7 +48,7 @@ for test in $_TESTS; do
       fi
     fi
   fi
-  export _FULL_TEST_RESULTS="$_FULL_TEST_RESULTS$test_results"
+  export _FULL_TEST_RESULTS="$_FULL_TEST_RESULTS$test_results\n${test_execution_time}"
   cd ..
   echo -e "\n*********************finished: $test*********************\n"
 done

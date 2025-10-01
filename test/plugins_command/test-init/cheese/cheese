@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function cheese {
+  cat << 'EndOfYml'
+cheese:
+  burger: "flame broiled"
+EndOfYml
+}
+
+function burger {
+  echo "no onions, no pickles: ${1} > ${2}"
+}
+
+function cook {
+  mkdir -p "deploy/cheese"
+  cheese > "deploy/cheese/cheese.yml"
+}

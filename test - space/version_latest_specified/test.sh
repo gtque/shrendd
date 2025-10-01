@@ -8,16 +8,14 @@ source ../../build/release.sh
 export test_results_clone="true"
 export test_results="version_latest_specified:\n"
 export test_results="$test_results\tclone passed\n"
-export test_result_latest_version="true"
 _latest_version=$(yq e ".shrendd.version" "./.shrendd/version.yml")
 latest_release ./.shrendd/latestrelease.json
 _current_version="$_RELEASE"
 echo "running version validations"
 if [ "$_latest_version" == "$_current_version" ]; then
-  export test_result_latest_version="true"
-   passed "$test_results\tversion \"$_latest_version\" == \"$_current_version\""
+  passed "version \"$_latest_version\" == \"$_current_version\""
 else
-  failed "$test_results\tversion \"$_latest_version\" == \"$_current_version\""
+  failed "version \"$_latest_version\" == \"$_current_version\""
 fi
 
 ../../build/test/cleanup_shrendd.sh

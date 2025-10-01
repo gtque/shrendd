@@ -1,0 +1,1 @@
+* `plugin:command` execution - execute command from a plugin defined in its `plugin` file, all subsequent arguments are passed to the command

@@ -92,6 +92,19 @@ while [ $# -gt 0 ]; do
     _do_something="true"
   elif [[ "$1" == "-U" ]]; then
     export FORCE_SHRENDD_UPDATES="true"
+  elif [[ "$1" == *":"* ]]; then
+    _plugin=$(echo "${1}" | cut -d':' -f1)
+    command=($(echo "${1}" | cut -d':' -f2))
+    shift
+    if [ -f "${SHRENDD_DIR}/${_plugin}/${_plugin}" ]; then
+      source "${SHRENDD_DIR}/${_plugin}/${_plugin}"
+      command+=("$@")
+      "${command[@]}"
+    else
+      shrenddEchoIfNotSilent "the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+      exit 2
+    fi
+    exit 0
   elif [[ "$1" == "?" ]]; then
     export helped=true
     echo "Usage:"
