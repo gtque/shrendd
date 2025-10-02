@@ -194,6 +194,21 @@ function shrenddLog {
   fi
 }
 
+function shrenddLogError {
+  if [[ -v _DEPLOY_ERROR_DIR ]]; then
+    if [ -d "$_DEPLOY_ERROR_DIR" ]; then
+      :
+    else
+      mkdir -p "$_DEPLOY_ERROR_DIR"
+    fi
+    if [[ $# -gt 1 ]]; then
+      echo -e "$(dateTimeStamp): $1" >> "$_DEPLOY_ERROR_DIR/render_error.log"
+    else
+      echoSensitive "$(dateTimeStamp): $1" "true" >> "$_DEPLOY_ERROR_DIR/render_error.log"
+    fi
+  fi
+}
+
 function echoSensitive {
   if [ -z "${_TUXEDO_MASK+x}" ]; then
     if [[ $# -gt 1 ]]; then
@@ -444,6 +459,31 @@ function initColors {
   export _TEXT_INFO=$(shrenddOrDefault "shrendd.text.info")
   export _TEXT_PASS=$(shrenddOrDefault "shrendd.text.pass")
   export _TEXT_WARN=$(shrenddOrDefault "shrendd.text.warn")
+}
+
+function shrenddIfTrue {
+  shrenddLog "shrenddIfTrue: checking if '$1' is true"
+  if [[ "$1" == "true" ]] || [[ "$1" == "True" ]] || [[ "$1" == "TRUE" ]]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+function executePlugin {
+  shrenddLog "executePlugin: executing plugin command: $1"
+  _plugin=$(echo "${1}" | cut -d':' -f1)
+  command=($(echo "${1}" | cut -d':' -f2))
+  _results="${_plugin}:${command} > failed to execute"
+  shift
+  if [ -f "${SHRENDD_DIR}/${_plugin}/${_plugin}" ]; then
+    source "${SHRENDD_DIR}/${_plugin}/${_plugin}"
+    command+=("$@")
+    _results="$(eval "${command[@]}")"
+  else
+    shrenddLogError "the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+  fi
+  echo "${_results}"
 }
 
 #this needs to be able to check plugin version...

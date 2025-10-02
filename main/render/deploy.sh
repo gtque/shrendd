@@ -238,15 +238,27 @@ function doRender {
     for fname in $config_files
     do
       if [ "$fname" != "*.srd" ]; then
-        shrenddLog "doRender: reset config error logs: rm ${_DEPLOY_ERROR_DIR}/config_error.log"
-        rm -rf "$_DEPLOY_ERROR_DIR/config_error.log"
-        shrenddEcho "------------------------------------------------------\nrendering $fname"
-        actualRender "$fname"
-        if [ -f "$_DEPLOY_ERROR_DIR/config_error.log" ]; then
-          shrenddEcho "failed to render: $TEMPLATE_DIR/$fname" >> "$_DEPLOY_ERROR_DIR/render_error.log"
-          shrenddEcho "$(cat "$_DEPLOY_ERROR_DIR/config_error.log")" | sed -e "s/^/  /g" >> "$_DEPLOY_ERROR_DIR/render_error.log"
+        _ifTrue=$(grep -m 1 "^\$(shrenddIfTrue" $fname || echo "true")
+        if [[ "$_ifTrue" != "true" ]]; then
+          _ifTrue="$(eval "echo \"$_ifTrue\"")"
+        else
+          _ifTrueResult="true"
         fi
-        shrenddEcho "end $fname\n------------------------------------------------------"
+        if [[ "$_ifTrue" == "true" ]]; then
+          shrenddLog "doRender: reset config error logs: rm ${_DEPLOY_ERROR_DIR}/config_error.log"
+          rm -rf "$_DEPLOY_ERROR_DIR/config_error.log"
+          shrenddEcho "------------------------------------------------------\nrendering $fname"
+          actualRender "$fname"
+          if [ -f "$_DEPLOY_ERROR_DIR/config_error.log" ]; then
+            shrenddEcho "failed to render: $TEMPLATE_DIR/$fname" >> "$_DEPLOY_ERROR_DIR/render_error.log"
+            shrenddEcho "$(cat "$_DEPLOY_ERROR_DIR/config_error.log")" | sed -e "s/^/  /g" >> "$_DEPLOY_ERROR_DIR/render_error.log"
+          fi
+          shrenddEcho "end $fname\n------------------------------------------------------"
+        else
+          shrenddEcho "------------------------------------------------------\nrendering $fname"
+          shrenddEcho "skipping $fname due to condition not met: $_ifTrue"
+          shrenddEcho "end $fname\n------------------------------------------------------"
+        fi
       fi
     done
     cd "$_curdir"

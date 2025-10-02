@@ -1,0 +1,3 @@
+* added support for executing/calling plugin function from template
+* add shrenddIfTrue for skipping rendering of a template file
+* shrenddLogError for logging error messages to the render_error.log file.
