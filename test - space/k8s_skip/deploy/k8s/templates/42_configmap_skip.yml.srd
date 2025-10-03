@@ -1,0 +1,29 @@
+$(shrenddIfTrue "$(complexIf)")
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "${APP_TEST_NAME}"
+  namespace: "${APP_TEST_NAMESPACE}"
+  labels:
+    app.kubernetes.io/name: "${APP_TEST_NAME}"
+    app.kubernetes.io/managed-by: "${APP_TEST_MANAGER}"
+    app.kubernetes.io/version: "$(getConfig "app.test.version")"
+    app.kubernetes.io/component: "${APP_TEST_NAME}"
+    app.kubernetes.io/part-of: "${APP_TEST_NAME}"
+data:
+  test1a: "${APP_TEST_TEST1}"
+  test1b: \"${APP_TEST_TEST1}\"
+  test2: |
+$(pad "$(getConfig "app.test.test2")" "2")
+  $(test_k8s_test3)
+  $(test_k8s_test4)
+  $(test_k8s_test5)
+  test6: |
+$(getConfig "app.test.test6")
+  application-$(echo "$(getConfig "release.stage")" | tr "[:upper:]" "[:lower:]").yml: |
+    server:
+      port: 8080
+      servlet:
+        context-path: '/'
+    hello:
+      world: \"Cheeks!\"

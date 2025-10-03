@@ -1,0 +1,15 @@
+shrendd:
+  config:
+    path: ./deploy/config
+  test:
+    local: ../../main
+  targets:
+    - name: k8s
+  special: "$(shrenddOrDefault shrendd.test.property)\\&check\\&test"
+  default:
+    plugins:
+      get:
+        method: getThis
+  plugins:
+    cheese:
+      version: "0.0.0"

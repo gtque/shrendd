@@ -1,0 +1,24 @@
+app:
+  id: shrendd-test
+  test:
+    name: k8s-localdev
+    namespace: shrendd-test
+    manager: shrendd
+    version: 0.0-SNAPSHOT
+    test10: "i shouldn't be here."
+    test1: "hello, world!"
+    test2: |
+      pets:
+        cats:
+        - name: takis
+        - name: ruffles
+        - name: catniss
+    test4: "the chip sisters!!!"
+    test8: "pre-sent"
+release:
+  stage: dev
+ralph:
+  wiggum: I wanna be a triangle.
+chief:
+  wiggum: Bake him away, toys.
+special: "$(shrenddOrDefault shrendd.test.property)\\&check\\&test"

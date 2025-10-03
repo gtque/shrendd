@@ -1,0 +1,12 @@
+shrendd:
+  test:
+    local: ../../main
+  targets:
+    - name: test
+  default:
+    plugins:
+      get:
+        method: getThis
+  plugins:
+    cheese:
+      version: "0.0.0"
