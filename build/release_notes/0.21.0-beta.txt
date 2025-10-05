@@ -1,1 +1,2 @@
 * strip curly braces during extract.
+* clean up default properties in shrendd.
