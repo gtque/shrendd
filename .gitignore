@@ -12,6 +12,7 @@
 **/template_extract/config
 **/template_extract_cleanup/config
 **/template_extract_library/config
+**/template_extract_library/shrendd
 **/template_spawn/config
 **/template_spawn_cleanup/config
 **/template_remote_library/shrendd.yml
