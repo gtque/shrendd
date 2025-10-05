@@ -65,7 +65,6 @@ shrendd:
     src: https://github.com/gtque/shrendd/releases/latest/download/${GET_ARTIFACT}
 #   below is an example of getting a specific version, as a reminder of how to specify a specific version
 #    src: "https://github.com/gtque/shrendd/releases/download/v$(shrenddOrDefault shrendd.version)/${GET_ARTIFACT}"
-  version: latest
   default:
     action: render
     template:
