@@ -1,0 +1,1 @@
+* strip curly braces during extract.

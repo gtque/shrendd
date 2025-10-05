@@ -218,7 +218,7 @@ function extractTemplate {
   echo -e "${_TEXT_INFO}templating the template${_CLEAR_TEXT_COLOR}"
   echo -e "$_checker" | while read match; do
     _o_match="$match"
-    match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
+    match=$(echo "$match" | sed -e "s/\\\$(getConfigOrEmpty//g" | sed -e "s/\\\$(getConfig//g" | sed -e "s/)//g" | sed -e "s/\\\//g" | sed -e "s/\"//g" | sed -e "s/{//g" | sed -e "s/}//g" | tr "[:upper:]" "[:lower:]" | sed -e 's/^[[:space:]]*//' | cut -d'[' -f1)
     match=$(echo "$match" | sed -e 's/\([a-zA-Z0-9 _-]\+ \+[a-zA-Z0-9 _-]\+\)/[\"\1\"]/g')
     if [[ "$match" == *"-"* ]]; then
       :
@@ -230,6 +230,7 @@ function extractTemplate {
       fi
 #      :
     fi
+    match=$(echo "$match" | sed -e "s/\\\$./\\\$/g")
     if [ -n "$match" ]; then
       echo "  extracted: $_o_match => $match"  # Example: Print the match
       _found="empty"
