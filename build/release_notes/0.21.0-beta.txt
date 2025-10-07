@@ -1,2 +1,3 @@
 * strip curly braces during extract.
 * clean up default properties in shrendd.
+* tweaks to handling offline mode when checking versions.
