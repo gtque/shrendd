@@ -510,33 +510,50 @@ function isUpToDate {
         _SHRENDD_CURRENT_VERSION=$(yq e ".version" "$_the_dir/version.yml")
       fi
       if [ "$_get_version" == "latest" ]; then
-        if [ -d "$_the_dir/.latest" ]; then
-          shrenddLog "isUpToDate: rm ${_the_dir}/.latest"
-          rm -rf "$_the_dir/.latest"
-        fi
-        mkdir "$_the_dir/.latest"
-        if [ $# -gt 5 ]; then
-          eval "$_get_action \"$_the_dir/.latest/version.yml\" \"$_get_src\" \"$6\""
+        if [[ "${is_offline}" == "true" ]]; then
+          shrenddLog "offline mode, cannot check for latest version."
         else
-          eval "$_get_action \"$_the_dir/.latest/version.yml\" \"$_get_src\""
+          if [ -d "$_the_dir/.latest" ]; then
+            shrenddLog "isUpToDate: rm ${_the_dir}/.latest"
+            rm -rf "$_the_dir/.latest"
+          fi
+          mkdir "$_the_dir/.latest"
+          if [ $# -gt 5 ]; then
+            eval "$_get_action \"$_the_dir/.latest/version.yml\" \"$_get_src\" \"$6\""
+          else
+            eval "$_get_action \"$_the_dir/.latest/version.yml\" \"$_get_src\""
+          fi
         fi
-        _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" "$_the_dir/.latest/version.yml")
-        if [[ "$_SHRENDD_LATEST_VERSION" == "null" ]]; then
-          _SHRENDD_LATEST_VERSION=$(yq e ".version" "$_the_dir/.latest/version.yml")
+        _SHRENDD_LATEST_VERSION="$_SHRENDD_CURRENT_VERSION"
+        shrenddLog "checking latest version in $_the_dir/.latest/version.yml"
+        if [[ -f "$_the_dir/.latest/version.yml" ]]; then
+          _SHRENDD_LATEST_VERSION=$(yq e ".shrendd.version" "$_the_dir/.latest/version.yml")
+          if [[ "$_SHRENDD_LATEST_VERSION" == "null" ]]; then
+            _SHRENDD_LATEST_VERSION=$(yq e ".version" "$_the_dir/.latest/version.yml")
+          fi
         fi
         if [ "$_SHRENDD_LATEST_VERSION" == "$_SHRENDD_CURRENT_VERSION" ]; then
           _SHRENDD_IS_UPTODATE="true"
         else
+          if [[ "${is_offline}" == "true" ]]; then
+            shrenddLog "offline mode: detected version mismatch, you will need to run in online mode to update."
+          fi
           _SHRENDD_IS_UPTODATE="false"
         fi
       else
         if [ "$_get_version" == "$_SHRENDD_CURRENT_VERSION" ]; then
           _SHRENDD_IS_UPTODATE="true"
         else
+          if [[ "${is_offline}" == "true" ]]; then
+            shrenddLog "offline mode: detected version mismatch, you will need to run in online mode to update."
+          fi
           _SHRENDD_IS_UPTODATE="false"
         fi
       fi
     else
+      if [[ "${is_offline}" == "true" ]]; then
+        shrenddLog "offline mode: no version file, you will need to run in online mode to actually pull the target."
+      fi
       _SHRENDD_IS_UPTODATE="false"
     fi
   fi
@@ -626,7 +643,7 @@ function clonePlugin {
   setGettingArtifact "$_plugin_artifact.zip"
   _ARTIFACT_URL="$(eval "echo \"$_plugin_src\"")"
   shrenddEchoIfNotSilent "$_plugin_artifact uptodate: $_IS_UPTODATE_NOW"
-  if [ "$_IS_UPTODATE_NOW" == "true" ]; then
+  if [[ "$_IS_UPTODATE_NOW" == "true" ]] || [[ "${is_offline}" == "true" ]]; then
     :
   else
     if [ -d "$SHRENDD_DIR" ]; then
@@ -678,25 +695,27 @@ function initPlugins {
       if [[ "$_plugs" == *" $_plug "* ]]; then
         :
       else
-        if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
-          shrenddLog "initPlugins: force updates: rm ${SHRENDD_DIR}/${_plug}"
-          rm -rf "$SHRENDD_DIR/$_plug"
-        fi
-        _plugs="$_plugs$_plug "
-#        \"$_GETTER\" \"test\"
-        _plug_version=$(shrenddOrDefault "shrendd.plugins.$_plug.version")
-        #$(echo "$_plugins" | yq e ".$_plug.version" -)
-        _plug_src=$(shrenddOrDefault "shrendd.plugins.$_plug.get.src" 42)
-        #$(echo "$_plugins" | yq e ".$_plug.source" -)
-        _plug_getter="$(shrenddOrDefault "shrendd.default.plugins.get.method")"
-        _plug_getter_=$(shrenddOrDefault "shrendd.plugins.$_plug.get.method")
-        #$(echo "$_plugins" | yq e ".$_plug.getter" -)
-        if [[ "$_plug_getter_" == "null" ]]; then
-          :
+        if [[ "${is_offline}" == "true" ]]; then
+          shrenddEchoIfNotSilent "offline mode, not updating plugin: $_plug"
         else
-          _plug_getter="$_plug_getter_"
-        fi
-        if [[ "${is_offline}" == "false" ]]; then
+          if [[ "$FORCE_SHRENDD_UPDATES" == "true" ]]; then
+            shrenddLog "initPlugins: force updates: rm ${SHRENDD_DIR}/${_plug}"
+            rm -rf "$SHRENDD_DIR/$_plug"
+          fi
+          _plugs="$_plugs$_plug "
+  #        \"$_GETTER\" \"test\"
+          _plug_version=$(shrenddOrDefault "shrendd.plugins.$_plug.version")
+          #$(echo "$_plugins" | yq e ".$_plug.version" -)
+          _plug_src=$(shrenddOrDefault "shrendd.plugins.$_plug.get.src" 42)
+          #$(echo "$_plugins" | yq e ".$_plug.source" -)
+          _plug_getter="$(shrenddOrDefault "shrendd.default.plugins.get.method")"
+          _plug_getter_=$(shrenddOrDefault "shrendd.plugins.$_plug.get.method")
+          #$(echo "$_plugins" | yq e ".$_plug.getter" -)
+          if [[ "$_plug_getter_" == "null" ]]; then
+            :
+          else
+            _plug_getter="$_plug_getter_"
+          fi
           clonePlugin "$_plug_getter" "$_plug" "$_plug_version" "$_plug_src" "plugin"
           shrenddEchoIfNotSilent "plugin cloned......"
         fi
