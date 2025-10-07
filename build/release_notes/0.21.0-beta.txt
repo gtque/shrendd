@@ -1,3 +1,8 @@
 * strip curly braces during extract.
 * clean up default properties in shrendd.
 * tweaks to handling offline mode when checking versions.
+* support for piping a command/function to shrenddIndent with a padding size to add leading spaces: `$(someCommand | shrenddIndent 42)`
+* quality of life improvements: shrenddSetActiveModule, shrenddTemplateDir
+* executing a plugin command only sources the plugin once.
+* fixed template_library tests and added them back to active list of tests.
+* fixed bug where shrenddIfTrue was getting printed if the file was imported.

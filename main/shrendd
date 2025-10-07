@@ -383,6 +383,50 @@ function testIf {
   fi
 }
 
+function shrenddIndent() {
+    # Generate the string of spaces
+    local spaces=$(printf '%*s' "$1" '')
+    # Use awk to prepend the spaces to each line
+    awk -v prefix="$spaces" '{print prefix $0}'
+}
+
+function shrenddSetActiveModule {
+  export _MODULE_DIR="${SHRENDD_WORKING_DIR}"
+  _module="."
+  if [[ -z "${module+x}" ]] || [[ -z "${module}" ]]; then
+    shrenddLog "no module set, checking parameter"
+    if [[ -z "${1+x}" ]]; then
+      shrenddLog "no module specified, using working directory"
+    else
+      shrenddLog "module specified: $1"
+      _module="$1"
+    fi
+  else
+    _module="$module"
+  fi
+  shrenddLog "setting active module to '$_module'"
+  if [[ "$_module" != "." ]] && [[ -n "$_module" ]]; then
+    shrenddLog "adding ${_module} to the module_dir"
+    export _MODULE_DIR="${_MODULE_DIR}/${_module}"
+  fi
+}
+
+function shrenddTemplateDir {
+  export target="$1"
+  if [[ $# -gt 1 ]]; then
+    shrenddLog "setting active module"
+    shrenddSetActiveModule $2
+  else
+    shrenddSetActiveModule
+  fi
+  export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.render.template.dir")
+  if [ -z "$TEMPLATE_DIR" ] || [ "$TEMPLATE_DIR" == "null" ]; then
+    shrenddLog "no specific render template dir specified, using the default."
+    export TEMPLATE_DIR=$(shrenddOrDefault "shrendd.default.template.dir")
+  fi
+  echo "$TEMPLATE_DIR"
+}
+
 function shrenddOrDefault {
   _value=""
   if [ "$(testIf "$1")" == "true" ]; then
@@ -475,13 +519,25 @@ function executePlugin {
   command=($(echo "${1}" | cut -d':' -f2))
   _results="${_plugin}:${command} > failed to execute"
   shift
-  if [ -f "${SHRENDD_DIR}/${_plugin}/${_plugin}" ]; then
-    source "${SHRENDD_DIR}/${_plugin}/${_plugin}"
-    command+=("$@")
-    _results="$(eval "${command[@]}")"
+  if [[ $(type -t ${command}) != function ]]; then
+    if [ -f "${SHRENDD_DIR}/${_plugin}/${_plugin}" ]; then
+      shrenddLog "sourcing plugin ${_plugin} for command ${command}"
+      source "${SHRENDD_DIR}/${_plugin}/${_plugin}"
+    else
+      if [[ "$_plugin" == "shrendd" ]]; then
+        shrenddLog "running from shrendd, no sourcing required."
+      else
+        shrenddLogError "the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+        echo "ERROR: the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+        return
+      fi
+    fi
   else
-    shrenddLogError "the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+    shrenddLog "${command} was found, no sourcing required."
   fi
+  command+=("$@")
+  shrenddLog "running command: ${command[@]}"
+  _results="$(eval "${command[@]}")"
   echo "${_results}"
 }
 

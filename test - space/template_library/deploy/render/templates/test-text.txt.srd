@@ -1,5 +1,8 @@
 some text before the block
-$(importShrendd "template_library:text/helloworld.txt.srd:text")
+$(importShrendd "template_library:lib>text/helloworld.txt.srd:text")
 
 more text after the block
 ${RALPH_WIGGUM}
+
+$(importShrendd "this:render/templates/testspace4.txt.srd:text" | shrenddIndent 4)
+$(importShrendd "this:render/templates/testspace6.txt.srd:text" | shrenddIndent 6)

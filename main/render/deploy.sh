@@ -5,6 +5,8 @@ export _merge_yaml=""
 export _current_merge_yaml=""
 
 function doEval {
+
+  _sanitized="$(echo -e "$1" | sed '/\$(shrenddIfTrue .*/d')"
   if [[ $# -gt 1 ]]; then
     shrenddLog "doEval($2) pre-processing:\n$1"
   else
@@ -12,12 +14,12 @@ function doEval {
   fi
   if [[ "$SKIP_RENDER" == false ]]; then
     if [ $# -gt 1 ]; then
-      eval "echo -e \"$1\" > \"$2\"" 2>> "$_DEPLOY_ERROR_DIR/config_error.log"
+      eval "echo -e \"$_sanitized\" > \"$2\"" 2>> "$_DEPLOY_ERROR_DIR/config_error.log"
     else
-      eval "echo -e \"$1\"" 2>> "$_DEPLOY_ERROR_DIR/config_error.log"
+      eval "echo -e \"$_sanitized\"" 2>> "$_DEPLOY_ERROR_DIR/config_error.log"
     fi
   else
-    _text=$(echo -e "$1" | sed -e "s/\$(importShrendd \([-\"a-zA-Z0-9:/._> ]*\))/_dollar_parenthesis_importShrendd \1_importShrendd_close_curly/g" | sed -e "s/\${/_dollar_curly_/g" | sed -e "s/}/_close_curly_/g" | sed -e "s/\$(/_dollar_parenthesis_/g" | sed -e "s/)/_close_parenthesis_/g" | sed -e "s/\\$/_dollar_sign_/g")
+    _text=$(echo -e "$_sanitized" | sed -e "s/\$(importShrendd \([-\"a-zA-Z0-9:/._> ]*\))/_dollar_parenthesis_importShrendd \1_importShrendd_close_curly/g" | sed -e "s/\${/_dollar_curly_/g" | sed -e "s/}/_close_curly_/g" | sed -e "s/\$(/_dollar_parenthesis_/g" | sed -e "s/)/_close_parenthesis_/g" | sed -e "s/\\$/_dollar_sign_/g")
     _text=$(echo -e "${_text}" | sed -e "s/\"/_double_shrendd_quotes/g" | sed -e "s/_dollar_parenthesis_importShrendd/\$(importShrendd/g" | sed -e "s/_importShrendd_close_curly/)/g" | sed -e "s/importShrendd _double_shrendd_quotes/importShrendd \"/g" | sed -e "s/_double_shrendd_quotes\( *\))/\"\1)/g")
 #    _has_import="$(echo -e "${_text}" | grep "_dollar_parenthesis_importShrendd" || echo "false")"
 #    while [[ "${_has_import}" != "false" ]]; do
