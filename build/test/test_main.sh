@@ -3,14 +3,13 @@
 if [ $# -gt 0 ]; then
   sleep $1 #sleepping to stagger tests a bit
 fi
-
 echo "hold my beer - drunk cousin at the wedding"
 export _TESTS="version_latest_default_local version_latest_default version_latest_specified version_specified"
 export _TESTS="$_TESTS render_render render_no_template render_only_template render_with_scripts"
 export _TESTS="$_TESTS upshrendd_clone upshrendd_downgrade upshrendd_upgrade"
 export _TESTS="$_TESTS shrendd_yaml_override shrendd_yaml_stub shrendd_yaml_nostub"
 export _TESTS="$_TESTS module_share module_custom_render module_unwind module_override_properties module_get_property"
-export _TESTS="$_TESTS template_extract template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
+export _TESTS="$_TESTS template_extract template_library template_spawn template_extract_cleanup template_spawn_cleanup template_extract_library template_remote_library"
 export _TESTS="$_TESTS k8s_simple_deploy k8s_skip"
 export _TESTS="$_TESTS plugins_get plugins_command plugins_execute"
 export _TESTS="$_TESTS offline_init offline_library offline_plugin"

@@ -11,7 +11,7 @@ if [ $# -gt 0 ]; then
   ./shrendd -r -verbose
   exit 0
 fi
-export test_results="plugin_execute, & some additional skip template testing:\n"
+export test_results="plugins_execute, & some additional skip template testing:\n"
 _shrendd=$(./shrendd -r)
 if [ -f "./deploy/target/render/k8s/42_configmap_skip.yml" ]; then
   passed "configmap created when it should have been"

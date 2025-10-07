@@ -93,17 +93,42 @@ while [ $# -gt 0 ]; do
   elif [[ "$1" == "-U" ]]; then
     export FORCE_SHRENDD_UPDATES="true"
   elif [[ "$1" == *":"* ]]; then
-    _plugin=$(echo "${1}" | cut -d':' -f1)
-    command=($(echo "${1}" | cut -d':' -f2))
+    quoted_args=()
+    quoted_args+=( "$1" )
     shift
-    if [ -f "${SHRENDD_DIR}/${_plugin}/${_plugin}" ]; then
-      source "${SHRENDD_DIR}/${_plugin}/${_plugin}"
-      command+=("$@")
-      "${command[@]}"
-    else
-      shrenddEchoIfNotSilent "the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+    for arg in "$@"; do
+       quoted_args+=( "\"$arg\"" )
+    done
+    echo "args quoted: ${quoted_args[*]}"
+    _result=$(executePlugin "${quoted_args[@]}")
+    if [[ "$_result" == "ERROR"* ]]; then
+      echo "error detected!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "$_result"
       exit 2
+    else
+      echo "result detected!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo -e "$_result"
     fi
+#    _plugin=$(echo "${1}" | cut -d':' -f1)
+#    command=($(echo "${1}" | cut -d':' -f2))
+#    shift
+#    if [[ $(type -t ${command}) != function ]]; then
+#      if [ -f "${SHRENDD_DIR}/${_plugin}/${_plugin}" ]; then
+#        shrenddLog "sourcing plugin ${_plugin} for command ${command}"
+#        source "${SHRENDD_DIR}/${_plugin}/${_plugin}"
+#      else
+#        if [[ "$_plugin" == "shrendd" ]]; then
+#          shrenddLog "running from shrendd, no sourcing required."
+#        else
+#          shrenddLogError "the plugin '${_plugin}' was not found or has no ${_plugin} file, cannot run command ${command}"
+#          exit 2
+#        fi
+#      fi
+#    else
+#      shrenddEchoIfNotSilent "${command} was found, no sourcing required."
+#    fi
+#    command+=("$@")
+#    "${command[@]}"
     exit 0
   elif [[ "$1" == "?" ]]; then
     export helped=true

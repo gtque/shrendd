@@ -1,9 +1,9 @@
-$(importShrendd "template_library:k8s/configmap-render-test.yml.srd")
+$(importShrendd "template_library:lib>k8s/configmap-render-test.yml.srd")
 data:
   test1a: "${APP_TEST_TEST1}"
   test1b: "chunkky"
   test2: |
-$(pad "$(getConfig "app.test.test2")" "2")
+$(getConfig "app.test.test2" | shrenddIndent 4)
   application-$(echo "$(getConfig "release.stage")" | tr "[:upper:]" "[:lower:]").yml: |
     server:
       port: 8080

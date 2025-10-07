@@ -1,1 +1,1 @@
-$(importShrendd "template_library:k8s/namespace.yml.srd:yaml")
+$(importShrendd "template_library:lib>k8s/namespace.yml.srd:yaml")

@@ -6,8 +6,6 @@ shrendd:
   targets:
     - name: render
     - name: k8s
-  cache:
-    dir: "~/.shrendd/cache - space"
   library:
     template_library:
       get:
