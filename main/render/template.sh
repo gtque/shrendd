@@ -117,9 +117,10 @@ function extractTemplate {
   _curdir=$(pwd)
   _files_extracted=""
   if [ -d "$_SHRENDD_DEPLOY_DIRECTORY" ]; then
-    echo -e "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
+    shrenddEchoIfNotSilent "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
     cd "$_SHRENDD_DEPLOY_DIRECTORY"
-    _deploy_files=$(find "$(pwd -P)" -type f -print)
+    _deploy_files=$(find "$(pwd -P)" -type f ! -name "*.srd" -print)
+    shrenddEchoIfNotSilent "non-srd files: $_deploy_files"
     templateFileScanner "$_deploy_files"
     cd "$_curdir"
   fi
@@ -139,8 +140,9 @@ function extractTemplate {
       _curdir="$(pwd)"
       echo "running bash templating..."
       cd "$TEMPLATE_DIR"
-      config_files="*.srd"
-      echo "files should be in: $config_files"
+#      config_files="*/*.srd"
+      config_files=$(find "." -type f -name "*.srd" -print)
+      shrenddEchoIfNotSilent "files should be in: $config_files"
       for fname in $config_files; do
         shrenddLog "extractTemplate: reset error log:rm ${_DEPLOY_ERROR_DIR}/config_error.log"
         rm -rf "$_DEPLOY_ERROR_DIR/config_error.log"
