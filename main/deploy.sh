@@ -23,7 +23,7 @@ function stageLeft {
     for _target in $targets; do
       targetDirs "$_target"
       if [ -d "$RENDER_DIR" ]; then
-        shrenddEchoIfNotSilent "deleting $RENDER_DIR"
+        echo "deleting $RENDER_DIR"
         shrenddLog "stageLeft: rm ${RENDER_DIR}"
         rm -rf "$RENDER_DIR"
       fi
@@ -284,7 +284,7 @@ function getSecret {
 function getConfig {
   _name=$(trueName "$1")
   if [ -z "${!_name+x}" ]; then
-    shrenddEchoError "error getting config for $1"
+    echo "error getting config for $1" >> "$_DEPLOY_ERROR_DIR/config_error.log"
     shrenddLog "\${${1}}"
     echo -e "\${${1}}"
     return 1
@@ -305,7 +305,7 @@ function configify {
 function getAsIs {
   _name=$(trueName "$1")
   if [ -z "${!_name+x}" ]; then
-    shrenddEchoError "error getting as is config for $1"
+    echo "error getting as is config for $1" >> "$_DEPLOY_ERROR_DIR/config_error.log"
     shrenddLog "\${${1}}"
     echo -e "\${${1}}"
     return 1

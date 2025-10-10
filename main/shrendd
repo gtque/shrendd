@@ -868,6 +868,9 @@ export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
 export SHRENDD_WORKING_DIR=$(pwd)
 export SHRENDD_DIR=$(shrenddOrDefault "shrendd.dir")
 export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
+if [[ -f "$_DEPLOY_ERROR_DIR/render_error.log" ]]; then
+  rm -f "$_DEPLOY_ERROR_DIR/render_error.log"
+fi
 
 shrenddEchoIfNotSilent "shrendd version: $_SHRENDD_VERSION"
 if [[ "$_getting" == "0" ]]; then
