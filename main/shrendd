@@ -167,9 +167,10 @@ function shrenddEcho {
   echo -e "$1"
   if [[ $# -gt 1 ]]; then
     echo -e "$1" "$2"
-  else
-    shrenddLog "$1"
+#  else
   fi
+  shrenddLog "$1"
+#  fi
 }
 
 function dateTimeStamp {
@@ -193,6 +194,16 @@ function shrenddLog {
   fi
 }
 
+function shrenddEchoError {
+  if [[ $# -gt 1 ]]; then
+    shrenddEcho "${_TEXT_ERROR}$1${_CLEAR_TEXT_COLOR}" "$2"
+    shrenddLogError "$1" "$2"
+  else
+    shrenddEcho "${_TEXT_ERROR}$1${_CLEAR_TEXT_COLOR}"
+    shrenddLogError "$1"
+  fi
+}
+
 function shrenddLogError {
   if [[ -v _DEPLOY_ERROR_DIR ]]; then
     if [ -d "$_DEPLOY_ERROR_DIR" ]; then
@@ -204,6 +215,31 @@ function shrenddLogError {
       echo -e "$(dateTimeStamp): $1" >> "$_DEPLOY_ERROR_DIR/render_error.log"
     else
       echoSensitive "$(dateTimeStamp): $1" "true" >> "$_DEPLOY_ERROR_DIR/render_error.log"
+    fi
+  fi
+}
+
+function shrenddEchoWarning {
+  if [[ $# -gt 1 ]]; then
+    shrenddEcho "${_TEXT_WARN}$1${_CLEAR_TEXT_COLOR}" "$2"
+    shrenddLogWarning "$1" "$2"
+  else
+    shrenddEcho "${_TEXT_WARN}$1${_CLEAR_TEXT_COLOR}"
+    shrenddLogWarning "$1"
+  fi
+}
+# >> "$_DEPLOY_ERROR_DIR/render_warning.log"
+function shrenddLogWarning {
+  if [[ -v _DEPLOY_ERROR_DIR ]]; then
+    if [ -d "$_DEPLOY_ERROR_DIR" ]; then
+      :
+    else
+      mkdir -p "$_DEPLOY_ERROR_DIR"
+    fi
+    if [[ $# -gt 1 ]]; then
+      echo -e "$(dateTimeStamp): $1" >> "$_DEPLOY_ERROR_DIR/render_warning.log"
+    else
+      echoSensitive "$(dateTimeStamp): $1" "true" >> "$_DEPLOY_ERROR_DIR/render_warning.log"
     fi
   fi
 }
@@ -404,6 +440,7 @@ function shrenddSetActiveModule {
   else
     _module="$module"
   fi
+  _module=$(echo "$_module" | sed -e "s/[[:space:]]*$//")
   shrenddLog "setting active module to '$_module'"
   if [[ "$_module" != "." ]] && [[ -n "$_module" ]]; then
     shrenddLog "adding ${_module} to the module_dir"
@@ -831,6 +868,9 @@ export _SHRENDD_VERSION=$(shrenddOrDefault "shrendd.version")
 export SHRENDD_WORKING_DIR=$(pwd)
 export SHRENDD_DIR=$(shrenddOrDefault "shrendd.dir")
 export _DEPLOY_ERROR_DIR="$SHRENDD_DIR/errors"
+if [[ -f "$_DEPLOY_ERROR_DIR/render_error.log" ]]; then
+  rm -f "$_DEPLOY_ERROR_DIR/render_error.log"
+fi
 
 shrenddEchoIfNotSilent "shrendd version: $_SHRENDD_VERSION"
 if [[ "$_getting" == "0" ]]; then

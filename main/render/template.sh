@@ -49,9 +49,9 @@ function templateFileScanner {
               echo "    nested reference found";
               echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> "$_DEPLOY_ERROR_DIR/render_warning.log"
             fi
-            _already_found=$(echo "$_checker" | grep "$match" || echo "not found")
+            _already_found=$(echo "$_checker" | grep "\n *$match *\n" || echo "not found")
             if [ "$_already_found" != "not found" ]; then
-              echo "   already found.."
+              echo "   already found..>\"$_checker\" | grep \"$match\""
             else
               export _checker="$(echo "$_checker\n$match")"
               echo "   not found, adding to list"
@@ -117,10 +117,14 @@ function extractTemplate {
   _curdir=$(pwd)
   _files_extracted=""
   if [ -d "$_SHRENDD_DEPLOY_DIRECTORY" ]; then
-    echo -e "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
+    shrenddEchoIfNotSilent "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
     cd "$_SHRENDD_DEPLOY_DIRECTORY"
-    _deploy_files=$(find "$(pwd -P)" -type f -print)
-    templateFileScanner "$_deploy_files"
+    _deploy_files=$(find "$(pwd -P)" -type f ! -name "*.srd" -print)
+    shrenddEchoIfNotSilent "non-srd files: $_deploy_files"
+    if [[ -n "$_deploy_files" ]]; then
+      templateFileScanner "$_deploy_files"
+    fi
+#    templateFileScanner "$_deploy_files"
     cd "$_curdir"
   fi
   if [ -d "$(shrenddOrDefault "shrendd.config.src")" ]; then
@@ -139,8 +143,9 @@ function extractTemplate {
       _curdir="$(pwd)"
       echo "running bash templating..."
       cd "$TEMPLATE_DIR"
-      config_files="*.srd"
-      echo "files should be in: $config_files"
+#      config_files="*/*.srd"
+      config_files=$(find "." -type f -name "*.srd" -print)
+      shrenddEchoIfNotSilent "files should be in: $config_files"
       for fname in $config_files; do
         shrenddLog "extractTemplate: reset error log:rm ${_DEPLOY_ERROR_DIR}/config_error.log"
         rm -rf "$_DEPLOY_ERROR_DIR/config_error.log"
@@ -161,9 +166,9 @@ function extractTemplate {
                 echo "    nested reference found";
                 echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> "$_DEPLOY_ERROR_DIR/render_warning.log"
               fi
-              _already_found=$(echo "$_checker" | grep "$match" || echo "not found")
+              _already_found=$(echo "$_checker" | grep "\n *$match *\n" || echo "not found")
               if [ "$_already_found" != "not found" ]; then
-                echo "   already found.."
+                echo "   already found>>>\"$_already_found\":\"$match\""
               else
                 export _checker="$(echo "$_checker\n$match")"
                 echo "   not found, adding to list"
@@ -183,9 +188,9 @@ function extractTemplate {
                 echo "    nested reference found";
                 echo "nested reference found: $match ($fname)-> cannot full extract, please add any indirectly referenced configs to the template." >> "$_DEPLOY_ERROR_DIR/render_warning.log"
               fi
-              _already_found=$(echo "$_checker" | grep "$match" || echo "not found")
+              _already_found=$(echo "$_checker" | grep "\n *$match *\n" || echo "not found")
               if [ "$_already_found" != "not found" ]; then
-                echo "   already found.."
+                echo "   already found!!>\"$_checker\" | grep \"$match\""
               else
                 export _checker="$(echo "$_checker\n$match")"
                 echo "   not found, adding to list"

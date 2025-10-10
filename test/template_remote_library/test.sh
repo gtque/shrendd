@@ -4,7 +4,7 @@ set -euo pipefail
 source ../../build/test/start.sh
 ../../build/test/init_shrendd.sh
 rm -rf ./deploy/target
-rm -f ./deploy/config/config-template.yml
+rm -f ./config/config-template.yml
 rm -rf ~/.shrendd/cache/shrendd-lib-test
 rm -f ./shrendd.yml
 cp ./test-init/shrendd_1.yml ./shrendd.yml

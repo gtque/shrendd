@@ -117,6 +117,12 @@ zip "../build/target/$_VERSION/render.zip" stub.sh
 zip "../build/target/$_VERSION/render.zip" parse_parameters.sh
 cd ../build/target/$_VERSION
 zip "./render.zip" version.yml
+for target in $_targets; do
+  echo " versioning: $target"
+  mkdir "$target"
+  cp "version.yml" "./$target/"
+  zip -r "$target.zip" "$target/version.yml"
+done
 cd ../../../main
 echo "processing targets"
 for target in $_targets; do

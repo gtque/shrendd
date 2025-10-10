@@ -1,6 +1,6 @@
 shrendd:
-  config:
-    path: ./deploy/config
+#  config:
+#    path: ./deploy/config
   test:
     local: ../../main
   targets:

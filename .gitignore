@@ -17,7 +17,7 @@
 **/template_spawn_cleanup/config
 **/template_remote_library/shrendd.yml
 **/template_remote_library/shrendd
-**/template_remote_library/deploy/config/config-template.yml
+test/template_remote_library/config/config-template.yml
 **/shrendd_yaml_stub/shrendd.yml
 **/version_latest_default/shrendd
 **/version_latest_specified/shrendd

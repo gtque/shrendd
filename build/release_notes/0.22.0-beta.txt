@@ -1,0 +1,5 @@
+* add version.yml to zip files
+* filter out srd files when processing all other files in deploy folder
+* handle nested folders, like teardown, in target directory
+* add shrenddEchoError
+* add shrenddEchoWarning
