@@ -194,6 +194,10 @@ function shrenddLog {
   fi
 }
 
+function shrenddNull {
+  echo null
+}
+
 function shrenddEchoError {
   if [[ $# -gt 1 ]]; then
     shrenddEcho "${_TEXT_ERROR}$1${_CLEAR_TEXT_COLOR}" "$2"

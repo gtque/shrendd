@@ -133,6 +133,14 @@ function initConfig {
     _provided_keys=$(echo "$_provided_keys" | sed -e "s/ $_config_key / /g")
     _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_yq_name" -)
     _template_value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" -)
+    _suppressWarning=$(echo "$_template_value" | yq e ".suppressWarning" -)
+    _neverSpawn=$(echo "$_template_value" | yq e ".neverSpawn" -)
+    if [[ "$_suppressWarning" == "null" ]] || [[ "$_suppressWarning" != "true" ]]; then
+      _suppressWarning="false"
+    fi
+    if [[ "$_neverSpawn" == "null" ]] || [[ "$_neverSpawn" != "true" ]]; then
+      _neverSpawn="false"
+    fi
     _is_sensitive="false"
     if [ -z "$_template_value" ]; then
       :
@@ -147,21 +155,26 @@ function initConfig {
         fi
         if [ "${_value_required}" == "true" ] && [ "$_IGNORE_REQUIRED" == "false" ]; then
           shrenddEchoError "  \"$_config_key\" is required but was not provided. Description: $_value_description"
-#          echo "\"$_config_key\" is required but was not provided. Description: $_value_description" >> "$_DEPLOY_ERROR_DIR/render_error.log"
           _initialized="false"
         else
           _value_default=$(echo "$_template_value" | yq e ".default" -)
           if [ "${_value_default}" == "null" ]; then
-#            shrenddEchoIfNotSilent "  \"$_config_key\" no default has been defined."
-            if [ "${_strict}" == "true" ]; then
+            if [[ "${_strict}" == "true" ]] && [[ "$_suppressWarning" != true ]] ; then
               shrenddEchoError "\"$_config_key\" is not required and was not provided and no default has been defined. Description: $_value_description"
               _initialized="false"
             else
-              shrenddEchoWarning "\"$_config_key\" is not required and was not provided and no default has been defined. Description: $_value_description"
+              if [[ "$_suppressWarning" != true ]]; then
+                shrenddEchoWarning "\"$_config_key\" is not required and was not provided and no default has been defined. Description: $_value_description"
+              else
+                shrenddEchoIfNotSilent "suppressed warning: \"$_config_key\" is not required and was not provided and no default has been defined. Description: $_value_description"
+              fi
             fi
           else
-#            shrenddEchoIfNotSilent "  \"$_config_key\" using default value"
-            shrenddEchoIfNotSilent "\"$_config_key\" is not required and was not provided, so the default was used. Description: $_value_description"
+            if [[ "$_suppressWarning" != true ]]; then
+              shrenddEchoWarning "\"$_config_key\" is not required and was not provided, so the default was used. Description: $_value_description"
+            else
+              shrenddEchoIfNotSilent "\"$_config_key\" is not required and was not provided, so the default was used. Description: $_value_description"
+            fi
             _value="${_value_default}"
           fi
         fi
@@ -172,37 +185,48 @@ function initConfig {
     else
       if [ "$_is_sensitive" == "true" ]; then
         shrenddEchoIfNotSilent "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}*****${_CLEAR_TEXT_COLOR}"
-        if [ -z "$_TUXEDO_MASK" ]; then
-          :
+        _value_t=""
+        if [[ -z "${_value}" ]] || [[ "${_value}" == "" ]]; then
+          _value_t=""
         else
-          _TUXEDO_MASK="$_TUXEDO_MASK;"
+          #handle new lines in sensitive values for masking
+          _value_t=$(echo "${_value}" | sed "s/\./\\./g" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g' | sed ':a;N;$!ba;s/\r//g')
         fi
-        _value_t=$(echo "${_value}" | sed "s/\./\\./g" | sed ':a;N;$!ba;s/\n/'$_NEW_LINE_PLACE_HOLDER'/g' | sed ':a;N;$!ba;s/\r//g')
-        _TUXEDO_MASK="${_TUXEDO_MASK}s/${_value_t}/*****/g"
+        if [[ -n "${_value_t}" ]] && [[ "${_value_t}" != "\"\"" ]]; then
+          if [ -z "$_TUXEDO_MASK" ]; then
+            :
+          else
+            export _TUXEDO_MASK="$_TUXEDO_MASK;"
+          fi
+          export _TUXEDO_MASK="${_TUXEDO_MASK}s/${_value_t}/*****/g"
+        fi
       else
         shrenddEchoIfNotSilent "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}$_value${_CLEAR_TEXT_COLOR}"
       fi
+      shrenddEchoIfNotSilent "\texported $_name"
       export $_name="$_value"
     fi
   done
+
   for _config_key in $_provided_keys; do
     _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
     _yq_name=$(yqName "$_config_key")
-#    shrenddEchoIfNotSilent "  \"$_config_key\" was provided but not defined in the config template."
-    if [ "${_strict}" == "true" ]; then
+    if [[ "${_strict}" == "true" ]]; then
       shrenddEchoError "\"$_config_key\" was provided but not defined in the config template."
       _initialized="false"
     else
       _name=$(trueName $_config_key)
       _value=$(echo "$_PROVIDED_CONFIG" | yq e ".$_yq_name" -)
       shrenddEchoWarning "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}$_value\n  ${_TEXT_WARN}if this is a sensitive value, you should add it to the config-template.yml file and mark it as sensitive.${_CLEAR_TEXT_COLOR}"
-      export $_name="$_value"
       shrenddEchoWarning "\"$_config_key\" was provided but not defined in the config template."
+      export $_name="$_value"
     fi
   done
   if [ "$_initialized" == "false" ]; then
     shrenddEchoIfNotSilent "${_TEXT_ERROR}something was missing in the config template, please update the config template and try again.${_CLEAR_TEXT_COLOR}"
     exit 1
+  else
+    shrenddEchoIfNotSilent "${_TEXT_INFO}configuration complete.${_CLEAR_TEXT_COLOR}"
   fi
 }
 
@@ -289,12 +313,8 @@ function getConfig {
     echo -e "\${${1}}"
     return 1
   else
-      if [ -z "$_value" ] || [ "$_value" == "" ]; then
-        echo ""
-      else
-        _value=$(eval "echo -e \"${!_name}\"")
-        echo -e "$_value"
-      fi
+    _value=$(eval "echo -e \"${!_name}\"")
+    echo -e "$_value"
   fi
 }
 
@@ -310,22 +330,7 @@ function getAsIs {
     echo -e "\${${1}}"
     return 1
   else
-      if [ -z "$_value" ] || [ "$_value" == "" ]; then
-        echo ""
-      else
-        echo -e "${!_name}"
-      fi
-  fi
-}
-
-function getConfigOrEmptyD {
-  _check=$(trueName "$1")
-  shrenddEchoIfNotSilent "truename for config: $_check"
-  if [ -z "${!_check+x}" ]; then
-    shrenddEchoIfNotSilent " was empty"
-  else
-    shrenddEchoIfNotSilent " was not empty?"
-    getConfig "$1"
+    echo -e "${!_name}"
   fi
 }
 

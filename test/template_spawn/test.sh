@@ -11,7 +11,10 @@ _valid=$(./shrendd --spawn testspawn.yml)
 echo -e "$_valid"
 export test_results="template spawn:\n"
 _test_array=$(yq e ".test.array" "./config/config-template.yml")
+_the_bottle=$(yq e ".bbq.sauce" "./config/config-template.yml")
+_the_sauce=$(echo "$_the_bottle" | yq e ".default" -)
 _test_array_age_actual=$(yq e ".test.array.[2].age" "./config/testspawn.yml")
+_test_sauce=$(yq e ".bbq.sauce" "./config/testspawn.yml")
 _test_array_age_expected=$(echo "$_test_array" | yq e ".default.[2].age" -)
 _test_array_age_description=$(echo "$_test_array" | yq e ".description" -)
 _shawn=$(yq e ".psych.spencer.shawn" "./config/config-template.yml")
@@ -65,5 +68,16 @@ if [ "$_pineapple_expected" == "$_pineapple_actual" ]; then
 else
   export test_results="$test_results\t${_TEST_ERROR}nested complex key: not equal. \"$_pineapple_expected\" == \"$_pineapple_actual\" failed${_CLEAR_TEXT_COLOR}\n"
 fi
+if [[ "$_the_sauce" == "sweet georgia brown" ]]; then
+  passed "sauce check"
+else
+  failed "sauce check"
+fi
+if [[ "$_test_sauce" == "null" ]]; then
+  passed "not stubbed"
+else
+  failed "not stubbed"
+fi
+
 ../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh

@@ -392,9 +392,9 @@ function deleteEmptyKeys {
 }
 
 function spawnTemplate {
-  echo -e "$_TEXT_WARN}}}}spawning{{{{${_CLEAR_TEXT_COLOR}"
+  shrenddEchoIfNotSilent "$_TEXT_WARN}}}}spawning{{{{${_CLEAR_TEXT_COLOR}"
   if [ -z "$_SHRENDD_CONFIG" ]; then
-    echo "no shrendd_config"
+    shrenddEchoIfNotSilent "no shrendd_config"
     _config_keys=""
   else
     _config_keys=$(keysFor "$_SHRENDD_CONFIG")
@@ -407,19 +407,19 @@ function spawnTemplate {
   fi
   _spawned_keys=""
   if [ -f "$_spawn_path" ]; then
-    echo -e "${_TEXT_WARN}spawn is present${_CLEAR_TEXT_COLOR}"
+    shrenddEchoIfNotSilent "${_TEXT_WARN}spawn is present${_CLEAR_TEXT_COLOR}"
   #      cat "${_spawn_path}"
     _spawned_keys=$(keysFor "$(cat "$_spawn_path")")
   fi
   if [ -f "$_spawn_path" ]; then
-    echo "spawn does exist: $_spawn_path"
+    shrenddEchoIfNotSilent "spawn does exist: $_spawn_path"
   else
-    echo -e "${_TEXT_INFO}spawn does not exist: $_spawn_path${_CLEAR_TEXT_COLOR}"
+    shrenddEchoIfNotSilent "${_TEXT_INFO}spawn does not exist: $_spawn_path${_CLEAR_TEXT_COLOR}"
     VAR="$_spawn_path"
     DIR="."
     if [[ "$VAR" == *"/"* ]]; then
       DIR=${VAR%/*}
-      echo "config dir: $DIR"
+      shrenddLog "config dir: $DIR"
       if [ -d "$DIR" ]; then
         :
       else
@@ -432,16 +432,24 @@ function spawnTemplate {
     _yq_name=$(yqName "$_config_key")
     _found="empty"
     export _template_stub=""
-    echo -e "${_TEXT_DEBUG}spawning:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
+    shrenddEchoIfNotSilent "${_TEXT_DEBUG}spawning:${_CLEAR_TEXT_COLOR} \"$_config_key\"->\"$_yq_name\""
     _spawn_default=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".default" -)
     _spawn_comment=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".description" -)
+    _spawn_neverSpawn=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" - | yq e ".neverSpawn" -)
+    if [[ "$_spawn_neverSpawn" == "null" ]] || [[ "$_spawn_neverSpawn" != "true" ]]; then
+      _spawn_neverSpawn="false"
+    fi
+    if [[ "$_spawn_neverSpawn" == "true" ]]; then
+      shrenddEchoIfNotSilent "  never stub is true, skipping key"
+      continue
+    fi
     _has_array="false"
     _drop_key=$(echo "$_config_key" | sed "s/ /$_SPACE_PLACE_HOLDER/g")
     _spawned_keys=$(echo "$_spawned_keys"| sed "s/$_drop_key[^ ]*//g" | sed "s/^ //g" | sed "s/  */ /g")
     if [ "$_spawn_default" == "null" ]; then
-      echo "  no default value found."
+      shrenddEchoIfNotSilent "  no default value found."
     else
-      echo "  found a default value"
+      shrenddEchoIfNotSilent "  found a default value"
       export _template_stub="$_spawn_default"
       _default_array=$(echo "$_spawn_default" | yq e ".[]" - )
       if [ -z "$_default_array" ]; then
@@ -450,54 +458,54 @@ function spawnTemplate {
         _has_array="true"
         export _template_stub="$(echo "[${_template_stub/-/{}}]" | sed -e "s/-/},{/g" | sed ':a;N;$!ba;s/\([^{]\)\n\([^}]\)/\1,\2/g'  | sed ':a;N;$!ba;s/\([^}]\)\n\([}]\)/\1,\2/g')"
       fi
-      echo "  has array:$_has_array"
+      shrenddEchoIfNotSilent "  has array:$_has_array"
     fi
     if [ -f "$_spawn_path" ]; then
-      echo "  spawn is present"
+      shrenddEchoIfNotSilent "  spawn is present"
     #      cat "${_spawn_path}"
       _found=$(cat "$_spawn_path" | yq e ".$_yq_name" -)
     else
-      echo "  no spawn, will try to create it this time."
+      shrenddEchoIfNotSilent "  no spawn, will try to create it this time."
     fi
     if [ "$_found" ==  "null" ]; then
-      echo "  adding to config."
+      shrenddEchoIfNotSilent "  adding to config."
       if [ "$_has_array" == "false" ]; then
         yq -i ".${_yq_name} = strenv(_template_stub)" "$_spawn_path"
         if [ "$_spawn_comment" != "null" ]; then
-          echo "  adding comment."
+          shrenddEchoIfNotSilent "  adding comment."
           yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" "$_spawn_path"
         fi
       else
-        echo -e "  trying to add array:\n$_template_stub"
+        shrenddEchoIfNotSilent "  trying to add array:\n$_template_stub"
         yq -i ".${_yq_name} = []" "$_spawn_path"
         if [ "$_spawn_comment" != "null" ]; then
-          echo "  adding comment."
+          shrenddEchoIfNotSilent "  adding comment."
           yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" "$_spawn_path"
         fi
         yq -i ".${_yq_name} += env(_template_stub)" "$_spawn_path"
       fi
     else
       if [ "$_found" == "empty" ]; then
-        echo "  creating new config yaml:$_yq_name"
+        shrenddEchoIfNotSilent "  creating new config yaml:$_yq_name"
         if [ "$_has_array" == "false" ]; then
           yq -n ".${_yq_name} = strenv(_template_stub)" > "$_spawn_path"
           if [ "$_spawn_comment" != "null" ]; then
-            echo "  adding comment."
+            shrenddEchoIfNotSilent "  adding comment."
             yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" "$_spawn_path"
           fi
         else
-          echo "  trying to add array"
+          shrenddEchoIfNotSilent "  trying to add array"
           yq -i ".${_yq_name} = []"  > "$_spawn_path"
           if [ "$_spawn_comment" != "null" ]; then
-            echo "  adding comment."
+            shrenddEchoIfNotSilent "  adding comment."
             yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" "$_spawn_path"
           fi
           yq -i ".${_yq_name} += env(_template_stub)" "$_spawn_path"
         fi
       else
-        echo "  already in spawn."
+        shrenddEchoIfNotSilent "  already in spawn."
         if [ "$_spawn_comment" != "null" ]; then
-          echo "  adding comment."
+          shrenddEchoIfNotSilent "  adding comment."
           yq -i "(.${_yq_name} | key) head_comment=\"$_spawn_comment\"" "$_spawn_path"
         fi
       fi
@@ -507,11 +515,11 @@ function spawnTemplate {
     for _config_key in $_spawned_keys; do
       _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
       _yq_name=$(yqName "$_config_key")
-      echo "  checking key: ${_yq_name}"
+      shrenddEchoIfNotSilent "  checking key: ${_yq_name}"
       if [ "$_yq_name" == "_" ]; then
-        echo -e "  ${_TEXT_WARN}invalid key, if actually present, please manually delete it.${_CLEAR_TEXT_COLOR}"
+        shrenddEchoIfNotSilent "  ${_TEXT_WARN}invalid key, if actually present, please manually delete it.${_CLEAR_TEXT_COLOR}"
       else
-        echo -e "${_TEXT_WARN}dropping key:${_yq_name} -> $_config_key${_CLEAR_TEXT_COLOR}"
+        shrenddEchoIfNotSilent "${_TEXT_WARN}dropping key:${_yq_name} -> $_config_key${_CLEAR_TEXT_COLOR}"
         shrenddLog "yq to spawn:$_spawn_path"
         yq -i "del(.${_yq_name})" "$_spawn_path"
         shrenddLog "deleted from spawn..."

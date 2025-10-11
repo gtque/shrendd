@@ -32,6 +32,11 @@ test:
           that should be masked
           and not visible on the screen.
     sensitive: true
+  iambecomenothing: |-
+    required: false
+    description: skip masking on empty string
+    default: ""
+    sensitive: true
   array: |-
     required: false
     description: mask over multiple lines?
@@ -41,3 +46,27 @@ test:
           - name: b 123-peek-a-boo
           - name: c 123-peek-a-boo
     sensitive: true
+  iambecomenothing2: |-
+    required: false
+    description: skip masking on empty string
+    default: $(shrenddNull)
+    sensitive: false
+  iambecomenothing3: |-
+    required: false
+    description: skip masking on empty string
+    default: ""
+    sensitive: false
+bbq:
+  sauce: |-
+    required: false
+    suppressWarning: true
+    neverSpawn: true
+    description: "sweet georgia brown"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
+    default: "sweet georgia brown"
+  rub: |-
+    required: false
+    suppressWarning: true
+    neverSpawn: true
+    description: "sweet georgia brown"
+    sensitive: false #whether the field should be considered sensitive or not, any matching values will be masked in the output.
