@@ -119,7 +119,7 @@ function extractTemplate {
   if [ -d "$_SHRENDD_DEPLOY_DIRECTORY" ]; then
     shrenddEchoIfNotSilent "${_TEXT_INFO}found deploy directory, extracting from: $_SHRENDD_DEPLOY_DIRECTORY${_CLEAR_TEXT_COLOR}"
     cd "$_SHRENDD_DEPLOY_DIRECTORY"
-    _deploy_files=$(find "$(pwd -P)" -type f ! -name "*.srd" -print)
+    _deploy_files=$(find "$(pwd -P)" -type f -name "*.sh" -print)
     shrenddEchoIfNotSilent "non-srd files: $_deploy_files"
     if [[ -n "$_deploy_files" ]]; then
       templateFileScanner "$_deploy_files"
@@ -139,7 +139,7 @@ function extractTemplate {
     echo "extracting: $target"
     echo "initializing target template directory"
     targetDirs "$target"
-    if [ -d "$TEMPLATE_DIR" ]; then
+    if [[ -d "$TEMPLATE_DIR" ]]; then
       _curdir="$(pwd)"
       echo "running bash templating..."
       cd "$TEMPLATE_DIR"

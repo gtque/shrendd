@@ -1,0 +1,5 @@
+* fix for last entry being empty value
+* tweak to sensitivity masking
+* support for 'suppressWarning' in config-template
+* support for 'neverSpawn' in config-template
+* small tweak to collecting script files for extraction
