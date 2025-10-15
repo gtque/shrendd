@@ -79,7 +79,7 @@ function importShrendd_auto {
 }
 
 function importShrendd_txt {
-  importShrendd_text "$1"
+  importShrendd_text "$1" "$2" "$3" "$4" "$5"
 }
 
 function importShrendd_text {
@@ -87,11 +87,16 @@ function importShrendd_text {
   _text=$(configify "$1")
 #  echo -e "the text:$_text"
   shrenddLog "the text: \n${_text}"
-  doEval "$_text"
+  _shrendd_indent="$5"
+  if [[ "$_shrendd_indent" != "null" ]]; then
+    doEval "$_text" | shrenddIndent "$_shrendd_indent"
+  else
+    doEval "$_text"
+  fi
 }
 
 function importShrendd_yml {
-  importShrendd_yaml "$1"
+  importShrendd_yaml "$1" "$2" "$3" "$4" "$5"
 }
 
 function importShrendd_yaml {
@@ -182,12 +187,19 @@ function importShrendd_yaml {
 }
 
 function importShrendd {
-  _import="${1}:::"
+  _import="${1}::::"
   _library=$(echo "$_import" | cut -d':' -f1)
   _template=$(echo "$_import" | cut -d':' -f2)
   _version=""
   _type=$(echo "$_import" | cut -d':' -f3)
   _map_name=$(echo "$_import" | cut -d':' -f4)
+  _shrendd_indent=$(echo "$_import" | cut -d':' -f5)
+#  if [[ $# -gt 1 ]]; then
+#    _shrendd_indent="$2"
+#  fi
+  if [[ "$_shrendd_indent" == "" ]]; then
+    _shrendd_indent="null"
+  fi
   if [ -z "$_library" ] || [ "$_library" == "null" ]; then
     shrenddEcho "${_TEXT_ERROR}looks like you didn't even specify the library.${_CLEAR_TEXT_COLOR}\nimportShrendd must specify the artifact using the pattern: <library>:<template_file>:[version]:[type]"
     exit 1
@@ -268,7 +280,7 @@ function importShrendd {
   if [ $# -lt 2 ]; then
     _current=$SECONDS
     shrenddLog "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n           importing shrendd ($_current): $_type"
-    eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\" \"$_map_name\""
+    eval "importShrendd_$_type \"$_bank/$_template\" \"$_library\" \"$_template\" \"$_map_name\" \"$_shrendd_indent\""
     shrenddLog "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n           finished imported ($_current): $_type"
   else
     shrenddLog "importShrendd: skipping import, just returning path to template: $_bank/$_template"

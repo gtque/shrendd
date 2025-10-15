@@ -79,5 +79,5 @@ if [ "${_lettuce}" == "${_expected_leafy_green}" ]; then
 else
   failed "external library with module reference with custom module shrendd.config: ${_lettuce}"
 fi
-../../build/test/cleanup_shrendd.sh
+#../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh
