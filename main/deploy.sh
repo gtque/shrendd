@@ -306,6 +306,12 @@ function getSecret {
 #maybe set a flag somewhere to indicate config-template configuration and
 #skip writing to file, and instead stuffing into yaml variable.
 function getConfig {
+  if [[ "${SKIP_RENDER}" == "true" ]]; then
+    shrenddLog "getConfig: SKIP_RENDER is true, returning raw variable: $1"
+    echo "\$(getConfig $1)"
+    return 0
+  fi
+
   _name=$(trueName "$1")
   if [ -z "${!_name+x}" ]; then
     echo "error getting config for $1" >> "$_DEPLOY_ERROR_DIR/config_error.log"
@@ -335,6 +341,11 @@ function getAsIs {
 }
 
 function getConfigOrEmpty {
+  if [[ "${SKIP_RENDER}" == "true" ]]; then
+    shrenddLog "getConfig: SKIP_RENDER is true, returning raw variable: $1"
+    echo "\$(getConfigOrEmpty $1)"
+    return 0
+  fi
   _check=$(trueName "$1")
   shrenddLog "truename for config: $_check"
   if [ -z "${!_check+x}" ]; then

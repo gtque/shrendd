@@ -1,3 +1,5 @@
 $(importShrendd "shrendd-lib-test:bob/text/biscuits.txt:text::2")
 
 $(importShrendd "shrendd-lib-test:bob/text/cake.txt.srd:text::4")
+
+$(importShrendd "this:shrendd_testBuild:plugin::3")

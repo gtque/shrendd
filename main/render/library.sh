@@ -186,6 +186,17 @@ function importShrendd_yaml {
 #  eval "shrecho \"$_text\""
 }
 
+function importShrendd_plugin {
+#  echo "texting: $1"
+  _text="${2}:${3}"
+  _shrendd_indent="$5"
+  if [[ "$_shrendd_indent" != "null" ]]; then
+    executePlugin "$_text" | shrenddIndent "$_shrendd_indent"
+  else
+    executePlugin "$_text"
+  fi
+}
+
 function importShrendd {
   _import="${1}::::"
   _library=$(echo "$_import" | cut -d':' -f1)
@@ -224,58 +235,62 @@ function importShrendd {
   _bank="$_cache_dir/$_library/$_version"
   _shrendd_dir=$(shrenddOrDefault "shrendd.working.dir")
   _is_library=$(shrenddOrDefault "shrendd.library.$_library" 42)
-  if [[ "$_library" == "this" ]] || [[ "$_MODULE_DIR" == *"$_library" ]] || [[ "$_shrendd_dir" == *"/$_library" ]]; then
-    shrenddLog "detected local library: $_library"
-    _bank="$_SHRENDD_DEPLOY_DIRECTORY"
-    _module_check="${_template}>"
-    _module_present=$(echo "$_module_check" | cut -d'>' -f2)
-    shrenddLog "importShrendd: module check: $_module_present"
-    _local_module_dir="."
-    if [[ -z "$_module_present" ]] || [[ "$_module_present" == "null" ]]; then
-      _template=$(echo "$_module_check" | cut -d'>' -f1)
-      shrenddLog "importShrendd: ($_module_check) > no module specified still using: $_template"
+  if [[ "$_type" != "plugin" ]]; then
+    if [[ "$_library" == "this" ]] || [[ "$_MODULE_DIR" == *"$_library" ]] || [[ "$_shrendd_dir" == *"/$_library" ]]; then
+      shrenddLog "detected local library: $_library"
+      _bank="$_SHRENDD_DEPLOY_DIRECTORY"
+      _module_check="${_template}>"
+      _module_present=$(echo "$_module_check" | cut -d'>' -f2)
+      shrenddLog "importShrendd: module check: $_module_present"
+      _local_module_dir="."
+      if [[ -z "$_module_present" ]] || [[ "$_module_present" == "null" ]]; then
+        _template=$(echo "$_module_check" | cut -d'>' -f1)
+        shrenddLog "importShrendd: ($_module_check) > no module specified still using: $_template"
+      else
+        _local_module_dir=$(echo "$_module_check" | cut -d'>' -f1)
+        _template="$_module_present"
+        shrenddLog "importShrendd: unmodified template path: $_template"
+        _current_module_dir="$_MODULE_DIR"
+        shrenddLog "starting dir: $_STARTING_DIR"
+        _current_module_dir_id=$(shrenddOrDefault "shrendd.deploy.dir")
+        cd "$_STARTING_DIR"
+        _module_properties=$(./shrendd --target "$target" --get-property shrendd.deploy.dir --module "$_local_module_dir" -offline -preserve-log)
+        shrenddLog "module properties: $_module_properties"
+        _referenced_module_dir=$(echo "$_module_properties" | sed -e "s/${target}: //") #$(shrenddOrDefault "shrendd.deploy.dir")
+        shrenddLog "module deploy dir: $_referenced_module_dir"
+        _match_replace="$(echo "$_STARTING_DIR" | sed -e "s/\//\\\\\//g")"
+        shrenddLog "trying to replace: $_match_replace"
+        _referenced_module_dir=$(echo "$_referenced_module_dir"| sed -e "s/$_match_replace//g" | sed -e "s/^\///")
+        _current_module_dir_id=$(echo "$_current_module_dir_id"| sed -e "s/$_match_replace//g" | sed -e "s/^\///")
+        shrenddLog "modified module deploy dir: $_referenced_module_dir"
+        shrenddLog "current module deploy dir: $_current_module_dir_id"
+        _template=$(echo "$_referenced_module_dir/$_template")
+        shrenddLog "importShrendd: updated template: $_template"
+        cd "$_current_module_dir"
+        _match_replace="$(echo "$_current_module_dir_id" | sed -e "s/\//\\\\\//g")"
+        _bank=$(echo "$_bank" | sed -e "s/\/$_match_replace//g")
+      fi
     else
-      _local_module_dir=$(echo "$_module_check" | cut -d'>' -f1)
-      _template="$_module_present"
-      shrenddLog "importShrendd: unmodified template path: $_template"
-      _current_module_dir="$_MODULE_DIR"
-      shrenddLog "starting dir: $_STARTING_DIR"
-      _current_module_dir_id=$(shrenddOrDefault "shrendd.deploy.dir")
-      cd "$_STARTING_DIR"
-      _module_properties=$(./shrendd --target "$target" --get-property shrendd.deploy.dir --module "$_local_module_dir" -offline -preserve-log)
-      shrenddLog "module properties: $_module_properties"
-      _referenced_module_dir=$(echo "$_module_properties" | sed -e "s/${target}: //") #$(shrenddOrDefault "shrendd.deploy.dir")
-      shrenddLog "module deploy dir: $_referenced_module_dir"
-      _match_replace="$(echo "$_STARTING_DIR" | sed -e "s/\//\\\\\//g")"
-      shrenddLog "trying to replace: $_match_replace"
-      _referenced_module_dir=$(echo "$_referenced_module_dir"| sed -e "s/$_match_replace//g" | sed -e "s/^\///")
-      _current_module_dir_id=$(echo "$_current_module_dir_id"| sed -e "s/$_match_replace//g" | sed -e "s/^\///")
-      shrenddLog "modified module deploy dir: $_referenced_module_dir"
-      shrenddLog "current module deploy dir: $_current_module_dir_id"
-      _template=$(echo "$_referenced_module_dir/$_template")
-      shrenddLog "importShrendd: updated template: $_template"
-      cd "$_current_module_dir"
-      _match_replace="$(echo "$_current_module_dir_id" | sed -e "s/\//\\\\\//g")"
-      _bank=$(echo "$_bank" | sed -e "s/\/$_match_replace//g")
+      shrenddLog "using remote library: $_library"
+      _module_check="${_template}>"
+      _module_present=$(echo "$_module_check" | cut -d'>' -f2)
+      shrenddLog "importShrendd: module check: $_module_present"
+      _local_module_dir="."
+      if [[ -z "$_module_present" ]] || [[ "$_module_present" == "null" ]]; then
+        _template=$(echo "$_module_check" | cut -d'>' -f1)
+        shrenddLog "importShrendd: ($_module_check) > no module specified still using: $_template"
+      else
+        _local_module_dir=$(echo "$_module_check" | cut -d'>' -f1)
+        _template="$_local_module_dir/$_module_present"
+        _bank="$_bank"
+      fi
+    fi
+    if [[ "${is_offline}" == "false" ]]; then
+      shrenddLog "importShrendd: cloning library: $_library version: $_version to $_bank/<>/$_template"
+      cloneLibrary "$_library" "$_version" "$_bank" "$_template"
     fi
   else
-    shrenddLog "using remote library: $_library"
-    _module_check="${_template}>"
-    _module_present=$(echo "$_module_check" | cut -d'>' -f2)
-    shrenddLog "importShrendd: module check: $_module_present"
-    _local_module_dir="."
-    if [[ -z "$_module_present" ]] || [[ "$_module_present" == "null" ]]; then
-      _template=$(echo "$_module_check" | cut -d'>' -f1)
-      shrenddLog "importShrendd: ($_module_check) > no module specified still using: $_template"
-    else
-      _local_module_dir=$(echo "$_module_check" | cut -d'>' -f1)
-      _template="$_local_module_dir/$_module_present"
-      _bank="$_bank"
-    fi
-  fi
-  if [[ "${is_offline}" == "false" ]]; then
-    shrenddLog "importShrendd: cloning library: $_library version: $_version to $_bank/<>/$_template"
-    cloneLibrary "$_library" "$_version" "$_bank" "$_template"
+    shrenddLog "importShrendd: plugin import detected, skipping cloneLibrary"
   fi
   if [ $# -lt 2 ]; then
     _current=$SECONDS

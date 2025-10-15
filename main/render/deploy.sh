@@ -271,3 +271,7 @@ function doRender {
     fi
   fi
 }
+
+function shrendd_testBuild {
+  echo "this is a test, nothing \${TEST_B} to see here: $(getConfig test.a)"
+}

@@ -1,0 +1,1 @@
+* importShrendd - support plugin type for importing
