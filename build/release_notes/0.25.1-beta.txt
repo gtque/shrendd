@@ -1,0 +1,2 @@
+* importShrendd - support plugin type for importing
+* fix for importShrendd plugin because it is a function and not a file

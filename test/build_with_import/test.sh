@@ -21,6 +21,8 @@ _txt_import1=$(cat ./deploy/target/build/render/rabbit.txt | grep "butter, \$(ge
 _txt_import2=$(cat ./deploy/target/build/render/rabbit.txt | grep "melted butter (or \$(getConfig \"lib.butter.alternative2\")), milk, eggs, vanilla" || echo "failed")
 _hole=$(cat ./deploy/target/build/render/hole.txt)
 _rabbit=$(cat ./deploy/target/build/render/rabbit.txt)
+#   this is a test, nothing ${TEST_B} to see here: $(getConfig test.a)
+_rabbit2=$(cat ./deploy/target/build/render/rabbit2.txt | grep "   this is a test, nothing \${TEST_B} to see here: \$(getConfig test.a)" || echo "failed")
 sed -i -e "s/\"/_double_mcquote_/g" "./deploy/target/build/k8s/00_namespace.yml"
 _no_imports=$(yq e ".metadata.labels.[\"kubernetes.io/metadata.name\"]" "./deploy/target/build/k8s/00_namespace.yml" | sed -e "s/_escaped_double_mcquote_/\\\\\"/g" | sed -e "s/_double_mcquote_/\"/g")
 _configmap_namespace=$(yq e ".metadata.namespace" "./deploy/target/build/k8s/01_configmap.yml")
@@ -78,6 +80,11 @@ if [ "${_lettuce}" == "${_expected_leafy_green}" ]; then
   passed "external library with module reference"
 else
   failed "external library with module reference with custom module shrendd.config: ${_lettuce}"
+fi
+if [[ "${_rabbit2}" != "failed" ]]; then
+  passed "plugin import"
+else
+  failed "plugin import"
 fi
 #../../build/test/cleanup_shrendd.sh
 source ../../build/test/end.sh
