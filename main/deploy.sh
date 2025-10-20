@@ -135,11 +135,15 @@ function initConfig {
     _template_value=$(echo "$_SHRENDD_CONFIG" | yq e ".$_yq_name" -)
     _suppressWarning=$(echo "$_template_value" | yq e ".suppressWarning" -)
     _neverSpawn=$(echo "$_template_value" | yq e ".neverSpawn" -)
+    _allowed=$(echo "$_template_value" | yq e ".allowed" -)
     if [[ "$_suppressWarning" == "null" ]] || [[ "$_suppressWarning" != "true" ]]; then
       _suppressWarning="false"
     fi
     if [[ "$_neverSpawn" == "null" ]] || [[ "$_neverSpawn" != "true" ]]; then
       _neverSpawn="false"
+    fi
+    if [[ "$_allowed" == "null" ]] || [[ -z "$_allowed" ]]; then
+      _allowed=""
     fi
     _is_sensitive="false"
     if [ -z "$_template_value" ]; then
@@ -202,6 +206,27 @@ function initConfig {
         fi
       else
         shrenddEchoIfNotSilent "${_TEXT_DEBUG}initializing> \"$_config_key\": $_name: ${_TEXT_INFO}$_value${_CLEAR_TEXT_COLOR}"
+      fi
+      if [[ -n "${_allowed}" ]] && [[ "${_allowed}" != "null" ]]; then
+        _sensitive_allowed="$_allowed"
+        _sensitive_value="$_value"
+        if [ "$_is_sensitive" == "true" ]; then
+          _sensitive_allowed="*****"
+          _sensitive_value="*****"
+        fi
+        shrenddEchoIfNotSilent "\tchecking allowed values for \"$_config_key\": $_sensitive_allowed"
+        _allowed_found="false"
+        IFS=',' read -ra ADDR <<< "$_allowed"
+        for i in "${ADDR[@]}"; do
+          if [[ "$_value" =~ $i ]]; then
+            _allowed_found="true"
+          fi
+        done
+        if [ "$_allowed_found" == "false" ]; then
+          shrenddEchoError "\"$_config_key\" has a value of \"$_sensitive_value\" which is not in the allowed list: $_sensitive_allowed"
+          _initialized="false"
+          continue
+        fi
       fi
       shrenddEchoIfNotSilent "\texported $_name"
       export $_name="$_value"

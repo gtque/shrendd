@@ -11,6 +11,7 @@ export _TESTS="$_TESTS shrendd_yaml_override shrendd_yaml_stub shrendd_yaml_nost
 export _TESTS="$_TESTS module_share module_custom_render"
 export _TESTS="$_TESTS template_extract template_library template_spawn template_extract_cleanup template_spawn_cleanup template_remote_library"
 export _TESTS="$_TESTS k8s_skip"
+export _TESTS="$_TESTS config_template"
 export _TESTS="$_TESTS plugins_get plugins_command plugins_execute"
 export _TESTS="$_TESTS offline_init offline_library offline_plugin"
 export _TESTS="$_TESTS build_with_import bootstrap_init"

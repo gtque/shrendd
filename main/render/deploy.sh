@@ -92,13 +92,19 @@ function mergeYaml {
     shrenddLog "mergeYaml: \nog file:\n$(cat "$_og" | sed 's/^/\t/')"
     _place_holder_key=$(echo "$_merge_value" | cut -d':' -f2)
     _place_holder_value=$(yq e ".$_place_holder_key" "$_og")
+    _in_error="false"
     if [ -f "$_DEPLOY_ERROR_DIR/config_error.log" ]; then
       _error=$(cat "$_DEPLOY_ERROR_DIR/config_error.log")
       if [[ -z "$_error" ]]; then
         shrenddLog "mergeYaml: no errors looking up place holder handling"
       else
+        _in_error="true"
         shrenddLog "mergeYaml: error looking place holder handling: $_og \n${_error}"
       fi
+    fi
+    if [ "$_in_error" == "true" ]; then
+      shrenddLog "mergeYaml: aborting merge, error detected"
+      break
     fi
     shrenddLog "mergeYaml: merging: place holder key: $_place_holder_key"
 #    echo "  target:$_target"
@@ -203,7 +209,17 @@ function actualRender {
     shrenddEcho "yaml imports found, attempting to merge yaml"
     shrenddEcho "$(cat "$_current_merge_yaml")" #$RENDER_DIR/temp/merge_yaml"
     export _merge_yaml=$(cat "$_current_merge_yaml") #$RENDER_DIR/temp/merge_yaml")
-    mergeYaml "$_rname"
+    set +e
+    mergeYaml "$_rname" 2>> "$_DEPLOY_ERROR_DIR/config_error.log"
+    set -e
+    if [[ -f "$_DEPLOY_ERROR_DIR/config_error.log" ]]; then
+      _error=$(cat "$_DEPLOY_ERROR_DIR/config_error.log")
+      if [[ -z "$_error" ]]; then
+        shrenddLog "mergeYaml: no errors after merging yaml"
+      else
+        shrenddLog "mergeYaml: error after merging yaml: $_rname \n${_error}"
+      fi
+    fi
   else
     shrenddEcho "no yaml imports..."
   fi

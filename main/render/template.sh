@@ -551,7 +551,7 @@ function doTemplate {
       export _IGNORE_REQUIRED="true"
       for _specific_module in $_module; do
         loadConfig $_specific_module
-        echo "switching to module: $_the_module"
+        shrenddEchoIfNotSilent "switching to module: $_the_module"
         cd "$_the_module"
         export _MODULE_DIR=$(pwd)
         initTargets
@@ -561,10 +561,10 @@ function doTemplate {
         cd "$_STARTING_DIR"
       done
       #merge and clean up actual config template file
-      echo -e "${_TEXT_INFO}resolving temp template${_CLEAR_TEXT_COLOR}"
+      shrenddEchoIfNotSilent "${_TEXT_INFO}resolving temp template${_CLEAR_TEXT_COLOR}"
       for _specific_module in $_module; do
         loadConfig "$_specific_module"
-        echo "switching to module: $_the_module"
+        shrenddEchoIfNotSilent "switching to module: $_the_module"
         cd "$_the_module"
         export _MODULE_DIR=$(pwd)
         export _SHRENDD_DEPLOY_DIRECTORY=$(shrenddOrDefault "shrendd.deploy.dir")
@@ -573,7 +573,7 @@ function doTemplate {
         unwindConfig
         cd "$_STARTING_DIR"
       done
-      echo -e "${_TEXT_INFO}config template updated${_CLEAR_TEXT_COLOR}"
+      shrenddEchoIfNotSilent "${_TEXT_INFO}config template updated${_CLEAR_TEXT_COLOR}"
     fi
     export _IGNORE_REQUIRED="false"
     if [ -z "$SHRENDD_SPAWN" ]; then
@@ -582,11 +582,11 @@ function doTemplate {
       export _IGNORE_REQUIRED="true"
       for _specific_module in $_module; do
         loadConfig "$_specific_module"
-        echo "switching to module: $_the_module"
+        shrenddEchoIfNotSilent "switching to module: $_the_module"
         cd "$_the_module"
         export _MODULE_DIR=$(pwd)
         export _SHRENDD_DEPLOY_DIRECTORY=$(shrenddOrDefault "shrendd.deploy.dir")
-        echo "trying to load array of targets for: $_MODULE_DIR"
+        shrenddEchoIfNotSilent "trying to load array of targets for: $_MODULE_DIR"
         initTargets
         spawnTemplate "$_specific_module"
         unwindConfig

@@ -1,0 +1,16 @@
+hello:
+  greeting1: ${TEST_HELLO}
+  greeting2: ${test.hello}
+  greeting3: $(getConfig "test.howdy")
+  greeting4: $(getConfig "TEST_HOWDY")
+  theEscape1: "\"$(getConfig "TEST_HOWDY")\""
+  theEscape2: '$(getConfig "TEST_HOWDY")'
+  theEscape3: \"$(getConfig "TEST_HOWDY")\"
+  leelodallas: |
+    ${TEST_MULTIPASS}
+  dallas: |
+    ${TEST_CORBIN}
+  fhloston: |
+    ${test.multipass2}
+  cookies:
+    $(getConfig "test.array")

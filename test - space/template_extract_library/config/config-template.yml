@@ -7,6 +7,7 @@ app:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
     name: |-
       required: true
@@ -15,6 +16,7 @@ app:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
     namespace: |-
       required: true
@@ -23,6 +25,7 @@ app:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
     test1: |-
       required: true
@@ -31,6 +34,7 @@ app:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
     version: |-
       required: true
@@ -39,6 +43,7 @@ app:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 bartholomew:
   jojo:
@@ -49,6 +54,7 @@ bartholomew:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 chief:
   wiggum: |-
@@ -58,6 +64,7 @@ chief:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 library:
   name: |-
@@ -67,6 +74,7 @@ library:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   rufflesortaki: |-
     required: true
@@ -75,6 +83,7 @@ library:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   tree:
     leaf: |-
@@ -84,6 +93,7 @@ library:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
     nest: |-
       required: true
@@ -92,6 +102,7 @@ library:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 psych:
   burton guster: |-
@@ -101,6 +112,7 @@ psych:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   chief vic: |-
     required: true
@@ -109,6 +121,7 @@ psych:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   fru it:
     pin-a p_pl e: |-
@@ -118,6 +131,7 @@ psych:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   juliet: |-
     required: true
@@ -126,6 +140,7 @@ psych:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   lassie: |-
     required: true
@@ -134,6 +149,7 @@ psych:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   spencer:
     henry: |-
@@ -143,6 +159,7 @@ psych:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
     shawn: |-
       required: true
@@ -151,6 +168,7 @@ psych:
       #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
       #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
       #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+      #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
       #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 ralph:
   wiggum: |-
@@ -160,6 +178,7 @@ ralph:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 test:
   array: |-
@@ -169,6 +188,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   corbin: |-
     required: true
@@ -177,6 +197,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   hello: |-
     required: true
@@ -185,6 +206,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   howdy: |-
     required: true
@@ -193,6 +215,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   multipass: |-
     required: true
@@ -201,6 +224,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   multipass2: |-
     required: true
@@ -209,6 +233,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
   world: |-
     required: true
@@ -217,6 +242,7 @@ test:
     #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
     #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
     #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+    #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
     #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"
 test-howdy: |-
   required: true
@@ -225,4 +251,5 @@ test-howdy: |-
   #suppressWarning: false #whether to suppress warnings for this field or not, defaults to false if not present.
   #neverSpawn: false #whether this field should never be spawned or not, defaults to false if not present. Usually used with suppressWarning: true to keep fields from being spawned in the input files.
   #indirect: false #whether this field is indirectly referenced or not. If true, will not be deleted on reduce. Not required, if not present assumes false.
+  #allowed: ".*" #a regex pattern that the value must match, if not present no pattern matching is done.
   #default: "the default value to use, uncomment and set a value if required is false, delete or leave commented out if required is true"

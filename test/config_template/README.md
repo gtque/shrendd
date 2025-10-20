@@ -1,0 +1,1 @@
+test config-template: sensitive, allowed, default, required.

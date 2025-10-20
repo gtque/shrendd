@@ -20,6 +20,8 @@
 test/template_remote_library/config/config-template.yml
 **/shrendd_yaml_stub/shrendd.yml
 **/version_latest_default/shrendd
+**/config_template/shrendd
+**/config_template/.shrendd
 **/version_latest_specified/shrendd
 **/offline_library/shrendd.yml
 **/offline_library/shrendd
@@ -29,6 +31,7 @@ test/template_remote_library/config/config-template.yml
 **/bootstrap_init/shrendd
 **/bootstrap_init/boot.shrendd
 **/plugins_command/deploy
+**/render_render/shrendd
 documents/tutorials/libraryImport/config
 documents/tutorials/libraryImport/deploy
 documents/tutorials/libraryImport/boot.shrendd
