@@ -1,3 +1,3 @@
-* config template now supports "allowed" pattern matching for template values.
+* config template now supports 'allowed' pattern matching for template values.
 * more clean up of echo to shrendd echo
 * improved error handling on yaml merge issues
