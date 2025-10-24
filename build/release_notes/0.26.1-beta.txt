@@ -1,4 +1,4 @@
-* bug fix: remove new line and carriage return from shrenddIfTrue lines.
+* bug fix - remove new line and carriage return from shrenddIfTrue lines.
 * config template now supports 'allowed' pattern matching for template values.
 * more clean up of echo to shrendd echo
 * improved error handling on yaml merge issues
