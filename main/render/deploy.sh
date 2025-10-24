@@ -258,6 +258,7 @@ function doRender {
       if [ "$fname" != "*.srd" ]; then
         _ifTrue=$(grep -m 1 "^\$(shrenddIfTrue" $fname || echo "true")
         if [[ "$_ifTrue" != "true" ]]; then
+          _ifTrue=$(echo "$_ifTrue" | sed -e "s/\n*$//" | sed -e "s/\r*$//")
           _ifTrue="$(eval "echo \"$_ifTrue\"")"
         else
           _ifTrueResult="true"
