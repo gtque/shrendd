@@ -3,6 +3,7 @@ set -euo pipefail
 
 trap resetLocal EXIT
 
+export _MODULE_DIR="."
 export FORCE_SHRENDD_UPDATES="false"
 export GIVEN_TARGETS=""
 export LOG_VERBOSE="false"

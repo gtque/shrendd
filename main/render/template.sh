@@ -439,6 +439,7 @@ function spawnTemplate {
       fi
     fi
   fi
+  shrenddEchoIfNotSilent "config dirs created"
   for _config_key in $_config_keys; do
     _config_key=$(echo "$_config_key" | sed -e "s/$_SPACE_PLACE_HOLDER/ /g")
     _yq_name=$(yqName "$_config_key")
