@@ -1,0 +1,20 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: k8sgames
+  namespace: k8sgames
+spec:
+  gatewayClassName: contour
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      kinds:
+      - kind: HTTPRoute
+  - name: client
+    protocol: TCP
+    port: 25566
+    allowedRoutes:
+      kinds:
+      - kind: TCPRoute

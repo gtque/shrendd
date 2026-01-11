@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "k8sgames-server"
+  namespace: "k8sgames"
+  labels:
+    app.kubernetes.io/name: "k8sgames-server"
+    app.kubernetes.io/managed-by: "k8sgames"
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/part-of: "k8sgames"
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: k8sgames-server

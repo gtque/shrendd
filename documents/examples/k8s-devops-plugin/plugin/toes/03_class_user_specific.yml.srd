@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  #this storageclass should only ever be used as part of the init containers/jobs for minecraft servers, as it mounts the full minecraft directory.
+  name: k8sgames-user-specific-nfs-storage
+provisioner: games-root-provisioner # or choose another name, must match deployment's env PROVISIONER_NAME'
+parameters:
+  pathPattern: "user/${.PVC.namespace}"
+  archiveOnDelete: "false"
+reclaimPolicy: Retain

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    app: nfs-client-provisioner
+  # this is the namespace the provisioner is deployed to.
+  namespace: k8sgames
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            #the provisioner name to use for the provisioner.
+            - name: PROVISIONER_NAME
+              value: games-root-provisioner
+            - name: NFS_SERVER
+              value: localhost
+            - name: NFS_PATH
+              value: /games
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: localhost
+            path: /games

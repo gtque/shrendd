@@ -1,14 +1,14 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: "${APP_TEST_NAME}-teardown"
-  namespace: "${APP_TEST_NAMESPACE}"
+  name: "$(getConfig "config.name")-teardown"
+  namespace: "$(getConfig "k8s.namespace")"
   labels:
-    app.kubernetes.io/name: "${APP_TEST_NAME}-teardown"
-    app.kubernetes.io/managed-by: "${APP_TEST_MANAGER}"
-    app.kubernetes.io/version: "$(getConfig \"app.test.version\")"
-    app.kubernetes.io/component: "${APP_TEST_NAME}"
-    app.kubernetes.io/part-of: "${APP_TEST_NAME}"
+    app.kubernetes.io/name: "$(getConfig "config.name")-teardown"
+    app.kubernetes.io/managed-by: "$(getConfig "k8s.managedby")"
+    app.kubernetes.io/version: "$(getConfig "config.version")"
+    app.kubernetes.io/component: "$(getConfig "config.component")"
+    app.kubernetes.io/part-of: "(getConfig "config.name")"
 data:
-  identifier: "'-l app.kubernetes.io/part-of=${APP_TEST_NAME},app.kubernetes.io/component=${APP_TEST_NAME}'"
-  standard: ${APP_K8S_OBJECTS} #there should be a new line after this line with nothing on it, that means no spaces or tabs either.
+  identifier: "'-l app.kubernetes.io/part-of=$(getConfig "config.name"),app.kubernetes.io/component=$(getConfig "config.component")'"
+  standard: $(k8s_getTemplatedObjects) #there should be a new line after this line with nothing on it, that means no spaces or tabs either.

@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8sgames
+  # replace with namespace where provisioner is deployed
+  namespace: k8sgames
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8sgames-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8sgames-binding
+subjects:
+  - kind: ServiceAccount
+    name: k8sgames
+    # replace with namespace where provisioner is deployed
+    namespace: k8sgames
+roleRef:
+  kind: ClusterRole
+  name: k8sgames-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8sgames
+  # replace with namespace where provisioner is deployed
+  namespace: k8sgames
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints", "services", "pods", "deployments", "configmaps", "secrets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8sgames
+  # replace with namespace where provisioner is deployed
+  namespace: k8sgames
+subjects:
+  - kind: ServiceAccount
+    name: k8sgames
+    # replace with namespace where provisioner is deployed
+    namespace: k8sgames
+roleRef:
+  kind: Role
+  name: k8sgames
+  apiGroup: rbac.authorization.k8s.io

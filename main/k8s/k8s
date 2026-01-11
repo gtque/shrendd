@@ -1,0 +1,14 @@
+#!/bin/bash
+
+function k8s_stub() {
+    echo "k8s_stub called"
+}
+
+function k8s_getTemplatedObjects() {
+    echo "${APP_K8S_OBJECTS}"
+}
+
+function k8s_help() {
+    echo "k8s_stub - A stub function for Kubernetes templates. This will stub all currently available Kubernetes objects"
+    echo "k8s_getTemplatedObjects - Get the list of templated Kubernetes objects."
+}

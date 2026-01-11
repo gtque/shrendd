@@ -1,0 +1,56 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: k8sgames-server
+  namespace: k8sgames
+  labels:
+    app.kubernetes.io/instance: k8sgames-server
+    app.kubernetes.io/name: "k8sgames-server"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "k8sgames-server"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: k8sgames-server
+        app.kubernetes.io/name: "k8sgames-server"
+        app.kubernetes.io/managed-by: "k8sgames"
+        app.kubernetes.io/version: "dev"
+        app.kubernetes.io/component: "server"
+        app.kubernetes.io/part-of: "k8sgames"
+      namespace: k8sgames
+    spec:
+      serviceAccountName: k8sgames-server
+      containers:
+      - name: app
+        image: localhost:32000/k8sgames-server:local
+        imagePullPolicy: Always
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "{{ release.stage|lower }}"
+        - name: SPRING_CLOUD_BOOTSTRAP_ENABLED
+          value: "true"
+        - name: SPRING_CLOUD_KUBERNETES_SECRETS_ENABLEAPI
+          value: "true"
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 15
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 15
+          successThreshold: 1
+          failureThreshold: 60
